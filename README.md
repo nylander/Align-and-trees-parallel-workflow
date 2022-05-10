@@ -1,11 +1,13 @@
-# Align-and-trees-workflow
+# Align-and-trees-parallel-workflow
 
-- Last modified: tis maj 10, 2022  03:18
+- Last modified: tis maj 10, 2022  03:28
 - Sign: Johan.Nylander\@nrm.se
 
 ## Description
 
-Script for running (one) "standard" phylogenetic analysis on fasta-formatted input.
+Script for running a "standard" phylogenetic workflow on fasta-formatted input.
+In particular, parallel execution is done whenever possible.
+
 
 On unfiltered fasta files,
 
