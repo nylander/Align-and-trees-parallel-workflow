@@ -1,6 +1,6 @@
 # Align-and-trees-parallel-workflow
 
-- Last modified: tis maj 10, 2022  03:28
+- Last modified: tis maj 10, 2022  03:36
 - Sign: Johan.Nylander\@nrm.se
 
 ## Description
@@ -34,8 +34,9 @@ will be used as locus name in down stream analyses. See [example data](data).
 
 ## Output
 
-text
-
+- Filtered alignments in `outputfolder/treeshrink/realign-bmge/`
+- Gene trees in `outpfolder/trees/pargenes-bmge-treeshrink/`
+- Species tree in `outputfolder/trees/pargenes-bmge-treeshrink/astral_run/`
 
 ## Installation
 
