@@ -1,13 +1,12 @@
 # Align-and-trees-parallel-workflow
 
-- Last modified: tis maj 10, 2022  03:39
+- Last modified: tis maj 10, 2022  06:23
 - Sign: Johan.Nylander\@nrm.se
 
 ## Description
 
 Script for running a "standard" phylogenetic workflow on fasta-formatted input.
 In particular, parallel execution is done whenever possible.
-
 
 On unfiltered fasta files,
 
@@ -21,7 +20,8 @@ On unfiltered fasta files,
 
 ## Usage
 
-    ./align-and-trees-workflow.sh /path/to/folder/with/fas/files /path/to/output/folder
+    align-and-trees-parallel-workflow.sh [options] /path/to/folder/with/fas/files /path/to/output/folder
+    align-and-trees-parallel-workflow.sh -h
 
 ## Input data
 
@@ -44,7 +44,13 @@ See the [`INSTALL`](INSTALL) file.
 
 ### Important
 
-Currently, paths to some binaries needs to be manually adjusted inside the
-[align-and-trees-workflow.sh](src/align-and-trees-workflow.sh) script, as well
-as number of available cores!
+Current version with command line options are experimental.
 
+1. The path to the `BMGE.jar` can be supplied (full path) on command line using the `-b` option.
+It is, however, recommended to edit the script instead.
+
+2. The optimal total number of cores in combination with the number of parallel processes for GNU parallel,
+and in combination with number of cores used for child processes are not yet optimized, nor checked for
+inconsistencies. Please adjust in the script as needed (check your max N cores on your hardware).
+
+3. Spell check of arguments are not yet implemented.

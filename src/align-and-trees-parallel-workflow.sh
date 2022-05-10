@@ -1,68 +1,75 @@
 #!/bin/bash -l
 
-## File: align-and-trees-workflow.sh
-## Last modified: tis maj 10, 2022  03:00
-## Sign: JN
-##
-## Description:
-##     On unfiltered fasta files, run
-##     aligner + BMGE + pargenes + treeshrink + realigner + pargenes + ASTRAL
-##
-## Usage:
-##     ./align-and-trees-workflow.sh /path/to/folder/with/fas/files /path/to/new/run/folder
-##
-## Prerequitsites:
-##     Unaligned aa or nt sequences (need to specify manually) in fasta formatted files,
-##     one per locus, placed in the folder which is the first argument to the script.
-##     Name example: EOG7CKDX2.fas. The part 'EOG7CKDX2' will be used
-##     as locus name in downstream analyses.
-##
-##   Program versions used:
-##       BMGE v1.12
-##       GNU parallel v20161222
-##       catfasta2phyml.pl v1.1.0
-##       degap_fasta_alignment.pl v2.0
-##       mafft v7.453
-##       pargenes v1.3.9
-##       phylip2fasta.pl v0.3
-##       raxml-ng v0.9.0
-##       treeshrink v1.3.9
-##
-## Important:
-##     Paths to some binaries needs to be adjusted, as well as number of
-##     available cores!
-##
-
 set -euo pipefail
 
-## Settings and programs
+## Default settings
+version="0.1"
+quiet=0 # TODO: Use this option
+modeltestcriterion="BIC"
+datatype='nt'
+ncores='8'               # TODO: Adjust. This value needs to be checked againt hardware and threadsforparallel
+threadsforparallel='6'   # TODO: Adjust. This value le ncores
+modeltestperjobcores='4' # TODO: Adjust. This value needs to be at least 4
+bmgejar="/home/nylander/src/BMGE-1.12/BMGE.jar" # <<<<<<<<<<<<<< CHANGE HERE
 
-#### Compute resources
-ncores='10'                  # <<<<<<<<<<<<<< CHANGE HERE
-threadsforparallel='8'       # <<<<<<<<<<<<<< CHANGE HERE
-modeltestperjobcores='4'     # <<<<<<<<<<<<<< CHANGE HERE
+## Usage
+function usage {
+cat <<End_Of_Usage
 
-#### Data type
-datatype='nt' # 'aa' or 'nt' # <<<<<<<<<<<<<< CHANGE HERE
+$(basename "$0") version ${version}
 
-#### Model-selection criterion and default models
-modeltestcriterion='BIC'
-modelforraxmltest='GTR'
-datatypeforbmge='DNA'
-modelforpargenesfixed='GTR+G8+F'
-if [ "${datatype}" = 'aa' ] ; then
-    datatypeforbmge='AA'
-    modelforraxmltest='LG'
-    modelforpargenesfixed='LG+G8+F'
-fi
+What:
+           Run phylogenetics in parallel
 
-#### Programs
-pargenes='/home/nylander/src/ParGenes/pargenes/pargenes.py'  # <<<<<<<<<<<<<< CHANGE HERE
-treeshrink='/home/nylander/src/TreeShrink/run_treeshrink.py' # <<<<<<<<<<<<<< CHANGE HERE
-bmgejar='/home/nylander/src/BMGE-1.12/BMGE.jar'              # <<<<<<<<<<<<<< CHANGE HERE
-aligner='mafft'
+By:
+           Johan Nylander
+
+Usage:
+           $(basename "$0") [option] infolder outfolder
+
+Options:
+           -d type   -- Specify data type: nt or aa. Default: ${datatype}
+           -t number -- Specify the number of threads for xxx. Deafult: ${ncores}
+           -m crit   -- Model test criterion: BIC, AIC or AICC. Default: ${modeltestcriterion}
+           -b path   -- Full path to BMGE.jar. Current path: ${bmgejar}
+           -q        -- Be quiet (noverbose)
+           -v        -- Print version
+           -h        -- Print help message
+
+Examples:
+           $(basename "$0") infolder outfolder
+           $(basename "$0") -d nt -t 8 -b /home/nylander/src/BMGE-1.12/BMGE.jar data out
+
+Input:
+           Fasta formatted sequence files
+           Text
+
+Output:
+           Text
+
+Notes:
+           See INSTALL file for needed software
+
+
+License:   Copyright (C) 2022 nylander <johan.nylander@nrm.se>
+           Distributed under terms of the MIT license.
+
+End_Of_Usage
+
+}
+
+
+### Programs
+pargenes="pargenes.py"
+aligner="mafft" # Name of aligner, not path to binary
+alignerbin="mafft"
 alignerbinopts=' --auto'
-export aligner
+realigner="mafft"
+raxmlng="raxml-ng"
+degap_fasta_alignment="degap_fasta_alignment.pl"
+catfasta2phyml="catfasta2phyml.pl"
+phylip2fasta="phylip2fasta.pl"
+treeshrink="run_treeshrink.py"
 
 prog_exists() {
     if ! command -v "$1" &> /dev/null ; then
@@ -72,28 +79,72 @@ prog_exists() {
 }
 export -f prog_exists
 
-for p in "mafft" "raxml-ng" "degap_fasta_alignment.pl" "catfasta2phyml.pl" "phylip2fasta.pl" ; do
+for p in \
+    "${alignerbin}" \
+    "${catfasta2phyml}" \
+    "${degap_fasta_alignment}" \
+    "${pargenes}" \
+    "${phylip2fasta}" \
+    "${raxmlng}" \
+    "${realigner}" \
+    "${treeshrink}" ; do
     prog_exists "${p}"
 done
 
-for p in "${bmgejar}" "${pargenes}" "${treeshrink}" ; do
-    if [ ! -f "${p}" ] ; then
-        echo "## ALIGN-AND-TREES-WORKFLOW: ERROR: ${p} could not be found"
-        exit 1
-    fi
+### Data type
+
+### Model-selection criterion and default models
+modelforraxmltest='GTR'
+datatypeforbmge='DNA'
+modelforpargenesfixed='GTR+G8+F'
+if [ "${datatype}" = 'aa' ] ; then
+    datatypeforbmge='AA'
+    modelforraxmltest='LG'
+    modelforpargenesfixed='LG+G8+F'
+fi
+
+## Arguments
+dflag=
+tflag=
+mflag=
+vflag=
+qflag=
+hflag=
+
+while getopts 'd:t:m:b:vqh' OPTION
+do
+  case $OPTION in
+  d) dflag=1
+     dval="$OPTARG"
+     ;;
+  t) tflag=1
+     tval="$OPTARG"
+     ;;
+  m) mflag=1
+     mval="$OPTARG"
+     ;;
+  b) bflag=1
+     bval="$OPTARG"
+     ;;
+  v) echo "${version}"
+     exit
+     ;;
+  q) qflag=1
+     quiet=1
+     ;;
+  h) usage
+     exit
+     ;;
+  *) usage
+     exit
+     ;;
+  esac
 done
+shift $((OPTIND - 1))
 
-alignerbin=$(command -v "${aligner}")
-realigner=$(command -v mafft)
-raxmlng=$(command -v raxml-ng)
-degap_fasta_alignment=$(command -v degap_fasta_alignment.pl)
-catfasta2phyml=$(command -v catfasta2phyml.pl)
-phylip2fasta=$(command -v phylip2fasta.pl)
-
-
-## Arguments: 1) unaligned seqs folder and 2) run folder
+## Check if args are folders
 if [ $# -ne 2 ]; then
-    echo 1>&2 "Usage: $0 /path/to/folder/with/fas/files /path/to/new/run/folder"
+    echo 1>&2 "Usage: $0 [options] /path/to/folder/with/fas/files /path/to/output/folder"
     exit 1
 else
     unaligned=$(readlink -f "$1")
@@ -119,6 +170,30 @@ else
     mkdir -p "${runfolder}"
     echo "## ALIGN-AND-TREES-WORKFLOW: Created output folder ${runfolder}"
 fi
+
+if [ "${dflag}" ] ; then
+    datatype="${dval}"
+    # Need to check if 'nt' or 'aa'
+fi
+
+if [ "${tflag}" ] ; then
+    threads="${tval}"
+    ncores="${threads}" # For now
+fi
+
+if [ "${mflag}" ] ; then
+    modeltestcriterion="${mval}"
+    # Need to check if 'BIC', 'AIC', or 'AICC'(?)
+fi
+
+if [ "${bflag}" ] ; then
+    bmgejar="${bval}"
+fi
+if [ ! -f "${bmgejar}" ] ; then
+    echo "## ALIGN-AND-TREES-WORKFLOW: ERROR: jar file ${bmgejar} could not be found"
+    exit 1
+fi
+
 
 ## Needed for some bash functions
 export runfolder
@@ -205,7 +280,8 @@ find "${runfolder}/align/bmge" -type f -name '*.phy' | \
 echo '## ALIGN-AND-TREES-WORKFLOW: Run first round of pargenes (raxml-ng)'
 mkdir -p "${runfolder}/trees"
 cd "${runfolder}/trees" || exit
-python "${pargenes}" \
+#python "${pargenes}" \
+"${pargenes}" \
     --alignments-dir "${runfolder}/align/bmge" \
     --output-dir "${runfolder}/trees/pargenes-bmge" \
     --cores "${ncores}" \
@@ -231,7 +307,8 @@ find "${runfolder}/align/bmge/" -type f -name '*.bmge.phy' | \
 
 ## Run treeshrink
 echo '## ALIGN-AND-TREES-WORKFLOW: Run treeshrink'
-python "${treeshrink}" \
+#python "${treeshrink}" \
+"${treeshrink}" \
     --indir "${runfolder}/treeshrink/input-bmge" \
     --tree 'raxml.bestTree' \
     --alignment "${aligner}.ali"
@@ -247,12 +324,10 @@ mkdir -p "${runfolder}/treeshrink/realign-bmge"
 find "${runfolder}/treeshrink/input-bmge/" -type f -name 'output.ali' | \
     parallel 'b=$(basename {//} .ali); '"${realigner}"' --auto --thread '"${threadsforparallel}"' <('"${degap_fasta_alignment}"' --all {}) > '"${runfolder}"'/treeshrink/realign-bmge/"${b//_/\.}.ali"'
 
-## Another round of BMGE?
-#
-
 ## Run pargenes again, finish with ASTRAL
 echo '## ALIGN-AND-TREES-WORKFLOW: Run pargenes again, finish with ASTRAL'
-python "${pargenes}" \
+#python "${pargenes}" \
+"${pargenes}" \
     --alignments-dir "${runfolder}/treeshrink/realign-bmge" \
     --output-dir "${runfolder}/trees/pargenes-bmge-treeshrink" \
     --cores "${ncores}" \
