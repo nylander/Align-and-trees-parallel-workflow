@@ -1,6 +1,6 @@
 # Align-and-trees-parallel-workflow
 
-- Last modified: tis maj 10, 2022  06:23
+- Last modified: tis maj 10, 2022  06:28
 - Sign: Johan.Nylander\@nrm.se
 
 ## Description
@@ -29,7 +29,7 @@ Unaligned aa or nt sequences (need to specify manually in the script) in fasta
 formatted files, one per locus, placed in a folder (which is the first argument
 to the script). The number of sequences in the files does not need to be the
 same, but sequence labels should match if the data comes from the same sample.
-File names should en in `.fas`. Example: `EOG7CKDX2.fas`.  The part `EOG7CKDX2`
+File names should end in `.fas`. Example: `EOG7CKDX2.fas`.  The part `EOG7CKDX2`
 will be used as locus name in down stream analyses. See [example data](data).
 
 ## Output
@@ -51,6 +51,6 @@ It is, however, recommended to edit the script instead.
 
 2. The optimal total number of cores in combination with the number of parallel processes for GNU parallel,
 and in combination with number of cores used for child processes are not yet optimized, nor checked for
-inconsistencies. Please adjust in the script as needed (check your max N cores on your hardware).
+inconsistencies. **Please adjust in the script as needed** (check your max N cores on your hardware).
 
 3. Spell check of arguments are not yet implemented.
