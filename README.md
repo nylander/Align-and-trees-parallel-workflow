@@ -1,6 +1,6 @@
 # Align-and-trees-workflow
 
-- Last modified: tis maj 10, 2022  03:03
+- Last modified: tis maj 10, 2022  03:18
 - Sign: Johan.Nylander\@nrm.se
 
 ## Description
@@ -30,22 +30,18 @@ same, but sequence labels should match if the data comes from the same sample.
 File names should en in `.fas`. Example: `EOG7CKDX2.fas`.  The part `EOG7CKDX2`
 will be used as locus name in down stream analyses. See [example data](data).
 
-## Prerequitsites
+## Output
 
-- BMGE (v1.12): Get from <http://ftp.pasteur.fr/pub/gensoft/projects/BMGE/>
-- GNU parallel (v20161222): `sudo apt install parallel`
-- ParGenes (v1.3.9): `git clone --recursive https://github.com/BenoitMorel/ParGenes.git ; cd ParGenes ; ./install.sh`
-- RAxML-NG (v0.9.0): `wget https://github.com/amkozlov/raxml-ng/releases/download/1.1.0/raxml-ng_v1.1.0_linux_x86_64.zip` (and unzip, rename to raxml-ng and put in your `~/bin`  folder
-- TreeShrink (v1.3.9): `git clone https://github.com/uym2/TreeShrink.git ; cd TreeShrink ; python setup.py install --user`
-- catfasta2phyml.pl (v1.1.0): `git clone https//github/nylander/catfasta2phyml.git` (and copy `catfasta2phyml.pl` to your path).
-- degap_fasta_alignment.pl (v2.0): `wget https://raw.githubusercontent.com/nylander/fastagap/master/degap_fasta_alignment.pl`
-- mafft (v7.453): `sudo apt install mafft`
-- phylip2fasta.pl (v0.3): `git clone https://github.com/nylander/phy2fas.git` (and copy `phylip2fasta.pl` to your path).
+text
+
+
+## Installation
+
+See the [`INSTALL`](INSTALL) file.
 
 ### Important
 
 Currently, paths to some binaries needs to be manually adjusted inside the
 [align-and-trees-workflow.sh](src/align-and-trees-workflow.sh) script, as well
 as number of available cores!
-
 
