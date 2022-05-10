@@ -1,6 +1,6 @@
 # Align-and-trees-parallel-workflow
 
-- Last modified: tis maj 10, 2022  03:36
+- Last modified: tis maj 10, 2022  03:39
 - Sign: Johan.Nylander\@nrm.se
 
 ## Description
@@ -15,7 +15,7 @@ On unfiltered fasta files,
 2. Filter alignments using BMGE
 3. Infer phylogenetic trees for each locus with fixed model using pargenes and raxml-ng
 4. Filter trees using treeshrink
-5. Do multiple sequence alignments on filtered tree-filtered data uisng mafft
+5. Do multiple sequence alignments on tree-filtered data uisng mafft
 6. Infer phylogenetic trees for each locus with model selection using pargenes and raxml-ng
 7. Estimate species tree from individual trees using ASTRAL
 
