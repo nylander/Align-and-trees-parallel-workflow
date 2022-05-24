@@ -10,7 +10,9 @@ datatype='nt'
 ncores='8'               # TODO: Adjust. This value needs to be checked againt hardware and threadsforparallel
 threadsforparallel='6'   # TODO: Adjust. This value le ncores
 modeltestperjobcores='4' # TODO: Adjust. This value needs to be at least 4
-bmgejar="/home/nylander/src/BMGE-1.12/BMGE.jar" # <<<<<<<<<<<<<< CHANGE HERE
+bmgejar="/home/nylander/src/BMGE-1.12/BMGE.jar"              # <<<<<<<<<<<<<< CHANGE HERE
+pargenes="/home/nylander/src/ParGenes/pargenes/pargenes.py"  # <<<<<<<<<<<<<< CHANGE HERE
+treeshrink="/home/nylander/src/TreeShrink/run_treeshrink.py" # <<<<<<<<<<<<<< CHANGE HERE
 
 ## Usage
 function usage {
@@ -31,14 +33,13 @@ Options:
            -d type   -- Specify data type: nt or aa. Default: ${datatype}
            -t number -- Specify the number of threads for xxx. Deafult: ${ncores}
            -m crit   -- Model test criterion: BIC, AIC or AICC. Default: ${modeltestcriterion}
-           -b path   -- Full path to BMGE.jar. Current path: ${bmgejar}
            -q        -- Be quiet (noverbose)
            -v        -- Print version
            -h        -- Print help message
 
 Examples:
            $(basename "$0") infolder outfolder
-           $(basename "$0") -d nt -t 8 -b /home/nylander/src/BMGE-1.12/BMGE.jar data out
+           $(basename "$0") -d nt -t 8 data out
 
 Input:
            Fasta formatted sequence files
@@ -60,16 +61,14 @@ End_Of_Usage
 
 
 ### Programs
-pargenes="pargenes.py"
 aligner="mafft" # Name of aligner, not path to binary
 alignerbin="mafft"
 alignerbinopts=' --auto'
 realigner="mafft"
 raxmlng="raxml-ng"
-degap_fasta_alignment="degap_fasta_alignment.pl"
+fastagap="fastagap.pl"
 catfasta2phyml="catfasta2phyml.pl"
 phylip2fasta="phylip2fasta.pl"
-treeshrink="run_treeshrink.py"
 
 prog_exists() {
     if ! command -v "$1" &> /dev/null ; then
@@ -82,12 +81,10 @@ export -f prog_exists
 for p in \
     "${alignerbin}" \
     "${catfasta2phyml}" \
-    "${degap_fasta_alignment}" \
-    "${pargenes}" \
+    "${fastagap}" \
     "${phylip2fasta}" \
     "${raxmlng}" \
-    "${realigner}" \
-    "${treeshrink}" ; do
+    "${realigner}" ; do
     prog_exists "${p}"
 done
 
@@ -111,7 +108,7 @@ vflag=
 qflag=
 hflag=
 
-while getopts 'd:t:m:b:vqh' OPTION
+while getopts 'd:t:m:vqh' OPTION
 do
   case $OPTION in
   d) dflag=1
@@ -122,9 +119,6 @@ do
      ;;
   m) mflag=1
      mval="$OPTARG"
-     ;;
-  b) bflag=1
-     bval="$OPTARG"
      ;;
   v) echo "${version}"
      exit
@@ -186,15 +180,6 @@ if [ "${mflag}" ] ; then
     # Need to check if 'BIC', 'AIC', or 'AICC'(?)
 fi
 
-if [ "${bflag}" ] ; then
-    bmgejar="${bval}"
-fi
-if [ ! -f "${bmgejar}" ] ; then
-    echo "## ALIGN-AND-TREES-WORKFLOW: ERROR: jar file ${bmgejar} could not be found"
-    exit 1
-fi
-
-
 ## Needed for some bash functions
 export runfolder
 export phylip2fasta
@@ -229,42 +214,50 @@ checkNtaxaInFasta() {
 export -f checkNtaxaInFasta
 
 ## Step 1. Alignments with mafft
+## TODO: redirect stderr?
 echo "## ALIGN-AND-TREES-WORKFLOW: Align with ${aligner}"
 mkdir -p "${runfolder}/align/${aligner}"
 find "${unaligned}" -type f -name '*.fas' | \
     parallel ''"${alignerbin}"' '"${alignerbinopts}"' {} > '"${runfolder}"'/align/'"${aligner}"'/{/.}.'"${aligner}"'.ali'
+    #parallel ''"${alignerbin}"' '"${alignerbinopts}"' {} > '"${runfolder}"'/align/'"${aligner}"'/{/.}.'"${aligner}"'.ali 2> /dev/null'
 
 ## Step 2. Check alignments with raxml-ng
+## TODO: redirect stderr?
 echo '## ALIGN-AND-TREES-WORKFLOW: Check alignments with raxml-ng'
 mkdir -p "${runfolder}/align/${aligner}.check"
 ln -s -f "${runfolder}/align/${aligner}"/*.ali "${runfolder}/align/${aligner}.check/"
 cd "${runfolder}/align/${aligner}.check" || exit
 find -L . -type f -name '*.ali' | \
-    parallel ''"${raxmlng}"' --check --msa {} --model '"${modelforraxmltest}"' >/dev/null || true'
+    parallel ''"${raxmlng}"' --check --msa {} --threads 1 --model '"${modelforraxmltest}"' >/dev/null || true'
 
-## Step 3. Find error in logs. If error, remove the ali file
+## Step 3. Find error in logs.
+## TODO: remove also the ali file!
 cd "${runfolder}/align/${aligner}.check" || exit
 echo '## ALIGN-AND-TREES-WORKFLOW: Find error in logs. If error, remove the ali file'
 find . -type f -name '*.log' | \
     parallel 'if grep -q "^ERROR" {} ; then echo "found error in {}"; rm -v {=s/\.raxml\.log//=} ; fi'
 
 ## Step 4. If no .raxml.reduced.phy file was created, create one
+## TODO: Do not use the .reduced.phy alignments! So skip this step. We wish to use all ali files which are not removed above.
 cd "${runfolder}/align/${aligner}.check" || exit
 echo '## ALIGN-AND-TREES-WORKFLOW: If no .raxml.reduced.phy file was created, create one'
 find -L . -type f -name '*.ali' | \
     parallel 'if [ ! -e {}.raxml.reduced.phy ] ; then '"${catfasta2phyml}"' {} 2> /dev/null > {}.raxml.reduced.phy; fi'
 
 ## Step 5. Check and remove if any of the .phy files have less than 4 taxa
+## TODO: Do not use the .reduced.phy alignments! So skip this step. We wish to use all ali files which are not removed above.
 echo '## ALIGN-AND-TREES-WORKFLOW: Check and remove if any of the .reduced.phy files have less than 4 taxa'
 find "${runfolder}/align/${aligner}.check/" -type f -name '*.reduced.phy' | \
     parallel checkNtaxaInPhylip
 
 ## Step 6. Remove all .ali files in the check directory
+## TODO: we actually wish to keep and use the ali files!
 echo '## ALIGN-AND-TREES-WORKFLOW: Remove all .ali files in the check directory'
 cd "${runfolder}/align/${aligner}.check" || exit
 rm ./*.ali ./*.log
 
 ## Step 7. Run first run of BMGE
+## TODO: Do not use the .reduced.phy alignments! Use the ali files
 echo '## ALIGN-AND-TREES-WORKFLOW: Run BMGE'
 mkdir -p "${runfolder}/align/bmge"
 cd "${runfolder}/align/bmge" || exit
@@ -317,7 +310,7 @@ find "${runfolder}/treeshrink/input-bmge" -type f -name 'output.ali' | \
 echo '## ALIGN-AND-TREES-WORKFLOW: Realign using realigner'
 mkdir -p "${runfolder}/treeshrink/realign-bmge"
 find "${runfolder}/treeshrink/input-bmge/" -type f -name 'output.ali' | \
-    parallel 'b=$(basename {//} .ali); '"${realigner}"' --auto --thread '"${threadsforparallel}"' <('"${degap_fasta_alignment}"' --all {}) > '"${runfolder}"'/treeshrink/realign-bmge/"${b//_/\.}.ali"'
+    parallel 'b=$(basename {//} .ali); '"${realigner}"' --auto --thread '"${threadsforparallel}"' <('"${fastagap}"' {}) > '"${runfolder}"'/treeshrink/realign-bmge/"${b//_/\.}.ali"'
 
 ## Step 14. Run pargenes again, finish with ASTRAL
 echo '## ALIGN-AND-TREES-WORKFLOW: Run pargenes again, finish with ASTRAL'
