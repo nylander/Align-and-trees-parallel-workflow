@@ -228,13 +228,13 @@ checkNtaxaInFasta() {
 }
 export -f checkNtaxaInFasta
 
-## Alignments with mafft
+## Step 1. Alignments with mafft
 echo "## ALIGN-AND-TREES-WORKFLOW: Align with ${aligner}"
 mkdir -p "${runfolder}/align/${aligner}"
 find "${unaligned}" -type f -name '*.fas' | \
     parallel ''"${alignerbin}"' '"${alignerbinopts}"' {} > '"${runfolder}"'/align/'"${aligner}"'/{/.}.'"${aligner}"'.ali'
 
-## Check alignments with raxml-ng
+## Step 2. Check alignments with raxml-ng
 echo '## ALIGN-AND-TREES-WORKFLOW: Check alignments with raxml-ng'
 mkdir -p "${runfolder}/align/${aligner}.check"
 ln -s -f "${runfolder}/align/${aligner}"/*.ali "${runfolder}/align/${aligner}.check/"
@@ -242,56 +242,52 @@ cd "${runfolder}/align/${aligner}.check" || exit
 find -L . -type f -name '*.ali' | \
     parallel ''"${raxmlng}"' --check --msa {} --model '"${modelforraxmltest}"' >/dev/null || true'
 
-## Find error in logs. If error, remove the ali file
+## Step 3. Find error in logs. If error, remove the ali file
 cd "${runfolder}/align/${aligner}.check" || exit
 echo '## ALIGN-AND-TREES-WORKFLOW: Find error in logs. If error, remove the ali file'
 find . -type f -name '*.log' | \
     parallel 'if grep -q "^ERROR" {} ; then echo "found error in {}"; rm -v {=s/\.raxml\.log//=} ; fi'
 
-## If no .raxml.reduced.phy file was created, create one
+## Step 4. If no .raxml.reduced.phy file was created, create one
 cd "${runfolder}/align/${aligner}.check" || exit
 echo '## ALIGN-AND-TREES-WORKFLOW: If no .raxml.reduced.phy file was created, create one'
 find -L . -type f -name '*.ali' | \
     parallel 'if [ ! -e {}.raxml.reduced.phy ] ; then '"${catfasta2phyml}"' {} 2> /dev/null > {}.raxml.reduced.phy; fi'
 
-## Check and remove if any of the .phy files have less than 4 taxa
+## Step 5. Check and remove if any of the .phy files have less than 4 taxa
 echo '## ALIGN-AND-TREES-WORKFLOW: Check and remove if any of the .reduced.phy files have less than 4 taxa'
 find "${runfolder}/align/${aligner}.check/" -type f -name '*.reduced.phy' | \
     parallel checkNtaxaInPhylip
 
-## Remove all .ali files in the check directory
+## Step 6. Remove all .ali files in the check directory
 echo '## ALIGN-AND-TREES-WORKFLOW: Remove all .ali files in the check directory'
 cd "${runfolder}/align/${aligner}.check" || exit
 rm ./*.ali ./*.log
 
-## Run first run of BMGE
+## Step 7. Run first run of BMGE
 echo '## ALIGN-AND-TREES-WORKFLOW: Run BMGE'
 mkdir -p "${runfolder}/align/bmge"
 cd "${runfolder}/align/bmge" || exit
 find "${runfolder}/align/${aligner}.check/" -type f -name '*.reduced.phy' | \
     parallel 'java -jar '"${bmgejar}"' -i {} -t '"${datatypeforbmge}"' -o {/.}.bmge.phy'
 
-## Check and remove if any of the .bmge.phy files have less than 4 taxa
+## Step 8. Check and remove if any of the .bmge.phy files have less than 4 taxa
 echo '## ALIGN-AND-TREES-WORKFLOW: Check and remove if any of the .bmge.phy files have less than 4 taxa'
 find "${runfolder}/align/bmge" -type f -name '*.phy' | \
     parallel checkNtaxaInPhylip
 
-## Run pargenes on the .bmge.phy files with fixed model
+## Step 9. Run pargenes on the .bmge.phy files with fixed model
 echo '## ALIGN-AND-TREES-WORKFLOW: Run first round of pargenes (raxml-ng)'
 mkdir -p "${runfolder}/trees"
 cd "${runfolder}/trees" || exit
-#python "${pargenes}" \
 "${pargenes}" \
     --alignments-dir "${runfolder}/align/bmge" \
     --output-dir "${runfolder}/trees/pargenes-bmge" \
     --cores "${ncores}" \
     --datatype "${datatype}" \
     --raxml-global-parameters-string "--model ${modelforpargenesfixed}"
-#    --use-modeltest \
-#    --modeltest-criteria "${modeltestcriterion}" \
-#    --modeltest-perjob-cores "${modeltestperjobcores}"
 
-## Prepare input for threeshrink
+## Step 10. Prepare input for threeshrink
 echo '## ALIGN-AND-TREES-WORKFLOW: Prepare input for threeshrink'
 mkdir -p "${runfolder}/treeshrink/input-bmge"
 copyAndConvert () {
@@ -305,28 +301,26 @@ export -f copyAndConvert
 find "${runfolder}/align/bmge/" -type f -name '*.bmge.phy' | \
     parallel copyAndConvert
 
-## Run treeshrink
+## Step 11. Run treeshrink
 echo '## ALIGN-AND-TREES-WORKFLOW: Run treeshrink'
-#python "${treeshrink}" \
 "${treeshrink}" \
     --indir "${runfolder}/treeshrink/input-bmge" \
     --tree 'raxml.bestTree' \
     --alignment "${aligner}.ali"
 
-## Check and remove if any of the output.ali files have less than 4 taxa
+## Step 12. Check and remove if any of the output.ali files have less than 4 taxa
 echo '## ALIGN-AND-TREES-WORKFLOW: Check and remove if any of the output.ali files from treeshrink have less than 4 taxa'
 find "${runfolder}/treeshrink/input-bmge" -type f -name 'output.ali' | \
     parallel checkNtaxaInFasta
 
-## Realign using realigner
+## Step 13. Realign using realigner
 echo '## ALIGN-AND-TREES-WORKFLOW: Realign using realigner'
 mkdir -p "${runfolder}/treeshrink/realign-bmge"
 find "${runfolder}/treeshrink/input-bmge/" -type f -name 'output.ali' | \
     parallel 'b=$(basename {//} .ali); '"${realigner}"' --auto --thread '"${threadsforparallel}"' <('"${degap_fasta_alignment}"' --all {}) > '"${runfolder}"'/treeshrink/realign-bmge/"${b//_/\.}.ali"'
 
-## Run pargenes again, finish with ASTRAL
+## Step 14. Run pargenes again, finish with ASTRAL
 echo '## ALIGN-AND-TREES-WORKFLOW: Run pargenes again, finish with ASTRAL'
-#python "${pargenes}" \
 "${pargenes}" \
     --alignments-dir "${runfolder}/treeshrink/realign-bmge" \
     --output-dir "${runfolder}/trees/pargenes-bmge-treeshrink" \
