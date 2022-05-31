@@ -1,6 +1,6 @@
 INSTALL for Align-and-trees-workflow
 
-Last modified: tis maj 10, 2022  03:16
+Last modified: Tue May 31, 2022
 Sign: JN
 
 The workflow have been tested on Ubuntu Linux 20.04
@@ -8,7 +8,7 @@ The workflow have been tested on Ubuntu Linux 20.04
 Apart from standard bash commands, a number of additional software, including
 their dependencies, needs to be installed.
 
-Also note that the path to someof theses programs, as well as both hardware- and
+Also note that the path to some of theses programs, as well as both hardware- and
 data type specific settings needs to be manually set in the main script before running.
 
 
@@ -38,9 +38,9 @@ catfasta2phyml.pl (v1.1.0)
 
 `git clone https//github/nylander/catfasta2phyml.git` (and copy `catfasta2phyml.pl` to your path).
 
-degap_fasta_alignment.pl (v2.0):
+fastagap.pl (v1.0):
 
-`wget https://raw.githubusercontent.com/nylander/fastagap/master/degap_fasta_alignment.pl`
+`git clone https://github.com/nylander/fastagap.git` (and copy `fastagap.pl` to your path).
 
 mafft (v7.453):
 
