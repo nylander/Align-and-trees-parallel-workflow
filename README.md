@@ -1,6 +1,6 @@
 # Align-and-trees-parallel-workflow
 
-- Last modified: tis maj 31, 2022  10:04
+- Last modified: ons jun 01, 2022  12:59
 - Sign: Johan.Nylander\@nrm.se
 
 ## Description
@@ -35,7 +35,7 @@ stream analyses. See [example data](data).
 ## Output
 
 - Filtered alignments in `outputfolder/1_align/1.4_mafft_check_bmge_treeshrink/`
-- Gene trees in `outputfolder/2_trees/2.2_mafft_check_bmge_treeshrink_pargenes/xxxx`
+- Gene trees in `outputfolder/2_trees/2.2_mafft_check_bmge_treeshrink_pargenes/mlsearch_run/results`
 - Species tree in `outputfolder/2_trees/2.2_mafft_check_bmge_treeshrink_pargenes/astral_run/`
 
 ## Installation
