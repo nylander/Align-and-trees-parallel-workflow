@@ -13,9 +13,9 @@ nprocs=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || getconf _NPROCESS
 ncores="${nprocs}"
 #ncores='8'               # TODO: Adjust. This value needs to be checked againt hardware and threadsforparallel
 #threadsforparallel='6'   # TODO: Adjust. This value less or equal ncores
-modeltestperjobcores='4' # TODO: Adjust. This value needs to be at least 4
-threadsforaligner='2'    # TODO: Adjust.
-threadsforrealigner='2'  # TODO: Adjust.
+modeltestperjobcores='4'  # TODO: Adjust. This value needs to be at least 4
+threadsforaligner='2'     # TODO: Adjust.
+threadsforrealigner='2'   # TODO: Adjust.
 
 bmgejar="/home/nylander/src/BMGE-1.12/BMGE.jar"              # <<<<<<<<<< CHANGE HERE
 pargenes="/home/nylander/src/ParGenes/pargenes/pargenes.py"  # <<<<<<<<<< CHANGE HERE
@@ -201,9 +201,11 @@ fi
 
 
 ## Needed for some bash functions
+## TODO: Double check which are needed
 export runfolder
 export phylip2fasta
 export aligner
+export realigner
 
 
 ## Function for checking and removing phylip files with less than N taxa
