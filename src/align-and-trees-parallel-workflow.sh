@@ -10,12 +10,11 @@ modeltestcriterion="BIC"
 datatype='nt'
 
 nprocs=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null)
-ncores="${nprocs}"
-#ncores='8'               # TODO: Adjust. This value needs to be checked againt hardware and threadsforparallel
-#threadsforparallel='6'   # TODO: Adjust. This value less or equal ncores
-modeltestperjobcores='4'  # TODO: Adjust. This value needs to be at least 4
-threadsforaligner='2'     # TODO: Adjust.
-threadsforrealigner='2'   # TODO: Adjust.
+ncores="${nprocs}"        # TODO: Do we need to adjust?
+#threadsforparallel='6'   # TODO: Adjust? This value less or equal to ncores?
+modeltestperjobcores='4'  # TODO: Adjust? This value needs to be at least 4!
+threadsforaligner='2'     # TODO: Adjust?
+threadsforrealigner='2'   # TODO: Adjust?
 
 bmgejar="/home/nylander/src/BMGE-1.12/BMGE.jar"              # <<<<<<<<<< CHANGE HERE
 pargenes="/home/nylander/src/ParGenes/pargenes/pargenes.py"  # <<<<<<<<<< CHANGE HERE
@@ -40,7 +39,7 @@ cat <<End_Of_Usage
 $(basename "$0") version ${version}
 
 What:
-           Run phylogenetics in parallel
+           Phylogenetics in parallel
 
 By:
            Johan Nylander
@@ -50,7 +49,7 @@ Usage:
 
 Options:
            -d type   -- Specify data type: nt or aa. Default: ${datatype}
-           -t number -- Specify the number of threads for xxx. Deafult: ${ncores}
+           -t number -- Specify the number of threads. Deafult: ${ncores}
            -m crit   -- Model test criterion: BIC, AIC or AICC. Default: ${modeltestcriterion}
            -v        -- Print version
            -h        -- Print help message
@@ -60,13 +59,15 @@ Examples:
            $(basename "$0") -d nt -t 8 data out
 
 Input:
-           Fasta formatted sequence files (need to have suffix ".fas")
+           Folder with fasta formatted sequence files (files need to have suffix ".fas")
 
 Output:
            Folders with filtered alignments and species- and gene-trees.
+           Summary README.md file.
+           Log file.
 
 Notes:
-           See INSTALL file for needed software.
+           See INSTALL file for software needed.
 
 
 License:   Copyright (C) 2022 nylander <johan.nylander@nrm.se>
@@ -257,7 +258,7 @@ mkdir -p "${runfolder}/1_align/1.2_${aligner}_check"
 ln -s -f "${runfolder}/1_align/1.1_${aligner}"/*.ali "${runfolder}/1_align/1.2_${aligner}_check/"
 cd "${runfolder}/1_align/1.2_${aligner}_check" || exit
 find -L . -type f -name '*.ali' | \
-    parallel ''"${raxmlng}"' --check --msa {} --threads 1 --model '"${modelforraxmltest}"' >/dev/null || true'
+    parallel ''"${raxmlng}"' --check --msa {} --threads 1 --model '"${modelforraxmltest}"'' >> "${logfile}" 2>&1
 
 
 ######################################################################################
@@ -266,9 +267,9 @@ find -L . -type f -name '*.ali' | \
 ## Output: removes 1_align/1.2_mafft.check/*.mafft.ali if error
 ## TODO: redirect stderr? 
 cd "${runfolder}/1_align/1.2_${aligner}_check" || exit
-echo -e "\n## ATPW [$(date "+%F %T")]: Find error in logs. If error, remove the ali file"
+echo -e "\n## ATPW [$(date "+%F %T")]: Look for error in logs. If error, remove the ali file"
 find . -type f -name '*.log' | \
-    parallel 'if grep -q "^ERROR" {} ; then echo "found error in {}"; rm -v {=s/\.raxml\.log//=} ; fi' >> "${logfile}" 2>&1
+    parallel 'if grep -q "^ERROR" {} ; then echo "## ATPW: Found error in {}"; rm -v {=s/\.raxml\.log//=} ; fi' >> "${logfile}" 2>&1
 rm ./*.log ./*.raxml.reduced.phy
 
 
@@ -311,11 +312,10 @@ cd "${runfolder}/2_trees" || exit
 
 
 ######################################################################################
-## Step 7. Prepare input for threeshrink
-## Input: 1_align/1.3_mafft_check_bmge/*.bmge.ali
-## Output: 3_treeshrink/3.1_input-bmge/EOG7B0H2N_mafft_bmge_ali/mafft.ali
-## TODO: 
-echo -e "\n## ATPW [$(date "+%F %T")]: Prepare input for threeshrink" 2>&1 | tee -a "${logfile}"
+## Step 7. Run treeshrink. First prepare the folder structure needed
+## Input: 3_treeshrink/3.1_treeshrink
+## Output: 3_treeshrink/3.1_treeshrink/*/output.ali
+## TODO: describe output
 mkdir -p "${runfolder}/3_treeshrink/3.1_treeshrink"
 copyAndConvert () {
     f=$(basename "$1") # f=EOG7B0H2N.mafft.bmge.ali
@@ -327,13 +327,6 @@ copyAndConvert () {
 export -f copyAndConvert
 find "${runfolder}/1_align/1.3_mafft_check_bmge/" -type f -name '*.bmge.ali' | \
     parallel copyAndConvert >> "${logfile}" 2>&1
-
-
-######################################################################################
-## Step 8. Run treeshrink
-## Input: 3_treeshrink/3.1_treeshrink
-## Output: 3_treeshrink/3.1_treeshrink/*/output.ali
-## TODO: describe output
 echo -e "\n## ATPW [$(date "+%F %T")]: Run treeshrink" 2>&1 | tee -a "${logfile}"
 "${treeshrink}" \
     --indir "${runfolder}/3_treeshrink/3.1_treeshrink" \
@@ -342,7 +335,7 @@ echo -e "\n## ATPW [$(date "+%F %T")]: Run treeshrink" 2>&1 | tee -a "${logfile}
 
 
 ######################################################################################
-## Step 9. Check and remove if any of the output.ali files have less than 4 taxa
+## Step 8. Check and remove if any of the output.ali files have less than 4 taxa
 ## Input: 3_treeshrink/3.1_input-bmge
 ## Output: remove output.ali files
 ## TODO:
@@ -352,7 +345,7 @@ find "${runfolder}/3_treeshrink/3.1_treeshrink" -type f -name 'output.ali' | \
 
 
 ######################################################################################
-## Step 10. Realign using realigner
+## Step 9. Realign using realigner
 ## Input: 3_treeshrink/3.1_input-bmge/
 ## Output: 1_align/1.4_mafft_check_bmge_treeshrink
 ## TODO:
@@ -363,7 +356,7 @@ find "${runfolder}/3_treeshrink/3.1_treeshrink/" -type f -name 'output.ali' | \
 
 
 ######################################################################################
-## Step 11. Run pargenes again, finish with ASTRAL
+## Step 10. Run pargenes again, finish with ASTRAL
 ## Input: 1_align/1.4_mafft_check_bmge_treeshrink/*.mafft.bmge.ali
 ## Output: 2_trees/2.2_mafft_check_bmge_treeshrink_pargenes
 ## TODO:
@@ -380,39 +373,39 @@ echo -e "\n## ATPW [$(date "+%F %T")]: Run pargenes again, finish with ASTRAL" 2
 
 
 ######################################################################################
-## Step 12. Count genes and sequences after each step
+## Step 11. Count genes and sequences after each step
 ## Input:
 ## Output:
-## TODO: report min/max ntax ininput trees for astral
-## 1. count files and sequences in unaligned
+## TODO:
+## Count files and sequences in unaligned
 nf_unaligned=$(find "${unaligned}" -name '*.fas' | wc -l)
 ns_unaligned=$(grep -c -h '>' "${unaligned}"/*.fas | awk '{sum=sum+$1}END{print sum}')
 nt_unaligned=$(grep -h '>' "${unaligned}"/*.fas | sort -u | wc -l)
 
-## 2. count files and sequences in 1.1_mafft
+## Count files and sequences in 1.1_mafft
 nf_mafft=$(find  "${runfolder}/1_align/1.1_${aligner}" -name '*.ali' | wc -l)
 ns_mafft=$(grep -c -h '>' "${runfolder}/1_align/1.1_${aligner}"/*.ali | awk '{sum=sum+$1}END{print sum}')
 nt_mafft=$(grep -h '>' "${runfolder}/1_align/1.1_${aligner}"/*.ali | sort -u | wc -l)
 
-## 3. count files and sequences in 1.2_mafft_check
+## Count files and sequences in 1.2_mafft_check
 nf_mafft_check=$(find -L "${runfolder}/1_align/1.2_${aligner}_check" -name '*.ali' | wc -l)
 ns_mafft_check=$(grep -c -h '>' "${runfolder}/1_align/1.2_${aligner}_check"/*.ali | awk '{sum=sum+$1}END{print sum}')
 nt_mafft_check=$(grep -h '>' "${runfolder}/1_align/1.2_${aligner}_check"/*.ali | sort -u | wc -l)
 
-## 3. count files and sequences in 1.3_mafft_check_bmge
+## Count files and sequences in 1.3_mafft_check_bmge
 nf_mafft_check_bmge=$(find "${runfolder}/1_align/1.3_${aligner}_check_bmge" -name '*.ali' | wc -l)
 ns_mafft_check_bmge=$(grep -c -h '>' "${runfolder}/1_align/1.3_${aligner}_check_bmge"/*.ali | awk '{sum=sum+$1}END{print sum}')
 nt_mafft_check_bmge=$(grep -h '>' "${runfolder}/1_align/1.3_${aligner}_check_bmge"/*.ali | sort -u | wc -l)
 
-## 4. 1.4_mafft_check_bmge_treeshrink
+## Count files and sequences in 1.4_mafft_check_bmge_treeshrink
 nf_mafft_check_bmge_treeshrink=$(find "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink" -name '*.ali' | wc -l)
 ns_mafft_check_bmge_treeshrink=$(grep -c -h '>' "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink"/*.ali | awk '{sum=sum+$1}END{print sum}')
 nt_mafft_check_bmge_treeshrink=$(grep -h '>' "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink"/*.ali | sort -u | wc -l)
 
-## 5. Count taxa in astral tree
+## Count taxa in astral tree
 nt_astral=$(sed 's/[(,]/\n/g' "${runfolder}/2_trees/2.2_mafft_check_bmge_treeshrink_pargenes/astral_run/output_species_tree.newick" | grep -c .)
 
-# 6. Count taxa in input trees to astral
+# Count taxa in input trees to astral
 minntax=
 maxntax=0
 while read -r tree ; do
@@ -426,8 +419,14 @@ while read -r tree ; do
   elif [ "${ntax}" -lt "${minntax}" ] ; then
       minntax="${ntax}"
   fi
-done < "${runfolder}/2_trees/2.2_mafft_check_bmge_treeshrink_pargenes/astral_run/gene_trees.newick
+done < "${runfolder}/2_trees/2.2_mafft_check_bmge_treeshrink_pargenes/astral_run/gene_trees.newick"
 
+
+######################################################################################
+## Step 12. Print README.md
+## Input:
+## Output: README.md
+## TODO:
 
 readme="${runfolder}/README.md"
 outputfolder=$(basename ${runfolder})
@@ -435,38 +434,44 @@ outputfolder=$(basename ${runfolder})
 cat << EOF > "${readme}"
 # Summary 
 
-- Workflow: $(basename "$0")
-- Version: ${version}
-- Completed: $(date "+%F %T")
+## Workflow
+
+Name: \`$(basename "$0")\`
+
+Version: ${version}
+
+Run completed: $(date "+%F %T")
 
 ## Input
 
-Folder ${unaligned} with ${nf_unaligned} files and ${ns_unaligned} sequences.
+\`${unaligned}\`
+
+with ${nf_unaligned} fasta files (${datatype} format). Total of ${ns_unaligned} sequences from ${nt_unaligned} sequence names.
 
 ## Output
 
-#### Run folder
+#### Run folder:
 
-${outputfolder}
+\`${runfolder}\`
 
-#### Logfile
+#### Logfile:
 
-${outputfolder}/align-and-trees-parallel-workflow.log
+[\`align-and-trees-parallel-workflow.log\`](align-and-trees-parallel-workflow.log)
 
-#### The ASTRAL-species tree (${nt_astral} terminals)
+#### The ASTRAL-species tree (${nt_astral} terminals):
 
-${outputfolder}/2_trees/2.2_mafft_check_bmge_treeshrink_pargenes/astral_run/output_species_tree.newick
+[\`2_trees/2.2_mafft_check_bmge_treeshrink_pargenes/astral_run/output_species_tree.newick\`](2_trees/2.2_mafft_check_bmge_treeshrink_pargenes/astral_run/output_species_tree.newick)
 
-#### Gene trees (min Ntax=${minntax}, max Ntax=${maxntax})
+#### Gene trees (min Ntax=${minntax}, max Ntax=${maxntax}):
 
-${outputfolder}/2_trees/2.2_mafft_check_bmge_treeshrink_pargenes/astral_run/mlsearch_run/results/\*/\*.raxml.bestTree
+[\`2_trees/2.2_mafft_check_bmge_treeshrink_pargenes/astral_run/mlsearch_run/results/*/*.raxml.bestTree\`](2_trees/2.2_mafft_check_bmge_treeshrink_pargenes/astral_run/mlsearch_run/results/)
 
-#### Alignments
+#### Alignments:
 
-- ${outputfolder}/1_align/1.1_mafft/\*.ali
-- ${outputfolder}/1_align/1.2_mafft_check/\*.ali
-- ${outputfolder}/1_align/1.3_mafft_check_bmge/\*.ali
-- ${outputfolder}/1_align/1.4_mafft_check_bmge_treeshrink/\*.ali
+1. [\`1_align/1.1_mafft/*.ali\`](1_align/1.1_mafft/)
+2. [\`1_align/1.2_mafft_check/*.ali\`](1_align/1.2_mafft_check/)
+3. [\`1_align/1.3_mafft_check_bmge/*.ali\`](1_align/1.3_mafft_check_bmge/)
+4. [\`1_align/1.4_mafft_check_bmge_treeshrink/*.ali\`](1_align/1.4_mafft_check_bmge_treeshrink/)
 
 ## Filtering summary
 
