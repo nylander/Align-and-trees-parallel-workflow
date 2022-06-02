@@ -300,7 +300,7 @@ find "${runfolder}/1_align/1.3_mafft_check_bmge" -type f -name '*.ali' | \
 ## Input: /1_align/1.3_mafft_check_bmge
 ## Output: /2_trees/2.1_mafft_check_bmge_pargenes
 ## TODO:
-echo -e "\n## ATPW [$(date "+%F %T")]: Run first round of pargenes" 2>&1 | tee -a "${logfile}"
+echo -e "\n## ATPW [$(date "+%F %T")]: Run first round of pargenes (ML-search with fixed model)" 2>&1 | tee -a "${logfile}"
 mkdir -p "${runfolder}/2_trees"
 cd "${runfolder}/2_trees" || exit
 "${pargenes}" \
@@ -360,7 +360,7 @@ find "${runfolder}/3_treeshrink/3.1_treeshrink/" -type f -name 'output.ali' | \
 ## Input: 1_align/1.4_mafft_check_bmge_treeshrink/*.mafft.bmge.ali
 ## Output: 2_trees/2.2_mafft_check_bmge_treeshrink_pargenes
 ## TODO:
-echo -e "\n## ATPW [$(date "+%F %T")]: Run pargenes again, finish with ASTRAL" 2>&1 | tee -a "${logfile}"
+echo -e "\n## ATPW [$(date "+%F %T")]: Run pargenes again with model selection, finish with ASTRAL" 2>&1 | tee -a "${logfile}"
 "${pargenes}" \
     --alignments-dir "${runfolder}/1_align/1.4_mafft_check_bmge_treeshrink" \
     --output-dir "${runfolder}/2_trees/2.2_mafft_check_bmge_treeshrink_pargenes" \
