@@ -9,8 +9,10 @@ logfile=
 modeltestcriterion="BIC"
 datatype='nt'
 
-ncores='8'               # TODO: Adjust. This value needs to be checked againt hardware and threadsforparallel
-threadsforparallel='6'   # TODO: Adjust. This value less or equal ncores
+nprocs=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null)
+ncores="${nprocs}"
+#ncores='8'               # TODO: Adjust. This value needs to be checked againt hardware and threadsforparallel
+#threadsforparallel='6'   # TODO: Adjust. This value less or equal ncores
 modeltestperjobcores='4' # TODO: Adjust. This value needs to be at least 4
 threadsforaligner='2'    # TODO: Adjust.
 threadsforrealigner='2'  # TODO: Adjust.
