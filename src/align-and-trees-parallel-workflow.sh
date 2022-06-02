@@ -32,6 +32,7 @@ fastagap="fastagap.pl"
 catfasta2phyml="catfasta2phyml.pl"
 phylip2fasta="phylip2fasta.pl"
 
+
 ## Usage
 function usage {
 cat <<End_Of_Usage
@@ -51,7 +52,6 @@ Options:
            -d type   -- Specify data type: nt or aa. Default: ${datatype}
            -t number -- Specify the number of threads for xxx. Deafult: ${ncores}
            -m crit   -- Model test criterion: BIC, AIC or AICC. Default: ${modeltestcriterion}
-           -q        -- Be quiet (noverbose)
            -v        -- Print version
            -h        -- Print help message
 
@@ -97,7 +97,7 @@ for p in \
 done
 
 
-### Model-selection criterion and default models
+## Model-selection criterion and default models
 modelforraxmltest='GTR'
 datatypeforbmge='DNA'
 modelforpargenesfixed='GTR+G8+F'
@@ -113,10 +113,9 @@ dflag=
 tflag=
 mflag=
 vflag=
-qflag=
 hflag=
 
-while getopts 'd:t:m:vqh' OPTION
+while getopts 'd:t:m:vh' OPTION
 do
   case $OPTION in
   d) dflag=1
@@ -130,9 +129,6 @@ do
      ;;
   v) echo "${version}"
      exit
-     ;;
-  q) qflag=1
-     quiet=1
      ;;
   h) usage
      exit
@@ -177,10 +173,14 @@ else
 fi
 
 
-## Check other args
+## Check options
 if [ "${dflag}" ] ; then
-    datatype="${dval}"
-    ## TODO: Need to check if 'nt' or 'aa'
+    lcdval=${dval,,} # to lowercase
+    if [[ "${lcdval}" != @(nt|aa) ]] ; then
+        echo "\n## ATPW [$(date "+%F %T")]: ERROR! -d should be 'nt' or 'aa'" 2>&1 | tee "${logfile}"
+    else
+        datatype="${lcdval}"
+    fi
 fi
 
 if [ "${tflag}" ] ; then
@@ -189,14 +189,12 @@ if [ "${tflag}" ] ; then
 fi
 
 if [ "${mflag}" ] ; then
-    modeltestcriterion="${mval}"
-    ## TODO: Need to check if 'BIC', 'AIC', or 'AICC'(?)
-fi
-
-## Mute mafft
-if [ "${qflag}" ] ; then
-    alignerbinopts="${qalignerbinopts}"
-    realignerbinopts="${qrealignerbinopts}"
+    lcmval=${mval,,} # to lowercase
+    if [[ "${lcdval}" != @(bic|aic|aicc) ]] ; then
+        echo "\n## ATPW [$(date "+%F %T")]: ERROR! -m should be 'bic', 'aic', or 'aicc'" 2>&1 | tee "${logfile}"
+    else
+        modeltestcriterion="${lcmval}"
+    fi
 fi
 
 
@@ -453,6 +451,7 @@ ${outputfolder}/1_align/
 | 5. | TreeShrink | ${nf_mafft_check_bmge_treeshrink} | ${ns_mafft_check_bmge_treeshrink} |
 
 EOF
+
 
 ######################################################################################
 ## End
