@@ -383,26 +383,51 @@ echo -e "\n## ATPW [$(date "+%F %T")]: Run pargenes again, finish with ASTRAL" 2
 ## Step 12. Count genes and sequences after each step
 ## Input:
 ## Output:
-## TODO:
-# 1. count files and sequences in unaligned
+## TODO: report min/max ntax ininput trees for astral
+## 1. count files and sequences in unaligned
 nf_unaligned=$(find "${unaligned}" -name '*.fas' | wc -l)
 ns_unaligned=$(grep -c -h '>' "${unaligned}"/*.fas | awk '{sum=sum+$1}END{print sum}')
+nt_unaligned=$(grep -h '>' "${unaligned}"/*.fas | sort -u | wc -l)
 
-# 2. count files and sequences in 1.1_mafft
+## 2. count files and sequences in 1.1_mafft
 nf_mafft=$(find  "${runfolder}/1_align/1.1_${aligner}" -name '*.ali' | wc -l)
 ns_mafft=$(grep -c -h '>' "${runfolder}/1_align/1.1_${aligner}"/*.ali | awk '{sum=sum+$1}END{print sum}')
+nt_mafft=$(grep -h '>' "${runfolder}/1_align/1.1_${aligner}"/*.ali | sort -u | wc -l)
 
-# 3. count files and sequences in 1.2_mafft_check
+## 3. count files and sequences in 1.2_mafft_check
 nf_mafft_check=$(find -L "${runfolder}/1_align/1.2_${aligner}_check" -name '*.ali' | wc -l)
 ns_mafft_check=$(grep -c -h '>' "${runfolder}/1_align/1.2_${aligner}_check"/*.ali | awk '{sum=sum+$1}END{print sum}')
+nt_mafft_check=$(grep -h '>' "${runfolder}/1_align/1.2_${aligner}_check"/*.ali | sort -u | wc -l)
 
-# 3. count files and sequences in 1.3_mafft_check_bmge
+## 3. count files and sequences in 1.3_mafft_check_bmge
 nf_mafft_check_bmge=$(find "${runfolder}/1_align/1.3_${aligner}_check_bmge" -name '*.ali' | wc -l)
 ns_mafft_check_bmge=$(grep -c -h '>' "${runfolder}/1_align/1.3_${aligner}_check_bmge"/*.ali | awk '{sum=sum+$1}END{print sum}')
+nt_mafft_check_bmge=$(grep -h '>' "${runfolder}/1_align/1.3_${aligner}_check_bmge"/*.ali | sort -u | wc -l)
 
-# 4. 1.4_mafft_check_bmge_treeshrink
+## 4. 1.4_mafft_check_bmge_treeshrink
 nf_mafft_check_bmge_treeshrink=$(find "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink" -name '*.ali' | wc -l)
 ns_mafft_check_bmge_treeshrink=$(grep -c -h '>' "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink"/*.ali | awk '{sum=sum+$1}END{print sum}')
+nt_mafft_check_bmge_treeshrink=$(grep -h '>' "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink"/*.ali | sort -u | wc -l)
+
+## 5. Count taxa in astral tree
+nt_astral=$(sed 's/[(,]/\n/g' "${runfolder}/2_trees/2.2_mafft_check_bmge_treeshrink_pargenes/astral_run/output_species_tree.newick" | grep -c .)
+
+# 6. Count taxa in input trees to astral
+minntax=
+maxntax=0
+while read -r tree ; do
+  ntax=$(echo "${tree}" | sed 's/[(,]/\n/g' | grep -c .)
+  if [ "${minntax}" = '' ] ; then
+      minntax="${ntax}"
+      maxntax="${ntax}"
+  fi
+  if [ "${ntax}" -gt "${maxntax}" ] ; then
+      maxntax="${ntax}"
+  elif [ "${ntax}" -lt "${minntax}" ] ; then
+      minntax="${ntax}"
+  fi
+done < "${runfolder}/2_trees/2.2_mafft_check_bmge_treeshrink_pargenes/astral_run/gene_trees.newick
+
 
 readme="${runfolder}/README.md"
 outputfolder=$(basename ${runfolder})
@@ -428,27 +453,30 @@ ${outputfolder}
 
 ${outputfolder}/align-and-trees-parallel-workflow.log
 
-#### The ASTRAL-species tree
+#### The ASTRAL-species tree (${nt_astral} terminals)
 
 ${outputfolder}/2_trees/2.2_mafft_check_bmge_treeshrink_pargenes/astral_run/output_species_tree.newick
 
-#### Gene trees
+#### Gene trees (min Ntax=${minntax}, max Ntax=${maxntax})
 
 ${outputfolder}/2_trees/2.2_mafft_check_bmge_treeshrink_pargenes/astral_run/mlsearch_run/results/\*/\*.raxml.bestTree
 
-#### Filtered alignments
+#### Alignments
 
-${outputfolder}/1_align/
+- ${outputfolder}/1_align/1.1_mafft/\*.ali
+- ${outputfolder}/1_align/1.2_mafft_check/\*.ali
+- ${outputfolder}/1_align/1.3_mafft_check_bmge/\*.ali
+- ${outputfolder}/1_align/1.4_mafft_check_bmge_treeshrink/\*.ali
 
 ## Filtering summary
 
-| Step | Tool | Nfiles | Nseqs |
-| ---  | --- | --- | --- |
-| 1. | Unaligned | ${nf_unaligned} | ${ns_unaligned} |
-| 2. | Mafft | ${nf_mafft} | ${ns_mafft} |
-| 3. | Check w. raxml | ${nf_mafft_check} | ${ns_mafft_check} |
-| 4. | BMGE | ${nf_mafft_check_bmge} | ${ns_mafft_check_bmge} |
-| 5. | TreeShrink | ${nf_mafft_check_bmge_treeshrink} | ${ns_mafft_check_bmge_treeshrink} |
+| Step | Tool | Nfiles | Nseqs | Ntax |
+| ---  | --- | --- | --- | --- |
+| 1. | Unaligned | ${nf_unaligned} | ${ns_unaligned} | ${nt_unaligned} |
+| 2. | Mafft | ${nf_mafft} | ${ns_mafft} | ${nt_mafft} |
+| 3. | Check w. raxml | ${nf_mafft_check} | ${ns_mafft_check} | ${nt_mafft_check} |
+| 4. | BMGE | ${nf_mafft_check_bmge} | ${ns_mafft_check_bmge} | ${nt_mafft_check_bmge} |
+| 5. | TreeShrink | ${nf_mafft_check_bmge_treeshrink} | ${ns_mafft_check_bmge_treeshrink} | ${nt_mafft_check_bmge_treeshrink} |
 
 EOF
 
