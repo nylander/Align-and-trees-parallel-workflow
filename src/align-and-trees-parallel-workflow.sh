@@ -271,20 +271,11 @@ cd "${runfolder}/1_align/1.2_${aligner}_check" || exit
 echo -e "\n## ATPW [$(date "+%F %T")]: Find error in logs. If error, remove the ali file"
 find . -type f -name '*.log' | \
     parallel 'if grep -q "^ERROR" {} ; then echo "found error in {}"; rm -v {=s/\.raxml\.log//=} ; fi' >> "${logfile}" 2>&1
-
-
-######################################################################################
-## Step 4. Remove all .ali files in the check directory
-## Input: folder 1_align/1.2_mafft_check
-## Output: Removes *.log *.raxml.reduced.phy
-## TODO:
-echo -e "\n## ATPW [$(date "+%F %T")]: Remove some files in the check directory" 2>&1 | tee -a "${logfile}"
-cd "${runfolder}/1_align/1.2_${aligner}_check" || exit
 rm ./*.log ./*.raxml.reduced.phy
 
 
 ######################################################################################
-## Step 5. Run first run of BMGE
+## Step 4. Run first run of BMGE
 ## Input: 1_align/1.2_mafft_check/*.mafft.ali (symlinks)
 ## Output: 1_align/1.3_mafft_check_bmge/*.bmge.ali
 ## TODO:
@@ -296,17 +287,17 @@ find -L "${runfolder}/1_align/1.2_${aligner}_check/" -type f -name '*.ali' | \
 
 
 ######################################################################################
-## Step 6. Check and remove if any of the .mafft.bmge.ali files have less than 4 taxa
+## Step 5. Check and remove if any of the .mafft.bmge.ali files have less than 4 taxa
 ## Input: 1_align/1.3_mafft_check_bmge/*.mafft.bmge.ali
 ## Output: remove /1_align/1.3_mafft_check_bmge/*.mafft.bmge.ali files
 ## TODO:
-echo -e "\n## ATPW [$(date "+%F %T")]: Check and remove if any of the .bmge.phy files have less than 4 taxa" 2>&1 | tee -a "${logfile}"
+echo -e "\n## ATPW [$(date "+%F %T")]: Check and remove if any of the files from BMGE have less than 4 taxa" 2>&1 | tee -a "${logfile}"
 find "${runfolder}/1_align/1.3_mafft_check_bmge" -type f -name '*.ali' | \
     parallel checkNtaxaInFasta >> "${logfile}" 2>&1
 
 
 ######################################################################################
-## Step 7. Run pargenes on the .bmge.ali files with fixed model
+## Step 6. Run pargenes on the .bmge.ali files with fixed model
 ## Input: /1_align/1.3_mafft_check_bmge
 ## Output: /2_trees/2.1_mafft_check_bmge_pargenes
 ## TODO:
@@ -322,7 +313,7 @@ cd "${runfolder}/2_trees" || exit
 
 
 ######################################################################################
-## Step 8. Prepare input for threeshrink
+## Step 7. Prepare input for threeshrink
 ## Input: 1_align/1.3_mafft_check_bmge/*.bmge.ali
 ## Output: 3_treeshrink/3.1_input-bmge/EOG7B0H2N_mafft_bmge_ali/mafft.ali
 ## TODO: 
@@ -341,7 +332,7 @@ find "${runfolder}/1_align/1.3_mafft_check_bmge/" -type f -name '*.bmge.ali' | \
 
 
 ######################################################################################
-## Step 9. Run treeshrink
+## Step 8. Run treeshrink
 ## Input: 3_treeshrink/3.1_treeshrink
 ## Output: 3_treeshrink/3.1_treeshrink/*/output.ali
 ## TODO: describe output
@@ -353,17 +344,17 @@ echo -e "\n## ATPW [$(date "+%F %T")]: Run treeshrink" 2>&1 | tee -a "${logfile}
 
 
 ######################################################################################
-## Step 10. Check and remove if any of the output.ali files have less than 4 taxa
+## Step 9. Check and remove if any of the output.ali files have less than 4 taxa
 ## Input: 3_treeshrink/3.1_input-bmge
 ## Output: remove output.ali files
 ## TODO:
-echo -e "\n## ATPW [$(date "+%F %T")]: Check and remove if any of the output.ali files from treeshrink have less than 4 taxa" 2>&1 | tee -a "${logfile}"
+echo -e "\n## ATPW [$(date "+%F %T")]: Check and remove if any of the files from treeshrink have less than 4 taxa" 2>&1 | tee -a "${logfile}"
 find "${runfolder}/3_treeshrink/3.1_treeshrink" -type f -name 'output.ali' | \
     parallel checkNtaxaInFasta >> "${logfile}" 2>&1
 
 
 ######################################################################################
-## Step 11. Realign using realigner
+## Step 10. Realign using realigner
 ## Input: 3_treeshrink/3.1_input-bmge/
 ## Output: 1_align/1.4_mafft_check_bmge_treeshrink
 ## TODO:
@@ -374,7 +365,7 @@ find "${runfolder}/3_treeshrink/3.1_treeshrink/" -type f -name 'output.ali' | \
 
 
 ######################################################################################
-## Step 12. Run pargenes again, finish with ASTRAL
+## Step 11. Run pargenes again, finish with ASTRAL
 ## Input: 1_align/1.4_mafft_check_bmge_treeshrink/*.mafft.bmge.ali
 ## Output: 2_trees/2.2_mafft_check_bmge_treeshrink_pargenes
 ## TODO:
@@ -391,7 +382,7 @@ echo -e "\n## ATPW [$(date "+%F %T")]: Run pargenes again, finish with ASTRAL" 2
 
 
 ######################################################################################
-## Step 13. Count genes and sequences after each step
+## Step 12. Count genes and sequences after each step
 ## Input:
 ## Output:
 ## TODO:
