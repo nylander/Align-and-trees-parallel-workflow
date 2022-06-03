@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-## Default settings
+# Default settings
 version="0.6"
 logfile=
 modeltestcriterion="BIC"
@@ -10,7 +10,6 @@ datatype='nt'
 
 nprocs=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null)
 ncores="${nprocs}"        # TODO: Do we need to adjust?
-#threadsforparallel='6'   # TODO: Adjust? This value less or equal to ncores?
 modeltestperjobcores='4'  # TODO: Adjust? This value needs to be at least 4!
 threadsforaligner='2'     # TODO: Adjust?
 threadsforrealigner='2'   # TODO: Adjust?
@@ -31,7 +30,7 @@ catfasta2phyml="catfasta2phyml.pl"
 phylip2fasta="phylip2fasta.pl"
 
 
-## Usage
+# Usage
 function usage {
 cat <<End_Of_Usage
 
@@ -76,49 +75,51 @@ End_Of_Usage
 }
 
 
-## Check programs
+# Check programs
 prog_exists() {
-    if ! command -v "$1" &> /dev/null ; then
-        echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! $1 could not be found"
-        exit 1
-    fi
+  if ! command -v "$1" &> /dev/null ; then
+    echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! $1 could not be found"
+    exit 1
+  fi
 }
 export -f prog_exists
 
 
 for p in \
-    "${alignerbin}" \
-    "${catfasta2phyml}" \
-    "${fastagap}" \
-    "${phylip2fasta}" \
-    "${raxmlng}" \
-    "${realigner}" ; do
-    prog_exists "${p}"
+  "${alignerbin}" \
+  "${catfasta2phyml}" \
+  "${fastagap}" \
+  "${phylip2fasta}" \
+  "${raxmlng}" \
+  "${realigner}" \
+  "${pargenes}" \
+  "${treeshrink}" ; do
+  prog_exists "${p}"
 done
 
-for p in \
-    "${pargenes}" \
-    "${treeshrink}" ; do
-    if [ ! -x "$(command -v ${p})" ] ; then
-        echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! ${p} is not an executable file ${p}"
-        exit 1
-    fi
-done
+#for p in \
+#  "${pargenes}" \
+#  "${treeshrink}" ; do
+#  if [ ! -x "$(command -v ${p})" ] ; then
+#    echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! ${p} is not an executable file ${p}"
+#    exit 1
+#  fi
+#done
 
 
 
-## Model-selection criterion and default models
+# Model-selection criterion and default models
 modelforraxmltest='GTR'
 datatypeforbmge='DNA'
 modelforpargenesfixed='GTR+G8+F'
 if [ "${datatype}" = 'aa' ] ; then
-    datatypeforbmge='AA'
-    modelforraxmltest='LG'
-    modelforpargenesfixed='LG+G8+F'
+  datatypeforbmge='AA'
+  modelforraxmltest='LG'
+  modelforpargenesfixed='LG+G8+F'
 fi
 
 
-## Arguments
+# Arguments
 dflag=
 tflag=
 mflag=
@@ -151,70 +152,70 @@ done
 shift $((OPTIND - 1))
 
 
-## Check if args are folders and create log file
+# Check if args are folders and create log file
 if [ $# -ne 2 ]; then
-    echo 1>&2 "Usage: $0 [options] /path/to/folder/with/fas/files /path/to/output/folder"
-    exit 1
+  echo 1>&2 "Usage: $0 [options] /path/to/folder/with/fas/files /path/to/output/folder"
+  exit 1
 else
-    unaligned=$(readlink -f "$1")
-    runfolder=$(readlink -f "$2")
+  unaligned=$(readlink -f "$1")
+  runfolder=$(readlink -f "$2")
 fi
 
 if [ -d "${runfolder}" ]; then
-    echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! folder ${runfolder} exists"
-    exit 1
+  echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! folder ${runfolder} exists"
+  exit 1
 else
-    mkdir -p "${runfolder}"
-    mkdir -p "${runfolder}/1_align"
-    mkdir -p "${runfolder}/2_trees"
-    mkdir -p "${runfolder}/3_treeshrink"
-    logfile="${runfolder}/align-and-trees-parallel-workflow.log"
-    echo -e "\n## ATPW [$(date "+%F %T")]: Start" 2>&1 | tee "${logfile}"
-    echo -e "\n## ATPW [$(date "+%F %T")]: Created output folder ${runfolder}" 2>&1 | tee "${logfile}"
+  mkdir -p "${runfolder}"
+  mkdir -p "${runfolder}/1_align"
+  mkdir -p "${runfolder}/2_trees"
+  mkdir -p "${runfolder}/3_treeshrink"
+  logfile="${runfolder}/align-and-trees-parallel-workflow.log"
+  echo -e "\n## ATPW [$(date "+%F %T")]: Start" 2>&1 | tee "${logfile}"
+  echo -e "\n## ATPW [$(date "+%F %T")]: Created output folder ${runfolder}" 2>&1 | tee "${logfile}"
 fi
 
 if [ -d "${unaligned}" ] ; then
-    if [ "$(find "${unaligned}" -name '*.fas' | wc -l)" -gt 1 ] ; then
-        echo -e "\n## ATPW [$(date "+%F %T")]: Found .fas files in folder ${unaligned}" 2>&1 | tee "${logfile}"
-    else
-        echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! Could not find .fas files in folder ${unaligned}" 2>&1 | tee "${logfile}"
-        exit 1
-    fi
+  if [ "$(find "${unaligned}" -name '*.fas' | wc -l)" -gt 1 ] ; then
+    echo -e "\n## ATPW [$(date "+%F %T")]: Found .fas files in folder ${unaligned}" 2>&1 | tee "${logfile}"
+  else
+    echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! Could not find .fas files in folder ${unaligned}" 2>&1 | tee "${logfile}"
+      exit 1
+  fi
 else
-    echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! Folder ${unaligned} can not be found" 2>&1 | tee "${logfile}"
-    exit 1
+  echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! Folder ${unaligned} can not be found" 2>&1 | tee "${logfile}"
+  exit 1
 fi
 
 
 ## Check options
 if [ ! "${dflag}" ] ; then
-    echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! Need to supply data type ('nt' or 'aa') with '-d'\n" 2>&1 | tee "${logfile}"
-    exit 1
+  echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! Need to supply data type ('nt' or 'aa') with '-d'\n" 2>&1 | tee "${logfile}"
+  exit 1
 elif [ "${dflag}" ] ; then
-    lcdval=${dval,,} # to lowercase
-    if [[ "${lcdval}" != @(nt|aa) ]] ; then
-        echo "\n## ATPW [$(date "+%F %T")]: ERROR! -d should be 'nt' or 'aa'" 2>&1 | tee "${logfile}"
-        exit 1
-    fi
+  lcdval=${dval,,} # to lowercase
+  if [[ "${lcdval}" != @(nt|aa) ]] ; then
+    echo "\n## ATPW [$(date "+%F %T")]: ERROR! -d should be 'nt' or 'aa'" 2>&1 | tee "${logfile}"
+    exit 1
+  fi
 fi
 
 if [ "${tflag}" ] ; then
-    threads="${tval}"
-    ncores="${threads}" # TODO: differentiate these variables
+  threads="${tval}"
+  ncores="${threads}" # TODO: differentiate these variables
 fi
 
 if [ "${mflag}" ] ; then
-    lcmval=${mval,,} # to lowercase
-    if [[ "${lcdval}" != @(bic|aic|aicc) ]] ; then
-        echo "\n## ATPW [$(date "+%F %T")]: ERROR! -m should be 'bic', 'aic', or 'aicc'" 2>&1 | tee "${logfile}"
-    else
-        modeltestcriterion="${lcmval}"
-    fi
+  lcmval=${mval,,} # to lowercase
+  if [[ "${lcdval}" != @(bic|aic|aicc) ]] ; then
+    echo "\n## ATPW [$(date "+%F %T")]: ERROR! -m should be 'bic', 'aic', or 'aicc'" 2>&1 | tee "${logfile}"
+  else
+    modeltestcriterion="${lcmval}"
+  fi
 fi
 
 
-## Needed for some bash functions
-## TODO: Double check which are needed
+# Needed for some bash functions
+# TODO: Double check which are needed
 export runfolder
 export phylip2fasta
 export aligner
@@ -222,284 +223,312 @@ export realigner
 
 
 checkNtaxaInPhylip() {
-    ## Function for checking and removing phylip files with less than N taxa
-    ## If other max N, use, e.g., "parallel checkNtaxaInPhylip {} 10"
-    f=$1
-    n=${2:-4} # default 4
-    b=$(basename "${f}")
-    ntax=$(grep -m1 -oP '\K\d+(?=\s)' "${f}")
-    if [[ "${ntax}" -lt $n ]] ; then
-        echo -e "${b} have less than ${n} taxa: (${ntax})."
-        rm -v "${f}"
-    fi
+
+  # Function for checking and removing phylip files with less than N taxa
+  # If other max N, use, e.g., "parallel checkNtaxaInPhylip {} 10"
+
+  f=$1
+  n=${2:-4} # default 4
+  b=$(basename "${f}")
+  ntax=$(grep -m1 -oP '\K\d+(?=\s)' "${f}")
+  if [[ "${ntax}" -lt $n ]] ; then
+    echo -e "${b} have less than ${n} taxa: (${ntax})."
+      rm -v "${f}"
+  fi
 }
 export -f checkNtaxaInPhylip
 
 
 checkNtaxaInFasta() {
-    ## Function for checking and removing fasta files with less than N taxa
-    ## If other max N, use, e.g., "parallel checkNtaxaInFasta {} 10"
-    f=$1
-    n=${2:-4} # default 4
-    b=$(basename "${f}")
-    ntax=$(grep -c '>' "${f}")
-    if [[ "${ntax}" -lt $n ]] ; then
-        echo -e "${b} have less than ${n} taxa: (${ntax})."
-        rm -v "${f}"
-    fi
+
+  # Function for checking and removing fasta files with less than N taxa
+  # If other max N, use, e.g., "parallel checkNtaxaInFasta {} 10"
+
+  f=$1
+  n=${2:-4} # default 4
+  b=$(basename "${f}")
+  ntax=$(grep -c '>' "${f}")
+  if [[ "${ntax}" -lt $n ]] ; then
+    echo -e "${b} have less than ${n} taxa: (${ntax})."
+    rm -v "${f}"
+  fi
 }
 export -f checkNtaxaInFasta
 
 
 
 align() {
-    ## Alignments with mafft
-    ## Input: inputfolder/*.fas
-    ## Output: aligned files (*.ali) in folder 1_align/1.1_mafft/
-    ## Call: align "${unaligned}" "${runfolder}/1_align/1.1_${aligner}"
-    ## TODO: use threads
-    local inputfolder="$1"
-    local outputfolder="$2"
-    echo -e "\n## ATPW [$(date "+%F %T")]: Align with ${aligner}" 2>&1 | tee -a "${logfile}"
-    mkdir -p "${outputfolder}"
-    find "${inputfolder}" -type f -name '*.fas' | \
-        parallel ''"${alignerbin}"' '"${alignerbinopts}"' {} > '"${outputfolder}"'/{/.}.'"${aligner}"'.ali' >> "${logfile}" 2>&1
+
+  # Alignments with mafft
+  # Input: inputfolder/*.fas
+  # Output: aligned files (*.ali) in folder 1_align/1.1_mafft/
+  # Call: align "${unaligned}" "${runfolder}/1_align/1.1_${aligner}"
+  # TODO: use threads
+
+  local inputfolder="$1"
+  local outputfolder="$2"
+  echo -e "\n## ATPW [$(date "+%F %T")]: Align with ${aligner}" 2>&1 | tee -a "${logfile}"
+  mkdir -p "${outputfolder}"
+  find "${inputfolder}" -type f -name '*.fas' | \
+    parallel ''"${alignerbin}"' '"${alignerbinopts}"' {} > '"${outputfolder}"'/{/.}.'"${aligner}"'.ali' >> "${logfile}" 2>&1
 }
 
 
 checkAlignmentWithRaxml() {
-    ## Check alignments with raxml-ng
-    ## Input: 1_align/1.2_mafft_check/*.mafft.ali
-    ## Output: Folder 1_align/1.2_mafft_check/
-    ## Call: checkAlignmentWithRaxml "${runfolder}/1_align/1.1_${aligner}" "${runfolder}/1_align/1.2_${aligner}_check"
-    ## TODO:
-    local inputfolder="$1"
-    local outputfolder="$2"
-    echo -e "\n## ATPW [$(date "+%F %T")]: Check alignments with raxml-ng" | tee -a "${logfile}"
-    mkdir -p "${outputfolder}"
-    ln -s -f "${inputfolder}"/*.ali "${outputfolder}"
-    cd "${outputfolder}" || exit
-    find -L . -type f -name '*.ali' | \
-        parallel ''"${raxmlng}"' --check --msa {} --threads 1 --model '"${modelforraxmltest}"'' >> "${logfile}" 2>&1
-    find . -type f -name '*.log' | \
-        parallel 'if grep -q "^ERROR" {} ; then echo "## ATPW: Found error in {}"; rm -v {=s/\.raxml\.log//=} ; fi' >> "${logfile}" 2>&1
-    rm ./*.log ./*.raxml.reduced.phy
-    cd .. || exit
+
+  # Check alignments with raxml-ng
+  # Input: 1_align/1.2_mafft_check/*.mafft.ali
+  # Output: Folder 1_align/1.2_mafft_check/
+  # Call: checkAlignmentWithRaxml "${runfolder}/1_align/1.1_${aligner}" "${runfolder}/1_align/1.2_${aligner}_check"
+  # TODO:
+
+  local inputfolder="$1"
+  local outputfolder="$2"
+  echo -e "\n## ATPW [$(date "+%F %T")]: Check alignments with raxml-ng" | tee -a "${logfile}"
+  mkdir -p "${outputfolder}"
+  ln -s -f "${inputfolder}"/*.ali "${outputfolder}"
+  cd "${outputfolder}" || exit
+  find -L . -type f -name '*.ali' | \
+    parallel ''"${raxmlng}"' --check --msa {} --threads 1 --model '"${modelforraxmltest}"'' >> "${logfile}" 2>&1
+  find . -type f -name '*.log' | \
+    parallel 'if grep -q "^ERROR" {} ; then echo "## ATPW: Found error in {}"; rm -v {=s/\.raxml\.log//=} ; fi' >> "${logfile}" 2>&1
+  rm ./*.log ./*.raxml.reduced.phy
+  cd .. || exit
 }
 
 
 runBmge() {
-    ## Run BMGE
-    ## Input: 1_align/1.2_mafft_check/*.mafft.ali (symlinks)
-    ## Output: 1_align/1.3_mafft_check_bmge/*.bmge.ali
-    ## Call: runBmge "${runfolder}/1_align/1.2_${aligner}_check/" "${runfolder}/1_align/1.3_mafft_check_bmge"
-    ## TODO:
-    local inputfolder="$1"
-    local outputfolder="$2"
-    echo -e "\n## ATPW [$(date "+%F %T")]: Run BMGE" | tee -a "${logfile}"
-    mkdir -p "${outputfolder}"
-    cd "${outputfolder}" || exit
-    find -L "${inputfolder}/" -type f -name '*.ali' | \
-        parallel 'java -jar '"${bmgejar}"' -i {} -t '"${datatypeforbmge}"' -of {/.}.bmge.ali' >> "${logfile}" 2>&1
-    cd .. || exit
+
+  # Run BMGE
+  # Input: 1_align/1.2_mafft_check/*.mafft.ali (symlinks)
+  # Output: 1_align/1.3_mafft_check_bmge/*.bmge.ali
+  # Call: runBmge "${runfolder}/1_align/1.2_${aligner}_check/" "${runfolder}/1_align/1.3_mafft_check_bmge"
+  # TODO:
+
+  local inputfolder="$1"
+  local outputfolder="$2"
+  echo -e "\n## ATPW [$(date "+%F %T")]: Run BMGE" | tee -a "${logfile}"
+  mkdir -p "${outputfolder}"
+  cd "${outputfolder}" || exit
+  find -L "${inputfolder}/" -type f -name '*.ali' | \
+    parallel 'java -jar '"${bmgejar}"' -i {} -t '"${datatypeforbmge}"' -of {/.}.bmge.ali' >> "${logfile}" 2>&1
+  cd .. || exit
 }
 
 
 checkNtaxa() {
-    ## Check and remove if any of the .ali files have less than 4 taxa
-    ## Input: 1_align/1.3_mafft_check_bmge/*.mafft.bmge.ali
-    ## Output: remove /1_align/1.3_mafft_check_bmge/*.mafft.bmge.ali files
-    ## Call: checkNtaxa 1_align/1.3_mafft_check_bmge/ 4
-    ## TODO: Have this function create yet another folder? Use symlinks for files from inputfolder?
-    local inputfolder="$1"
-    local min="$2"
-    echo -e "\n## ATPW [$(date "+%F %T")]: Check and remove if any of the files from BMGE have less than 4 taxa" 2>&1 | tee -a "${logfile}"
-    find "${inputfolder}" -type f -name '*.ali' | \
-        parallel 'checkNtaxaInFasta '"${min}"''>> "${logfile}" 2>&1
+
+  # Check and remove if any of the .ali files have less than 4 taxa
+  # Input: 1_align/1.3_mafft_check_bmge/*.mafft.bmge.ali
+  # Output: remove /1_align/1.3_mafft_check_bmge/*.mafft.bmge.ali files
+  # Call: checkNtaxa 1_align/1.3_mafft_check_bmge/ 4
+  # TODO: Have this function create yet another folder? Use symlinks for files from inputfolder?
+
+  local inputfolder="$1"
+  local min="$2"
+  echo -e "\n## ATPW [$(date "+%F %T")]: Check and remove if any of the files from BMGE have less than 4 taxa" 2>&1 | tee -a "${logfile}"
+  find "${inputfolder}" -type f -name '*.ali' | \
+    parallel 'checkNtaxaInFasta '"${min}"''>> "${logfile}" 2>&1
 }
 
 
 checkNtaxaOutputAli() {
-    ## Check and remove if any of the output.ali files have less than 4 taxa
-    ## Input: 1_align/1.3_mafft_check_bmge/*.mafft.bmge.ali
-    ## Output: remove /1_align/1.3_mafft_check_bmge/*.mafft.bmge.ali files
-    ## Call: checkNtaxaOutputAli 1_align/1.3_mafft_check_bmge/ 4
-    ## TODO: Use when we have other .ali files except the output.ali from treeshrink
-    local inputfolder="$1"
-    local min="$2"
-    echo -e "\n## ATPW [$(date "+%F %T")]: Check and remove if any of the files from BMGE have less than 4 taxa" 2>&1 | tee -a "${logfile}"
-    find "${inputfolder}" -type f -name 'output.ali' | \
-        parallel 'checkNtaxaInFasta '"${min}"''>> "${logfile}" 2>&1
+
+  # Check and remove if any of the output.ali files have less than 4 taxa
+  # Input: 1_align/1.3_mafft_check_bmge/*.mafft.bmge.ali
+  # Output: remove /1_align/1.3_mafft_check_bmge/*.mafft.bmge.ali files
+  # Call: checkNtaxaOutputAli 1_align/1.3_mafft_check_bmge/ 4
+  # TODO: Use when we have other .ali files except the output.ali from treeshrink
+
+  local inputfolder="$1"
+  local min="$2"
+  echo -e "\n## ATPW [$(date "+%F %T")]: Check and remove if any of the files from BMGE have less than 4 taxa" 2>&1 | tee -a "${logfile}"
+  find "${inputfolder}" -type f -name 'output.ali' | \
+    parallel 'checkNtaxaInFasta '"${min}"''>> "${logfile}" 2>&1
 }
 
 
 pargenesFixedModel() {
-    ## Run pargenes with fixed model
-    ## Input: /1_align/1.3_mafft_check_bmge
-    ## Output: /2_trees/2.1_mafft_check_bmge_pargenes
-    ## Call: pargenesFixedModel "${runfolder}/1_align/1.3_mafft_check_bmge" "${runfolder}/2_trees/2.1_mafft_check_bmge_pargenes"
-    ## TODO: Create the "${runfolder}/2_trees" outside the function!
-    local inputfolder="$1"
-    local outputfolder="$2"
-    echo -e "\n## ATPW [$(date "+%F %T")]: Run pargenes with fixed model" 2>&1 | tee -a "${logfile}"
-    "${pargenes}" \
-        --alignments-dir "${inputfolder}" \
-        --output-dir "${outputfolder}" \
-        --cores "${ncores}" \
-        --datatype "${datatype}" \
-        --raxml-global-parameters-string "--model ${modelforpargenesfixed}" >> "${logfile}" 2>&1
+
+  # Run pargenes with fixed model
+  # Input: /1_align/1.3_mafft_check_bmge
+  # Output: /2_trees/2.1_mafft_check_bmge_pargenes
+  # Call: pargenesFixedModel "${runfolder}/1_align/1.3_mafft_check_bmge" "${runfolder}/2_trees/2.1_mafft_check_bmge_pargenes"
+  # TODO: Create the "${runfolder}/2_trees" outside the function!
+
+  local inputfolder="$1"
+  local outputfolder="$2"
+  echo -e "\n## ATPW [$(date "+%F %T")]: Run pargenes with fixed model" 2>&1 | tee -a "${logfile}"
+  "${pargenes}" \
+    --alignments-dir "${inputfolder}" \
+    --output-dir "${outputfolder}" \
+    --cores "${ncores}" \
+    --datatype "${datatype}" \
+    --raxml-global-parameters-string "--model ${modelforpargenesfixed}" >> "${logfile}" 2>&1
 }
 
 
 setupTreeshrink() {
-    ## Setup data for TreeShrink
-    ## Input: 3_treeshrink/3.1_treeshrink
-    ## Output: 3_treeshrink/3.1_treeshrink
-    ## Call: setupTreeshrink "${runfolder}/2_trees/2.1_mafft_check_bmge_pargenes/mlsearch_run/results "${runfolder}/1_align/1.3_mafft_check_bmge" "${runfolder}/3_treeshrink/3.1_treeshrink"
-    ## TODO:
-    inputfolderone="$1" # where to look for trees
-    inputfoldertwo="$2" # where to look for alignments
-    outputfolderthree="$3"
-    export inputfolderone
-    export inputfoldertwo
-    export outputfolderthree
-    mkdir -p "${outputfolderthree}"
-    copyAndConvert () {
-        local f=$(basename "$1") # f=EOG7B0H2N.mafft.bmge.ali
-        local s="${f//\./_}"     # s=EOG7B0H2N_mafft_bmge_ali
-        mkdir -p "${outputfolderthree}/${s}"
-        ln -s "${inputfolderone}/${s}/${s}.raxml.bestTree" "${outputfolderthree}/${s}/raxml.bestTree"
-        ln -s "${inputfoldertwo}/${f}" "${outputfolderthree}/${s}/${aligner}.ali"
-    }
-    export -f copyAndConvert
-    find "${inputfoldertwo}" -type f -name '*.bmge.ali' | \
-        parallel copyAndConvert >> "${logfile}" 2>&1
+
+ # Setup data for TreeShrink
+ # Input: 3_treeshrink/3.1_treeshrink
+ # Output: 3_treeshrink/3.1_treeshrink
+ # Call: setupTreeshrink "${runfolder}/2_trees/2.1_mafft_check_bmge_pargenes/mlsearch_run/results "${runfolder}/1_align/1.3_mafft_check_bmge" "${runfolder}/3_treeshrink/3.1_treeshrink"
+ # TODO:
+
+ inputfolderone="$1" # where to look for trees
+ inputfoldertwo="$2" # where to look for alignments
+ outputfolderthree="$3"
+ export inputfolderone
+ export inputfoldertwo
+ export outputfolderthree
+ mkdir -p "${outputfolderthree}"
+ copyAndConvert () {
+   local f=$(basename "$1") # f=EOG7B0H2N.mafft.bmge.ali
+   local s="${f//\./_}"     # s=EOG7B0H2N_mafft_bmge_ali
+   mkdir -p "${outputfolderthree}/${s}"
+   ln -s "${inputfolderone}/${s}/${s}.raxml.bestTree" "${outputfolderthree}/${s}/raxml.bestTree"
+   ln -s "${inputfoldertwo}/${f}" "${outputfolderthree}/${s}/${aligner}.ali"
+ }
+ export -f copyAndConvert
+ find "${inputfoldertwo}" -type f -name '*.bmge.ali' | \
+   parallel copyAndConvert >> "${logfile}" 2>&1
 }
 
 
 runTreeshrink() {
-    ## Run TreeShrink
-    ## Input: 3_treeshrink/3.1_treeshrink
-    ## Output: 3_treeshrink/3.1_treeshrink
-    ## Call: runTreeshrink  "${runfolder}/3_treeshrink/3.1_treeshrink"
-    local inputfolder="$1"
-    echo -e "\n## ATPW [$(date "+%F %T")]: Run treeshrink" 2>&1 | tee -a "${logfile}"
-    "${treeshrink}" \
-        --indir "${inputfolder}" \
-        --tree 'raxml.bestTree' \
-        --alignment "${aligner}.ali" >> "${logfile}" 2>&1
+
+  # Run TreeShrink
+  # Input: 3_treeshrink/3.1_treeshrink
+  # Output: 3_treeshrink/3.1_treeshrink
+  # Call: runTreeshrink  "${runfolder}/3_treeshrink/3.1_treeshrink"
+
+  local inputfolder="$1"
+  echo -e "\n## ATPW [$(date "+%F %T")]: Run treeshrink" 2>&1 | tee -a "${logfile}"
+  "${treeshrink}" \
+    --indir "${inputfolder}" \
+    --tree 'raxml.bestTree' \
+    --alignment "${aligner}.ali" >> "${logfile}" 2>&1
 }
 
 
 realignerOutputAli() {
-    ## Realign using realigner (search for "output.ali" files)
-    ## Input: 3_treeshrink/3.1_input-bmge/
-    ## Output: 1_align/1.4_mafft_check_bmge_treeshrink
-    ## Call: realignerOutputAli  "${runfolder}/3_treeshrink/3.1_treeshrink/" "${runfolder}/1_align/1.4_mafft_check_bmge_treeshrink"
-    ## TODO: Check if I can avoid the specific search for "output.ali" (there are other .ali files in in the input folder, but they are symlinks!)
-    local inputfolder="$1"
-    local outputfolder="$2"
-    echo -e "\n## ATPW [$(date "+%F %T")]: Realign using ${realigner}" 2>&1 | tee -a "${logfile}"
-    mkdir -p "${outputfolder}"
-    find "${inputfolder}" -type f -name 'output.ali' | \
-        parallel 'b=$(basename {//} .ali); '"${realigner}"' '"${realignerbinopts}"' <('"${fastagap}"' {}) > '"${outputfolder}"'/"${b//_/\.}"' >> "${logfile}" 2>&1
+
+  # Realign using realigner (search for "output.ali" files)
+  # Input: 3_treeshrink/3.1_input-bmge/
+  # Output: 1_align/1.4_mafft_check_bmge_treeshrink
+  # Call: realignerOutputAli  "${runfolder}/3_treeshrink/3.1_treeshrink/" "${runfolder}/1_align/1.4_mafft_check_bmge_treeshrink"
+  # TODO: Check if I can avoid the specific search for "output.ali" (there are other .ali files in in the input folder, but they are symlinks!)
+
+  local inputfolder="$1"
+  local outputfolder="$2"
+  echo -e "\n## ATPW [$(date "+%F %T")]: Realign using ${realigner}" 2>&1 | tee -a "${logfile}"
+  mkdir -p "${outputfolder}"
+  find "${inputfolder}" -type f -name 'output.ali' | \
+    parallel 'b=$(basename {//} .ali); '"${realigner}"' '"${realignerbinopts}"' <('"${fastagap}"' {}) > '"${outputfolder}"'/"${b//_/\.}"' >> "${logfile}" 2>&1
 }
 
 
 realignerAli() {
-    ## Realign using realigner (search for ".ali" files)
-    ## Input: 3_treeshrink/3.1_input-bmge/
-    ## Output: 1_align/1.4_mafft_check_bmge_treeshrink
-    ## Call: realignerOutputAli  "${runfolder}/3_treeshrink/3.1_treeshrink/" "${runfolder}/1_align/1.4_mafft_check_bmge_treeshrink"
-    ## TODO: Check if I can avoid the specific search for "output.ali" (there are other .ali files in in the input folder, but they are symlinks!)
-    local inputfolder="$1"
-    local outputfolder="$2"
-    echo -e "\n## ATPW [$(date "+%F %T")]: Realign using ${realigner}" 2>&1 | tee -a "${logfile}"
-    mkdir -p "${outputfolder}"
-    find "${inputfolder}" -type f -name '*.ali' | \
-        parallel 'b=$(basename {//} .ali); '"${realigner}"' '"${realignerbinopts}"' <('"${fastagap}"' {}) > '"${outputfolder}"'/"${b//_/\.}"' >> "${logfile}" 2>&1
+
+  # Realign using realigner (search for ".ali" files)
+  # Input: 3_treeshrink/3.1_input-bmge/
+  # Output: 1_align/1.4_mafft_check_bmge_treeshrink
+  # Call: realignerOutputAli  "${runfolder}/3_treeshrink/3.1_treeshrink/" "${runfolder}/1_align/1.4_mafft_check_bmge_treeshrink"
+  # TODO: Check if I can avoid the specific search for "output.ali" (there are other .ali files in in the input folder, but they are symlinks!)
+
+  local inputfolder="$1"
+  local outputfolder="$2"
+  echo -e "\n## ATPW [$(date "+%F %T")]: Realign using ${realigner}" 2>&1 | tee -a "${logfile}"
+  mkdir -p "${outputfolder}"
+  find "${inputfolder}" -type f -name '*.ali' | \
+    parallel 'b=$(basename {//} .ali); '"${realigner}"' '"${realignerbinopts}"' <('"${fastagap}"' {}) > '"${outputfolder}"'/"${b//_/\.}"' >> "${logfile}" 2>&1
 }
 
 
 pargenesModeltestAstral() {
-    ## Run pargenes with modeltest, finish with ASTRAL
-    ## Input: /1_align/1.3_mafft_check_bmge
-    ## Output: /2_trees/2.1_mafft_check_bmge_pargenes
-    ## Call: pargenesModeltestAstral "${runfolder}/1_align/1.4_mafft_check_bmge_treeshrink" "${runfolder}/2_trees/2.2_mafft_check_bmge_treeshrink_pargenes"
-    ## TODO:
-    local inputfolder="$1"
-    local outputfolder="$2"
-    echo -e "\n## ATPW [$(date "+%F %T")]: Run pargenes with model selection, finish with ASTRAL" 2>&1 | tee -a "${logfile}"
-    "${pargenes}" \
-        --alignments-dir "${inputfolder}" \
-        --output-dir "${outputfolder}" \
-        --cores "${ncores}" \
-        --datatype "${datatype}" \
-        --use-modeltest \
-        --modeltest-criteria "${modeltestcriterion}" \
-        --modeltest-perjob-cores "${modeltestperjobcores}" \
-        --use-astral >> "${logfile}" 2>&1
+
+  # Run pargenes with modeltest, finish with ASTRAL
+  # Input: /1_align/1.3_mafft_check_bmge
+  # Output: /2_trees/2.1_mafft_check_bmge_pargenes
+  # Call: pargenesModeltestAstral "${runfolder}/1_align/1.4_mafft_check_bmge_treeshrink" "${runfolder}/2_trees/2.2_mafft_check_bmge_treeshrink_pargenes"
+  # TODO:
+
+  local inputfolder="$1"
+  local outputfolder="$2"
+  echo -e "\n## ATPW [$(date "+%F %T")]: Run pargenes with model selection, finish with ASTRAL" 2>&1 | tee -a "${logfile}"
+  "${pargenes}" \
+    --alignments-dir "${inputfolder}" \
+    --output-dir "${outputfolder}" \
+    --cores "${ncores}" \
+    --datatype "${datatype}" \
+    --use-modeltest \
+    --modeltest-criteria "${modeltestcriterion}" \
+    --modeltest-perjob-cores "${modeltestperjobcores}" \
+    --use-astral >> "${logfile}" 2>&1
 }
 
 
 count() {
-    ## Count genes and sequences after each step
-    ## Input:
-    ## Output:
-    ## Call: count
-    ## TODO: Rewrite to avoid hard codes parts
-    
-    ## Count files and sequences in unaligned
-    nf_unaligned=$(find "${unaligned}" -name '*.fas' | wc -l)
-    ns_unaligned=$(grep -c -h '>' "${unaligned}"/*.fas | awk '{sum=sum+$1}END{print sum}')
-    nt_unaligned=$(grep -h '>' "${unaligned}"/*.fas | sort -u | wc -l)
 
-    ## Count files and sequences in 1.1_mafft
-    nf_mafft=$(find  "${runfolder}/1_align/1.1_${aligner}" -name '*.ali' | wc -l)
-    ns_mafft=$(grep -c -h '>' "${runfolder}/1_align/1.1_${aligner}"/*.ali | awk '{sum=sum+$1}END{print sum}')
-    nt_mafft=$(grep -h '>' "${runfolder}/1_align/1.1_${aligner}"/*.ali | sort -u | wc -l)
+  # Count genes and sequences after each step
+  # Input:
+  # Output:
+  # Call: count
+  # TODO: Rewrite to avoid hard codes parts
+  
+  # Count files and sequences in unaligned
+  nf_unaligned=$(find "${unaligned}" -name '*.fas' | wc -l)
+  ns_unaligned=$(grep -c -h '>' "${unaligned}"/*.fas | awk '{sum=sum+$1}END{print sum}')
+  nt_unaligned=$(grep -h '>' "${unaligned}"/*.fas | sort -u | wc -l)
 
-    ## Count files and sequences in 1.2_mafft_check
-    nf_mafft_check=$(find -L "${runfolder}/1_align/1.2_${aligner}_check" -name '*.ali' | wc -l)
-    ns_mafft_check=$(grep -c -h '>' "${runfolder}/1_align/1.2_${aligner}_check"/*.ali | awk '{sum=sum+$1}END{print sum}')
-    nt_mafft_check=$(grep -h '>' "${runfolder}/1_align/1.2_${aligner}_check"/*.ali | sort -u | wc -l)
+  # Count files and sequences in 1.1_mafft
+  nf_mafft=$(find  "${runfolder}/1_align/1.1_${aligner}" -name '*.ali' | wc -l)
+  ns_mafft=$(grep -c -h '>' "${runfolder}/1_align/1.1_${aligner}"/*.ali | awk '{sum=sum+$1}END{print sum}')
+  nt_mafft=$(grep -h '>' "${runfolder}/1_align/1.1_${aligner}"/*.ali | sort -u | wc -l)
 
-    ## Count files and sequences in 1.3_mafft_check_bmge
-    nf_mafft_check_bmge=$(find "${runfolder}/1_align/1.3_${aligner}_check_bmge" -name '*.ali' | wc -l)
-    ns_mafft_check_bmge=$(grep -c -h '>' "${runfolder}/1_align/1.3_${aligner}_check_bmge"/*.ali | awk '{sum=sum+$1}END{print sum}')
-    nt_mafft_check_bmge=$(grep -h '>' "${runfolder}/1_align/1.3_${aligner}_check_bmge"/*.ali | sort -u | wc -l)
+  # Count files and sequences in 1.2_mafft_check
+  nf_mafft_check=$(find -L "${runfolder}/1_align/1.2_${aligner}_check" -name '*.ali' | wc -l)
+  ns_mafft_check=$(grep -c -h '>' "${runfolder}/1_align/1.2_${aligner}_check"/*.ali | awk '{sum=sum+$1}END{print sum}')
+  nt_mafft_check=$(grep -h '>' "${runfolder}/1_align/1.2_${aligner}_check"/*.ali | sort -u | wc -l)
 
-    ## Count files and sequences in 1.4_mafft_check_bmge_treeshrink
-    nf_mafft_check_bmge_treeshrink=$(find "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink" -name '*.ali' | wc -l)
-    ns_mafft_check_bmge_treeshrink=$(grep -c -h '>' "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink"/*.ali | awk '{sum=sum+$1}END{print sum}')
-    nt_mafft_check_bmge_treeshrink=$(grep -h '>' "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink"/*.ali | sort -u | wc -l)
+  # Count files and sequences in 1.3_mafft_check_bmge
+  nf_mafft_check_bmge=$(find "${runfolder}/1_align/1.3_${aligner}_check_bmge" -name '*.ali' | wc -l)
+  ns_mafft_check_bmge=$(grep -c -h '>' "${runfolder}/1_align/1.3_${aligner}_check_bmge"/*.ali | awk '{sum=sum+$1}END{print sum}')
+  nt_mafft_check_bmge=$(grep -h '>' "${runfolder}/1_align/1.3_${aligner}_check_bmge"/*.ali | sort -u | wc -l)
 
-    ## Count taxa in astral tree
-    nt_astral=$(sed 's/[(,]/\n/g' "${runfolder}/2_trees/2.2_mafft_check_bmge_treeshrink_pargenes/astral_run/output_species_tree.newick" | grep -c .)
+  # Count files and sequences in 1.4_mafft_check_bmge_treeshrink
+  nf_mafft_check_bmge_treeshrink=$(find "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink" -name '*.ali' | wc -l)
+  ns_mafft_check_bmge_treeshrink=$(grep -c -h '>' "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink"/*.ali | awk '{sum=sum+$1}END{print sum}')
+  nt_mafft_check_bmge_treeshrink=$(grep -h '>' "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink"/*.ali | sort -u | wc -l)
 
-    # Count taxa in input trees to astral
-    minntax=
-    maxntax=0
-    while read -r tree ; do
-        ntax=$(echo "${tree}" | sed 's/[(,]/\n/g' | grep -c .)
-        if [ "${minntax}" = '' ] ; then
-            minntax="${ntax}"
-            maxntax="${ntax}"
-        fi
-        if [ "${ntax}" -gt "${maxntax}" ] ; then
-            maxntax="${ntax}"
-        elif [ "${ntax}" -lt "${minntax}" ] ; then
-            minntax="${ntax}"
-        fi
-    done < "${runfolder}/2_trees/2.2_mafft_check_bmge_treeshrink_pargenes/astral_run/gene_trees.newick"
+  # Count taxa in astral tree
+  nt_astral=$(sed 's/[(,]/\n/g' "${runfolder}/2_trees/2.2_mafft_check_bmge_treeshrink_pargenes/astral_run/output_species_tree.newick" | grep -c .)
+
+  # Count taxa in input trees to astral
+  minntax=
+  maxntax=0
+  while read -r tree ; do
+    ntax=$(echo "${tree}" | sed 's/[(,]/\n/g' | grep -c .)
+    if [ "${minntax}" = '' ] ; then
+      minntax="${ntax}"
+      maxntax="${ntax}"
+    fi
+    if [ "${ntax}" -gt "${maxntax}" ] ; then
+      maxntax="${ntax}"
+    elif [ "${ntax}" -lt "${minntax}" ] ; then
+      minntax="${ntax}"
+    fi
+  done < "${runfolder}/2_trees/2.2_mafft_check_bmge_treeshrink_pargenes/astral_run/gene_trees.newick"
 }
 
 createReadme() {
-## Print README.md
-## Input:
-## Output: README.md
-## Call: createReadme
-## TODO:
+
+# Print README.md
+# Input:
+# Output: README.md
+# Call: createReadme
+# TODO:
 
 readme="${runfolder}/README.md"
 outputfolder=$(basename ${runfolder})
@@ -561,10 +590,7 @@ EOF
 }
 
 
-
-
-######################################################################################
-## MAIN
+# MAIN
 
 align "${unaligned}" "${runfolder}/1_align/1.1_${aligner}"
 
@@ -590,7 +616,7 @@ count
 
 createReadme
 
-## End
+# End
 echo -e "\n## ATPW [$(date "+%F %T")]: Reached end of the script\n" 2>&1 | tee -a "${logfile}"
 
 exit 0
