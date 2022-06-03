@@ -1,6 +1,6 @@
 # Align-and-trees-parallel-workflow
 
-- Last modified: ons jun 01, 2022  12:59
+- Last modified: fre jun 03, 2022  01:32
 - Sign: Johan.Nylander\@nrm.se
 
 ## Description
@@ -10,18 +10,18 @@ In particular, parallel execution is done whenever possible.
 
 On unfiltered fasta files,
 
-1. Create multiple sequence alignments with mafft
-2. Filter alignments using BMGE
-3. Infer phylogenetic trees for each locus with fixed model using pargenes and raxml-ng
-4. Filter trees using treeshrink
-5. Do multiple sequence alignments on tree-filtered data using mafft
-6. Infer phylogenetic trees for each locus with model selection using pargenes and raxml-ng
-7. Estimate species tree from individual trees using ASTRAL
+1. Create multiple sequence alignments with [mafft](https://mafft.cbrc.jp/alignment/software/)
+2. Filter alignments using [BMGE](https://bmcecolevol.biomedcentral.com/articles/10.1186/1471-2148-10-210)
+3. Infer phylogenetic trees for each locus with fixed model using [pargenes](https://github.com/BenoitMorel/ParGenes) and [raxml-ng](https://github.com/amkozlov/raxml-ng)
+4. Filter trees using [TreeShrink](https://github.com/uym2/TreeShrink)
+5. Do multiple sequence alignments on treeshrink-filtered data using mafft
+6. Infer phylogenetic trees for each locus with [model selection](https://github.com/ddarriba/modeltest) using pargenes and raxml-ng
+7. Estimate species tree from individual trees using [ASTRAL](https://github.com/smirarab/ASTRAL)
 
 ## Usage
 
-    align-and-trees-parallel-workflow.sh [options] /path/to/folder/with/fas/files /path/to/output/folder
-    align-and-trees-parallel-workflow.sh -h
+    $ align-and-trees-parallel-workflow.sh [options] /path/to/folder/with/fas/files /path/to/output/folder
+    $ align-and-trees-parallel-workflow.sh -h
 
 ## Input data
 
@@ -34,9 +34,11 @@ stream analyses. See [example data](data).
 
 ## Output
 
-- Filtered alignments in `outputfolder/1_align/1.4_mafft_check_bmge_treeshrink/`
+- Alignments in `outputfolder/1_align/`
 - Gene trees in `outputfolder/2_trees/2.2_mafft_check_bmge_treeshrink_pargenes/mlsearch_run/results`
 - Species tree in `outputfolder/2_trees/2.2_mafft_check_bmge_treeshrink_pargenes/astral_run/`
+- Log file in `outputfolder/align-and-trees-parallel-workflow.log`
+- Summary file in `outputfolder/README.md`
 
 ## Installation
 
@@ -44,10 +46,8 @@ See the [`INSTALL`](INSTALL) file.
 
 ### Important caveats
 
-1. Current version with command line options is experimental.
-2. The path to some helper software **need to be hard coded (full path) in the script**.
-3. The optimal total number of cores in combination with the number of parallel processes for GNU parallel,
+* The path to some helper software **need to be hard coded (full path) in the script**.
+* The optimal total number of cores in combination with the number of parallel processes for GNU parallel,
 and in combination with number of cores used for child processes are not yet optimized, nor checked for
-inconsistencies. **Please adjust in the script as needed** (check your max N cores on your hardware).
-4. Spell check of arguments are not yet implemented.
+inconsistencies.
 
