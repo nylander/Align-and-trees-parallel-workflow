@@ -79,7 +79,7 @@ End_Of_Usage
 ## Check programs
 prog_exists() {
     if ! command -v "$1" &> /dev/null ; then
-        echo -e "\n## ALIGN-AND-TREES-WORKFLOW: ERROR: $1 could not be found"
+        echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! $1 could not be found"
         exit 1
     fi
 }
@@ -95,6 +95,16 @@ for p in \
     "${realigner}" ; do
     prog_exists "${p}"
 done
+
+for p in \
+    "${pargenes}" \
+    "${treeshrink}" ; do
+    if [ ! -x "$(command -v ${p})" ] ; then
+        echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! ${p} is not an executable file ${p}"
+        exit 1
+    fi
+done
+
 
 
 ## Model-selection criterion and default models
