@@ -77,13 +77,13 @@ End_Of_Usage
 
 # Check programs
 prog_exists() {
-  if ! command -v "$1" &> /dev/null ; then
-    echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! $1 could not be found"
+    if [ ! -x "$(command -v "$1")" ] ; then
+    echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! No executable file $1"
     exit 1
   fi
 }
-export -f prog_exists
 
+export -f prog_exists
 
 for p in \
   "${alignerbin}" \
@@ -96,16 +96,6 @@ for p in \
   "${treeshrink}" ; do
   prog_exists "${p}"
 done
-
-#for p in \
-#  "${pargenes}" \
-#  "${treeshrink}" ; do
-#  if [ ! -x "$(command -v ${p})" ] ; then
-#    echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! ${p} is not an executable file ${p}"
-#    exit 1
-#  fi
-#done
-
 
 
 # Model-selection criterion and default models
@@ -175,8 +165,9 @@ else
 fi
 
 if [ -d "${unaligned}" ] ; then
-  if [ "$(find "${unaligned}" -name '*.fas' | wc -l)" -gt 1 ] ; then
-    echo -e "\n## ATPW [$(date "+%F %T")]: Found .fas files in folder ${unaligned}" 2>&1 | tee "${logfile}"
+    nfas=$(find "${unaligned}" -name '*.fas' | wc -l)
+  if [ "${nfas}" -gt 1 ] ; then
+    echo -e "\n## ATPW [$(date "+%F %T")]: Found ${nfas} .fas files in folder ${unaligned}" 2>&1 | tee "${logfile}"
   else
     echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! Could not find .fas files in folder ${unaligned}" 2>&1 | tee "${logfile}"
       exit 1
