@@ -82,7 +82,6 @@ prog_exists() {
     exit 1
   fi
 }
-
 export -f prog_exists
 
 for p in \
@@ -212,7 +211,7 @@ export phylip2fasta
 export aligner
 export realigner
 
-
+# Functions
 checkNtaxaInPhylip() {
 
   # Function for checking and removing phylip files with less than N taxa
@@ -228,7 +227,6 @@ checkNtaxaInPhylip() {
   fi
 }
 export -f checkNtaxaInPhylip
-
 
 checkNtaxaInFasta() {
 
@@ -246,8 +244,6 @@ checkNtaxaInFasta() {
 }
 export -f checkNtaxaInFasta
 
-
-
 align() {
 
   # Alignments with mafft
@@ -263,7 +259,6 @@ align() {
   find "${inputfolder}" -type f -name '*.fas' | \
     parallel ''"${alignerbin}"' '"${alignerbinopts}"' {} > '"${outputfolder}"'/{/.}.'"${aligner}"'.ali' >> "${logfile}" 2>&1
 }
-
 
 checkAlignmentWithRaxml() {
 
@@ -287,7 +282,6 @@ checkAlignmentWithRaxml() {
   cd .. || exit
 }
 
-
 runBmge() {
 
   # Run BMGE
@@ -306,7 +300,6 @@ runBmge() {
   cd .. || exit
 }
 
-
 checkNtaxa() {
 
   # Check and remove if any of the .ali files have less than 4 taxa
@@ -322,7 +315,6 @@ checkNtaxa() {
     parallel 'checkNtaxaInFasta '"${min}"''>> "${logfile}" 2>&1
 }
 
-
 checkNtaxaOutputAli() {
 
   # Check and remove if any of the output.ali files have less than 4 taxa
@@ -337,7 +329,6 @@ checkNtaxaOutputAli() {
   find "${inputfolder}" -type f -name 'output.ali' | \
     parallel 'checkNtaxaInFasta '"${min}"''>> "${logfile}" 2>&1
 }
-
 
 pargenesFixedModel() {
 
@@ -357,7 +348,6 @@ pargenesFixedModel() {
     --datatype "${datatype}" \
     --raxml-global-parameters-string "--model ${modelforpargenesfixed}" >> "${logfile}" 2>&1
 }
-
 
 setupTreeshrink() {
 
@@ -386,7 +376,6 @@ setupTreeshrink() {
    parallel copyAndConvert >> "${logfile}" 2>&1
 }
 
-
 runTreeshrink() {
 
   # Run TreeShrink
@@ -401,7 +390,6 @@ runTreeshrink() {
     --tree 'raxml.bestTree' \
     --alignment "${aligner}.ali" >> "${logfile}" 2>&1
 }
-
 
 realignerOutputAli() {
 
@@ -419,7 +407,6 @@ realignerOutputAli() {
     parallel 'b=$(basename {//} .ali); '"${realigner}"' '"${realignerbinopts}"' <('"${fastagap}"' {}) > '"${outputfolder}"'/"${b//_/\.}"' >> "${logfile}" 2>&1
 }
 
-
 realignerAli() {
 
   # Realign using realigner (search for ".ali" files)
@@ -435,7 +422,6 @@ realignerAli() {
   find "${inputfolder}" -type f -name '*.ali' | \
     parallel 'b=$(basename {//} .ali); '"${realigner}"' '"${realignerbinopts}"' <('"${fastagap}"' {}) > '"${outputfolder}"'/"${b//_/\.}"' >> "${logfile}" 2>&1
 }
-
 
 pargenesModeltestAstral() {
 
@@ -458,7 +444,6 @@ pargenesModeltestAstral() {
     --modeltest-perjob-cores "${modeltestperjobcores}" \
     --use-astral >> "${logfile}" 2>&1
 }
-
 
 count() {
 
@@ -580,9 +565,7 @@ EOF
 
 }
 
-
 # MAIN
-
 align "${unaligned}" "${runfolder}/1_align/1.1_${aligner}"
 
 checkAlignmentWithRaxml "${runfolder}/1_align/1.1_${aligner}" "${runfolder}/1_align/1.2_${aligner}_check"
