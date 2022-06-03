@@ -3,8 +3,7 @@
 set -euo pipefail
 
 ## Default settings
-version="0.5"
-quiet=0 # TODO: Use this option
+version="0.6"
 logfile=
 modeltestcriterion="BIC"
 datatype='nt'
@@ -45,17 +44,16 @@ By:
            Johan Nylander
 
 Usage:
-           $(basename "$0") [option] infolder outfolder
+           $(basename "$0") -d nt|aa [options] infolder outfolder
 
 Options:
-           -d type   -- Specify data type: nt or aa. Default: ${datatype}
-           -t number -- Specify the number of threads. Deafult: ${ncores}
+           -d type   -- Specify data type: nt or aa. (Mandatory)
+           -t number -- Specify the number of threads. Default: ${ncores}
            -m crit   -- Model test criterion: BIC, AIC or AICC. Default: ${modeltestcriterion}
            -v        -- Print version
            -h        -- Print help message
 
 Examples:
-           $(basename "$0") infolder outfolder
            $(basename "$0") -d nt -t 8 data out
 
 Input:
@@ -179,12 +177,14 @@ fi
 
 
 ## Check options
-if [ "${dflag}" ] ; then
+if [ ! "${dflag}" ] ; then
+    echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! Need to supply data type ('nt' or 'aa') with '-d'\n" 2>&1 | tee "${logfile}"
+    exit 1
+elif [ "${dflag}" ] ; then
     lcdval=${dval,,} # to lowercase
     if [[ "${lcdval}" != @(nt|aa) ]] ; then
         echo "\n## ATPW [$(date "+%F %T")]: ERROR! -d should be 'nt' or 'aa'" 2>&1 | tee "${logfile}"
-    else
-        datatype="${lcdval}"
+        exit 1
     fi
 fi
 

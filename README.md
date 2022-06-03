@@ -1,6 +1,6 @@
 # Align-and-trees-parallel-workflow
 
-- Last modified: fre jun 03, 2022  01:32
+- Last modified: fre jun 03, 2022  01:45
 - Sign: Johan.Nylander\@nrm.se
 
 ## Description
@@ -20,7 +20,7 @@ On unfiltered fasta files,
 
 ## Usage
 
-    $ align-and-trees-parallel-workflow.sh [options] /path/to/folder/with/fas/files /path/to/output/folder
+    $ align-and-trees-parallel-workflow.sh -d nt|aa [options] /path/to/folder/with/fas/files /path/to/output/folder
     $ align-and-trees-parallel-workflow.sh -h
 
 ## Input data
