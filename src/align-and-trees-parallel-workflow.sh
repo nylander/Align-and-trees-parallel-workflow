@@ -310,7 +310,7 @@ checkNtaxa() {
 
   local inputfolder="$1"
   local min="$2"
-  echo -e "\n## ATPW [$(date "+%F %T")]: Check and remove if any of the files from BMGE have less than 4 taxa" 2>&1 | tee -a "${logfile}"
+  echo -e "\n## ATPW [$(date "+%F %T")]: Check and remove if any files have less than 4 taxa" 2>&1 | tee -a "${logfile}"
   find "${inputfolder}" -type f -name '*.ali' | \
     parallel 'checkNtaxaInFasta '"${min}"''>> "${logfile}" 2>&1
 }
