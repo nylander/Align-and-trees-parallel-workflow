@@ -247,8 +247,8 @@ export -f checkNtaxaInFasta
 align() {
 
   # Alignments with mafft. Convert lower case mafft output to uppercase.
-  # Input: inputfolder/*.fas (upper case seqs in file TC101607.fas)
-  # Output: 1_align/1.1_mafft/*.ali (lower case seqs in file TC101607.mafft.ali)
+  # Input: inputfolder/*.fas
+  # Output: 1_align/1.1_mafft/*.ali
   # Call: align "${unaligned}" "${runfolder}/1_align/1.1_${aligner}"
   # TODO: use threads
 
@@ -257,14 +257,14 @@ align() {
   echo -e "\n## ATPW [$(date "+%F %T")]: Align with ${aligner}" 2>&1 | tee -a "${logfile}"
   mkdir -p "${outputfolder}"
   find "${inputfolder}" -type f -name '*.fas' | \
-    parallel ''"${alignerbin}"' '"${alignerbinopts}"' {} | sed '/>/ ! s/[a-z]/\U&/g' > '"${outputfolder}"'/{/.}.'"${aligner}"'.ali' >> "${logfile}" 2>&1
+    parallel ''"${alignerbin}"' '"${alignerbinopts}"' {} | '"sed '/>/ ! s/[a-z]/\U&/g'"' > '"${outputfolder}"'/{/.}.'"${aligner}"'.ali' >> "${logfile}" 2>&1
 }
 
 checkAlignmentWithRaxml() {
 
   # Check alignments with raxml-ng
-  # Input: 1_align/1.2_mafft_check/*.mafft.ali (lower case seqs in file TC101607.mafft.ali)
-  # Output: Folder 1_align/1.2_mafft_check/ (lower case seqs in file TC101607.mafft.ali)
+  # Input: 1_align/1.2_mafft_check/*.mafft.ali
+  # Output: Folder 1_align/1.2_mafft_check/
   # Call: checkAlignmentWithRaxml "${runfolder}/1_align/1.1_${aligner}" "${runfolder}/1_align/1.2_${aligner}_check"
   # TODO:
 
@@ -285,8 +285,8 @@ checkAlignmentWithRaxml() {
 runBmge() {
 
   # Run BMGE
-  # Input: 1_align/1.2_mafft_check/*.mafft.ali (symlinks) (lower case seqs in file TC101607.mafft.ali)
-  # Output: 1_align/1.3_mafft_check_bmge/*.bmge.ali (upper case seqs in file TC101607.mafft.bmge.ali)
+  # Input: 1_align/1.2_mafft_check/*.mafft.ali (symlinks)
+  # Output: 1_align/1.3_mafft_check_bmge/*.bmge.ali
   # Call: runBmge "${runfolder}/1_align/1.2_${aligner}_check/" "${runfolder}/1_align/1.3_mafft_check_bmge"
   # TODO:
 
@@ -382,8 +382,8 @@ setupTreeshrink() {
 runTreeshrink() {
 
   # Run TreeShrink
-  # Input: 3_treeshrink/3.1_treeshrink (uppercase seqs in file mafft.ali)
-  # Output: 3_treeshrink/3.1_treeshrink (uppercase seq in file output.ali)
+  # Input: 3_treeshrink/3.1_treeshrink
+  # Output: 3_treeshrink/3.1_treeshrink
   # Call: runTreeshrink  "${runfolder}/3_treeshrink/3.1_treeshrink"
 
   local inputfolder="$1"
@@ -397,8 +397,8 @@ runTreeshrink() {
 realignerOutputAli() {
 
   # Realign using realigner (search for "output.ali" files). Convert mafft output to upper case.
-  # Input: 3_treeshrink/3.1_treeshrink/  (uppercase seq in file output.ali)
-  # Output: 1_align/1.4_mafft_check_bmge_treeshrink (lower case in file TC101607.mafft.bmge.ali)
+  # Input: 3_treeshrink/3.1_treeshrink/
+  # Output: 1_align/1.4_mafft_check_bmge_treeshrink
   # Call: realignerOutputAli  "${runfolder}/3_treeshrink/3.1_treeshrink/" "${runfolder}/1_align/1.4_mafft_check_bmge_treeshrink"
   # TODO: Check if I can avoid the specific search for "output.ali" (there are other .ali files in in the input folder, but they are symlinks!)
 
@@ -407,7 +407,7 @@ realignerOutputAli() {
   echo -e "\n## ATPW [$(date "+%F %T")]: Realign using ${realigner}" 2>&1 | tee -a "${logfile}"
   mkdir -p "${outputfolder}"
   find "${inputfolder}" -type f -name 'output.ali' | \
-    parallel 'b=$(basename {//} .ali); '"${realigner}"' '"${realignerbinopts}"' <('"${fastagap}"' {}) | sed '/>/ ! s/[a-z]/\U&/g' > '"${outputfolder}"'/"${b//_/\.}"' >> "${logfile}" 2>&1
+    parallel 'b=$(basename {//} .ali); '"${realigner}"' '"${realignerbinopts}"' <('"${fastagap}"' {}) | '"sed '/>/ ! s/[a-z]/\U&/g'"' > '"${outputfolder}"'/"${b//_/\.}"' >> "${logfile}" 2>&1
 }
 
 realignerAli() {
