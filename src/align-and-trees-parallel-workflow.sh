@@ -30,7 +30,6 @@ realignerbinopts="${alignerbinopts}"
 #alignerbin="/home/nylander/jb/johaberg-all/src/omm_macse_v10.02.sif"
 #alignerbinopts=" -java_mem 2000m"
 
-
 raxmlng="raxml-ng"
 fastagap="fastagap.pl"
 catfasta2phyml="catfasta2phyml.pl"
@@ -295,7 +294,7 @@ runMacse() {
   # Call: runMacse "${input}" "${runfolder}/1_align/1.2_macse"
   # Note: use ${aligner} instead of 'macse', and
   # ${alignerbinopts} instead of "--java_mem 2000m"
-  # TODO:
+  # TODO: Figure out how to use together with collectMacse. Perhaps fuse?
 
   inputfolder="$1"
 
@@ -312,6 +311,27 @@ runMacse() {
     parallel runPara {} >> "${logfile}" 2>&1
 }
 export -f runMacse
+
+
+collectMacse() {
+
+  # Collect MACSE alignments into one file
+  # Input: resulting folder from runMacse
+  # Output: one alignment folder in "${runfolder}/1_align/1.2_macse"
+  # Call: collectMacse inputfolder outputfolder
+  # TODO: Figure out how to use together with runMacse. Perhaps fuse?
+
+    #mkdir -p /home/nylander/jb/johaberg-all/run/aa-baits-macse-trees/ali
+    #for f in $(find /home/nylander/jb/johaberg-all/data/mckenna-vasili-20-vasili-19-vasili-21-miller-ngi/AA/pmacse-translated-combined -name '*_final_align_AA.aln') ; do
+    #  g=$(basename "${f}" _final_align_AA.aln)
+    #  cp "${f}" /home/nylander/jb/johaberg-all/run/aa-baits-macse-trees/ali/"${g}".ali
+    #done
+
+  echo "Not implemented"
+
+}
+export -f collectMacse
+
 
 
 checkAlignmentWithRaxml() {
