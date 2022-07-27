@@ -49,7 +49,7 @@ Options:
            -d type   -- Specify data type: nt or aa. (Mandatory)
            -t number -- Specify the number of threads. Default: ${ncores}
            -m crit   -- Model test criterion: BIC, AIC or AICC. Default: ${modeltestcriterion}
-           -A        -- Do not run initial alignment (input is aligned). Default is to assume unaligned input.
+           -A        -- Do not run initial alignment (assume aligned input). Default is to assume unaligned input.
            -B        -- Do not run BMGE. Default is to use BMGE.
            -v        -- Print version
            -h        -- Print help message
@@ -394,6 +394,66 @@ setupTreeshrink() {
    parallel copyAndConvert >> "${logfile}" 2>&1
 }
 
+setupTreeshrinkNoAlignerNoBmge() {
+
+ # Setup data for TreeShrink
+ # Input: 3_treeshrink/3.1_treeshrink
+ # Output: 3_treeshrink/3.1_treeshrink
+ # Call: setupTreeshrinkNoAlignerNoBmge "${runfolder}/2_trees/2.1_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.0_input" "${runfolder}/3_treeshrink/3.1_treeshrink"
+ # TODO:
+ inputfolderone="$1"     # where to look for trees
+ inputfoldertwo="$2"     # where to look for alignments
+ outputfolderthree="$3"  # output
+ export inputfolderone
+ export inputfoldertwo
+ export outputfolderthree
+ mkdir -p "${outputfolderthree}"
+
+ copyAndConvertNoAlignerNoBmge () {
+   local f=
+   f=$(basename "$1" .raxml.bestTree) # f=p3896_EOG7SFVKF
+   mkdir -p "${outputfolderthree}/${f}"
+   ln -s "$1" "${outputfolderthree}/${f}/raxml.bestTree"
+   local a=${f/_ali/\.ali} # a=p3896_EOG7SFVKF.ali
+   ln -s "${inputfoldertwo}/${a}" "${outputfolderthree}/${f}/input.ali"
+ }
+ export -f copyAndConvertNoAlignerNoBmge
+
+ find "${inputfolderone}" -type f -name '*.raxml.bestTree' | \
+   parallel copyAndConvertNoAlignerNoBmge >> "${logfile}" 2>&1
+}
+
+setupTreeshrinkNoBmge() {
+
+ # Setup data for TreeShrink
+ # Input: 3_treeshrink/3.1_treeshrink
+ # Output: 3_treeshrink/3.1_treeshrink
+ # Call: setupTreeshrink "${runfolder}/2_trees/2.1_mafft_check_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.3_mafft_check" "${runfolder}/3_treeshrink/3.1_treeshrink"
+ # TODO:
+ inputfolderone="$1"     # where to look for trees
+ inputfoldertwo="$2"     # where to look for alignments
+ outputfolderthree="$3"  # output
+ export inputfolderone
+ export inputfoldertwo
+ export outputfolderthree
+ mkdir -p "${outputfolderthree}"
+
+ copyAndConvertNoBmge () {
+   local f=
+   f=$(basename "$1" .raxml.bestTree) # f=p3896_EOG7SFVKF_mafft_ali
+   mkdir -p "${outputfolderthree}/${f}"
+   ln -s "$1" "${outputfolderthree}/${f}/raxml.bestTree"
+   sear="_${aligner}_ali"
+   repl=".${aligner}.ali"
+   local a=${f/$sear/$repl} # a=p3896_EOG7SFVKF.mafft.ali
+   ln -s "${inputfoldertwo}/${a}" "${outputfolderthree}/${f}/${aligner}.ali"
+ }
+ export -f copyAndConvertNoBmge
+
+ find "${inputfolderone}" -type f -name '*.raxml.bestTree' | \
+   parallel copyAndConvertNoBmge >> "${logfile}" 2>&1
+}
+
 runTreeshrink() {
 
   # Run TreeShrink
@@ -596,12 +656,23 @@ EOF
 # TODO: rewrite to avoid all hard coded paths
 
 if [ ! "${Aflag}" ] ; then # do mafft
-  align "${input}" "${runfolder}/1_align/1.1_${aligner}"
-  checkAlignmentWithRaxml "${runfolder}/1_align/1.1_${aligner}" "${runfolder}/1_align/1.2_${aligner}_check"
-  if [ ! "${Bflag}" ] ; then # do bmge
-    runBmge "${runfolder}/1_align/1.2_${aligner}_check/" "${runfolder}/1_align/1.3_${aligner}_check_bmge"
-    checkNtaxa "${runfolder}/1_align/1.3_${aligner}_check_bmge" 4
+  align "${input}" "${runfolder}/1_align/1.1_${aligner}" # input: *.fas, output: *.mafft.ali
+  checkAlignmentWithRaxml "${runfolder}/1_align/1.1_${aligner}" "${runfolder}/1_align/1.2_${aligner}_check" # input: *.ali, output: *.mafft.ali
+else
+  mkdir -p "${runfolder}/1_align/1.0_input"
+  find "${input}" -name '*.fas' | \
+      parallel cp -s {} "${runfolder}/1_align/1.0_input/{/.}.ali"
+fi
+
+
+if [ ! "${Bflag}" ] ; then # do bmge
+  if [ ! "${Aflag}" ] ; then # did mafft
+    runBmge "${runfolder}/1_align/1.2_${aligner}_check/" "${runfolder}/1_align/1.3_${aligner}_check_bmge" # input:*.mafft.ali, output: *.bmge.ali
+    checkNtaxa "${runfolder}/1_align/1.3_${aligner}_check_bmge" 4 # input: *.ali, output: *.ali
   fi
+else
+  runBmge "${runfolder}/1_align/1.0_input" "${runfolder}/1_align/1.3_bmge" # input:*.ali, output: *.bmge.ali <<<<<<<<<<<<<<<<<< our input is *.fas
+  checkNtaxa "${runfolder}/1_align/1.3_bmge" 4 # input: *.ali, output: *.ali <<<<<<<<<<<<<<<<<< our input is *.fas
 fi
 
 if [ ! "${Aflag}" ] ; then # did mafft
@@ -611,7 +682,7 @@ if [ ! "${Aflag}" ] ; then # did mafft
     pargenesFixedModel "${runfolder}/1_align/1.3_${aligner}_check" "${runfolder}/2_trees/2.1_${aligner}_check_pargenes"
   fi
 else
-  pargenesFixedModel "${input}" "${runfolder}/2_trees/2.1_pargenes"
+  pargenesFixedModel "${runfolder}/1_align/1.0_input" "${runfolder}/2_trees/2.1_pargenes"
 fi
 
 if [ ! "${Aflag}" ] ; then # did mafft
@@ -621,7 +692,7 @@ if [ ! "${Aflag}" ] ; then # did mafft
     setupTreeshrink "${runfolder}/2_trees/2.1_${aligner}_check_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.3_${aligner}_check" "${runfolder}/3_treeshrink/3.1_treeshrink"
   fi
 else
-  setupTreeshrink "${runfolder}/2_trees/2.1_pargenes/mlsearch_run/results" "${input}" "${runfolder}/3_treeshrink/3.1_treeshrink"
+  setupTreeshrinkNoAlignerNoBmge "${runfolder}/2_trees/2.1_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.0_input" "${runfolder}/3_treeshrink/3.1_treeshrink"
 fi
 
 runTreeshrink "${runfolder}/3_treeshrink/3.1_treeshrink"
