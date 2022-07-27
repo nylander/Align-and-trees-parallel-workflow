@@ -12,7 +12,7 @@ nprocs=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || getconf _NPROCESS
 ncores="${nprocs}"        # TODO: Do we need to adjust?
 modeltestperjobcores='4'  # TODO: Adjust? This value needs to be at least 4!
 threadsforaligner='2'     # TODO: Adjust?
-threadsforrealigner='2'   # TODO: Adjust?
+#threadsforrealigner='2'   # TODO: Adjust?
 
 bmgejar="/home/nylander/src/BMGE-1.12/BMGE.jar"              # <<<<<<<<<< CHANGE HERE
 pargenes="/home/nylander/src/ParGenes/pargenes/pargenes.py"  # <<<<<<<<<< CHANGE HERE
@@ -49,6 +49,8 @@ Options:
            -d type   -- Specify data type: nt or aa. (Mandatory)
            -t number -- Specify the number of threads. Default: ${ncores}
            -m crit   -- Model test criterion: BIC, AIC or AICC. Default: ${modeltestcriterion}
+           -A        -- Do not run initial alignment (input is aligned). Default is to assume unaligned input.
+           -B        -- Do not run BMGE. Default is to use BMGE.
            -v        -- Print version
            -h        -- Print help message
 
@@ -56,7 +58,7 @@ Examples:
            $(basename "$0") -d nt -t 8 data out
 
 Input:
-           Folder with fasta formatted sequence files (files need to have suffix ".fas")
+           Folder with fasta formatted sequence files (files need to have suffix ".fas").
 
 Output:
            Folders with filtered alignments and species- and gene-trees.
@@ -109,15 +111,19 @@ fi
 
 
 # Arguments
+Aflag=
+Bflag=
 dflag=
 tflag=
 mflag=
-vflag=
-hflag=
 
-while getopts 'd:t:m:vh' OPTION
+while getopts 'ABd:t:m:vh' OPTION
 do
   case $OPTION in
+  A) Aflag=1
+     ;;
+  B) Bflag=1
+     ;;
   d) dflag=1
      dval="$OPTARG"
      ;;
@@ -141,7 +147,7 @@ done
 shift $((OPTIND - 1))
 
 
-# Check if args are folders and create log file
+# Check if positional args are folders and create log file
 if [ $# -ne 2 ]; then
   echo 1>&2 "Usage: $0 [options] /path/to/folder/with/fas/files /path/to/output/folder"
   exit 1
@@ -184,9 +190,17 @@ if [ ! "${dflag}" ] ; then
 elif [ "${dflag}" ] ; then
   lcdval=${dval,,} # to lowercase
   if [[ "${lcdval}" != @(nt|aa) ]] ; then
-    echo "\n## ATPW [$(date "+%F %T")]: ERROR! -d should be 'nt' or 'aa'" 2>&1 | tee "${logfile}"
+    echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! -d should be 'nt' or 'aa'" 2>&1 | tee "${logfile}"
     exit 1
   fi
+fi
+
+if [ "${Aflag}" ] ; then
+  echo -e "\n## ATPW [$(date "+%F %T")]: Data is assumed to be aligned. Skip first alignment step.\n" 2>&1 | tee "${logfile}"
+fi
+
+if [ "${Bflag}" ] ; then
+  echo -e "\n## ATPW [$(date "+%F %T")]: Skip the BMGE step.\n" 2>&1 | tee "${logfile}"
 fi
 
 if [ "${tflag}" ] ; then
@@ -197,7 +211,7 @@ fi
 if [ "${mflag}" ] ; then
   lcmval=${mval,,} # to lowercase
   if [[ "${lcdval}" != @(bic|aic|aicc) ]] ; then
-    echo "\n## ATPW [$(date "+%F %T")]: ERROR! -m should be 'bic', 'aic', or 'aicc'" 2>&1 | tee "${logfile}"
+    echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! -m should be 'bic', 'aic', or 'aicc'" 2>&1 | tee "${logfile}"
   else
     modeltestcriterion="${lcmval}"
   fi
@@ -365,7 +379,8 @@ setupTreeshrink() {
  mkdir -p "${outputfolderthree}"
 
  copyAndConvert () {
-   local f=$(basename "$1" .raxml.bestTree) # f=p3896_EOG7SFVKF_mafft_bmge_ali
+   local f=
+   f=$(basename "$1" .raxml.bestTree) # f=p3896_EOG7SFVKF_mafft_bmge_ali
    mkdir -p "${outputfolderthree}/${f}"
    ln -s "$1" "${outputfolderthree}/${f}/raxml.bestTree"
    sear="_${aligner}_bmge_ali"
@@ -510,7 +525,7 @@ createReadme() {
 # TODO:
 
 readme="${runfolder}/README.md"
-outputfolder=$(basename ${runfolder})
+outputfolder=$(basename "${runfolder}")
 
 cat << EOF > "${readme}"
 # Summary 
@@ -537,7 +552,7 @@ with ${nf_input} fasta files (${datatype} format). Total of ${ns_input} sequence
 
 #### Logfile:
 
-[\`align-and-trees-parallel-workflow.log\`](align-and-trees-parallel-workflow.log)
+[\`ATPW.log\`](ATPW.log)
 
 #### The ASTRAL-species tree (${nt_astral} terminals):
 
@@ -558,7 +573,7 @@ with ${nf_input} fasta files (${datatype} format). Total of ${ns_input} sequence
 
 | Step | Tool | Nfiles | Nseqs | Ntax |
 | ---  | --- | --- | --- | --- |
-| 1. | Unaligned | ${nf_input} | ${ns_input} | ${nt_input} |
+| 1. | Input | ${nf_input} | ${ns_input} | ${nt_input} |
 | 2. | Mafft | ${nf_mafft} | ${ns_mafft} | ${nt_mafft} |
 | 3. | Check w. raxml | ${nf_mafft_check} | ${ns_mafft_check} | ${nt_mafft_check} |
 | 4. | BMGE | ${nf_mafft_check_bmge} | ${ns_mafft_check_bmge} | ${nt_mafft_check_bmge} |
@@ -569,29 +584,74 @@ EOF
 }
 
 # MAIN
-align "${input}" "${runfolder}/1_align/1.1_${aligner}"
 
-checkAlignmentWithRaxml "${runfolder}/1_align/1.1_${aligner}" "${runfolder}/1_align/1.2_${aligner}_check"
+# $input is either aligned or unaligned.
+# if aligned, we can run BMGE or not
+# We then want to run:
+#     pargenes fixed
+#     treeshrink
+#     realign
+#     pargenes modelselection+ASTRAL
 
-runBmge "${runfolder}/1_align/1.2_${aligner}_check/" "${runfolder}/1_align/1.3_mafft_check_bmge"
+# TODO: rewrite to avoid all hard coded paths
 
-checkNtaxa "${runfolder}/1_align/1.3_mafft_check_bmge" 4
+if [ ! "${Aflag}" ] ; then # do mafft
+  align "${input}" "${runfolder}/1_align/1.1_${aligner}"
+  checkAlignmentWithRaxml "${runfolder}/1_align/1.1_${aligner}" "${runfolder}/1_align/1.2_${aligner}_check"
+  if [ ! "${Bflag}" ] ; then # do bmge
+    runBmge "${runfolder}/1_align/1.2_${aligner}_check/" "${runfolder}/1_align/1.3_${aligner}_check_bmge"
+    checkNtaxa "${runfolder}/1_align/1.3_${aligner}_check_bmge" 4
+  fi
+fi
 
-pargenesFixedModel "${runfolder}/1_align/1.3_mafft_check_bmge" "${runfolder}/2_trees/2.1_mafft_check_bmge_pargenes"
+if [ ! "${Aflag}" ] ; then # did mafft
+  if [ ! "${Bflag}" ] ; then # did bmge
+    pargenesFixedModel "${runfolder}/1_align/1.3_${aligner}_check_bmge" "${runfolder}/2_trees/2.1_${aligner}_check_bmge_pargenes"
+  else # no bmge
+    pargenesFixedModel "${runfolder}/1_align/1.3_${aligner}_check" "${runfolder}/2_trees/2.1_${aligner}_check_pargenes"
+  fi
+else
+  pargenesFixedModel "${input}" "${runfolder}/2_trees/2.1_pargenes"
+fi
 
-setupTreeshrink "${runfolder}/2_trees/2.1_mafft_check_bmge_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.3_mafft_check_bmge" "${runfolder}/3_treeshrink/3.1_treeshrink"
+if [ ! "${Aflag}" ] ; then # did mafft
+  if [ ! "${Bflag}" ] ; then # did bmge
+    setupTreeshrink "${runfolder}/2_trees/2.1_${aligner}_check_bmge_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.3_${aligner}_check_bmge" "${runfolder}/3_treeshrink/3.1_treeshrink"
+  else # no bmge
+    setupTreeshrink "${runfolder}/2_trees/2.1_${aligner}_check_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.3_${aligner}_check" "${runfolder}/3_treeshrink/3.1_treeshrink"
+  fi
+else
+  setupTreeshrink "${runfolder}/2_trees/2.1_pargenes/mlsearch_run/results" "${input}" "${runfolder}/3_treeshrink/3.1_treeshrink"
+fi
 
 runTreeshrink "${runfolder}/3_treeshrink/3.1_treeshrink"
 
 checkNtaxaOutputAli "${runfolder}/3_treeshrink/3.1_treeshrink" 4
 
-realignerOutputAli "${runfolder}/3_treeshrink/3.1_treeshrink/" "${runfolder}/1_align/1.4_mafft_check_bmge_treeshrink"
+if [ ! "${Aflag}" ] ; then # did mafft
+  if [ ! "${Bflag}" ] ; then # did bmge
+    realignerOutputAli "${runfolder}/3_treeshrink/3.1_treeshrink/" "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink"
+  else # no bmge
+    realignerOutputAli "${runfolder}/3_treeshrink/3.1_treeshrink/" "${runfolder}/1_align/1.4_${aligner}_check_treeshrink"
+  fi
+else
+  realignerOutputAli "${runfolder}/3_treeshrink/3.1_treeshrink/" "${runfolder}/1_align/1.4_treeshrink"
+fi
 
-pargenesModeltestAstral "${runfolder}/1_align/1.4_mafft_check_bmge_treeshrink" "${runfolder}/2_trees/2.2_mafft_check_bmge_treeshrink_pargenes"
+if [ ! "${Aflag}" ] ; then # did mafft
+  if [ ! "${Bflag}" ] ; then # did bmge
+    pargenesModeltestAstral "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink" "${runfolder}/2_trees/2.2_${aligner}_check_bmge_treeshrink_pargenes"
+  else # no bmge
+    pargenesModeltestAstral "${runfolder}/1_align/1.4_${aligner}_check_treeshrink" "${runfolder}/2_trees/2.2_${aligner}_check_treeshrink_pargenes"
+  fi
+else
+  pargenesModeltestAstral "${runfolder}/1_align/1.4_treeshrink" "${runfolder}/2_trees/2.2_treeshrink_pargenes"
+fi
 
-count
 
-createReadme
+#count
+
+#createReadme
 
 # End
 echo -e "\n## ATPW [$(date "+%F %T")]: Reached end of the script\n" 2>&1 | tee -a "${logfile}"
