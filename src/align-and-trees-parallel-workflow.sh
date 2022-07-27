@@ -103,11 +103,6 @@ done
 modelforraxmltest='GTR'
 datatypeforbmge='DNA'
 modelforpargenesfixed='GTR+G8+F'
-if [ "${datatype}" == 'aa' ] ; then
-  datatypeforbmge='AA'
-  modelforraxmltest='LG'
-  modelforpargenesfixed='LG+G8+F'
-fi
 
 
 # Arguments
@@ -193,6 +188,11 @@ elif [ "${dflag}" ] ; then
     echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! -d should be 'nt' or 'aa'" 2>&1 | tee "${logfile}"
     exit 1
   fi
+fi
+if [ "${datatype}" == 'aa' ] ; then
+  datatypeforbmge='AA'
+  modelforraxmltest='LG'
+  modelforpargenesfixed='LG+G8+F'
 fi
 
 if [ "${Aflag}" ] ; then
