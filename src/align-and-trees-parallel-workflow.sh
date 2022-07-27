@@ -158,7 +158,7 @@ else
   mkdir -p "${runfolder}/1_align"
   mkdir -p "${runfolder}/2_trees"
   mkdir -p "${runfolder}/3_treeshrink"
-  logfile="${runfolder}/align-and-trees-parallel-workflow.log"
+  logfile="${runfolder}/ATPW.log"
   echo -e "\n## ATPW [$(date "+%F %T")]: Start" 2>&1 | tee "${logfile}"
   echo -e "\n## ATPW [$(date "+%F %T")]: Created output folder ${runfolder}" 2>&1 | tee "${logfile}"
 fi
