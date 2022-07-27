@@ -388,7 +388,7 @@ setupTreeshrink() {
    sear="_${aligner}_bmge_ali"
    repl=".${aligner}.bmge.ali"
    local a=${f/$sear/$repl} # a=p3896_EOG7SFVKF.mafft.bmge.ali
-   ln -s "${inputfoldertwo}/${a}" "${outputfolderthree}/${f}/${aligner}.ali"
+   ln -s "${inputfoldertwo}/${a}" "${outputfolderthree}/${f}/alignment.ali"
  }
  export -f copyAndConvert
 
@@ -417,7 +417,7 @@ setupTreeshrinkNoAlignerNoBmge() {
    mkdir -p "${outputfolderthree}/${f}"
    ln -s "$1" "${outputfolderthree}/${f}/raxml.bestTree"
    local a=${f/_ali/\.ali} # a=p3896_EOG7SFVKF.ali
-   ln -s "${inputfoldertwo}/${a}" "${outputfolderthree}/${f}/input.ali"
+   ln -s "${inputfoldertwo}/${a}" "${outputfolderthree}/${f}/alignment.ali"
  }
  export -f copyAndConvertNoAlignerNoBmge
 
@@ -448,7 +448,7 @@ setupTreeshrinkNoBmge() {
    sear="_${aligner}_ali"
    repl=".${aligner}.ali"
    local a=${f/$sear/$repl} # a=p3896_EOG7SFVKF.mafft.ali
-   ln -s "${inputfoldertwo}/${a}" "${outputfolderthree}/${f}/${aligner}.ali"
+   ln -s "${inputfoldertwo}/${a}" "${outputfolderthree}/${f}/alignment.ali"
  }
  export -f copyAndConvertNoBmge
 
@@ -468,7 +468,7 @@ runTreeshrink() {
   "${treeshrink}" \
     --indir "${inputfolder}" \
     --tree 'raxml.bestTree' \
-    --alignment "${aligner}.ali" >> "${logfile}" 2>&1
+    --alignment "alignment.ali" >> "${logfile}" 2>&1
 }
 
 realignerOutputAli() {
@@ -539,27 +539,54 @@ count() {
   nt_input=$(grep -h '>' "${input}"/*.fas | sort -u | wc -l)
 
   # Count files and sequences in 1.1_mafft
-  nf_mafft=$(find  "${runfolder}/1_align/1.1_${aligner}" -name '*.ali' | wc -l)
-  ns_mafft=$(grep -c -h '>' "${runfolder}/1_align/1.1_${aligner}"/*.ali | awk '{sum=sum+$1}END{print sum}')
-  nt_mafft=$(grep -h '>' "${runfolder}/1_align/1.1_${aligner}"/*.ali | sort -u | wc -l)
+  if [ -d "${runfolder}/1_align/1.1_${aligner}" ] ; then
+    nf_mafft=$(find  "${runfolder}/1_align/1.1_${aligner}" -name '*.ali' | wc -l)
+    ns_mafft=$(grep -c -h '>' "${runfolder}/1_align/1.1_${aligner}"/*.ali | awk '{sum=sum+$1}END{print sum}')
+    nt_mafft=$(grep -h '>' "${runfolder}/1_align/1.1_${aligner}"/*.ali | sort -u | wc -l)
+  else
+    nf_mafft='NA'
+    ns_mafft='NA'
+    nt_mafft='NA'
+  fi
 
   # Count files and sequences in 1.2_mafft_check
-  nf_mafft_check=$(find -L "${runfolder}/1_align/1.2_${aligner}_check" -name '*.ali' | wc -l)
-  ns_mafft_check=$(grep -c -h '>' "${runfolder}/1_align/1.2_${aligner}_check"/*.ali | awk '{sum=sum+$1}END{print sum}')
-  nt_mafft_check=$(grep -h '>' "${runfolder}/1_align/1.2_${aligner}_check"/*.ali | sort -u | wc -l)
+  if [ -d "${runfolder}/1_align/1.2_${aligner}_check" ] ; then
+    nf_mafft_check=$(find -L "${runfolder}/1_align/1.2_${aligner}_check" -name '*.ali' | wc -l)
+    ns_mafft_check=$(grep -c -h '>' "${runfolder}/1_align/1.2_${aligner}_check"/*.ali | awk '{sum=sum+$1}END{print sum}')
+    nt_mafft_check=$(grep -h '>' "${runfolder}/1_align/1.2_${aligner}_check"/*.ali | sort -u | wc -l)
+  else
+    nf_mafft_check='NA'
+    ns_mafft_check='NA'
+    nt_mafft_check='NA'
+  fi
 
   # Count files and sequences in 1.3_mafft_check_bmge
-  nf_mafft_check_bmge=$(find "${runfolder}/1_align/1.3_${aligner}_check_bmge" -name '*.ali' | wc -l)
-  ns_mafft_check_bmge=$(grep -c -h '>' "${runfolder}/1_align/1.3_${aligner}_check_bmge"/*.ali | awk '{sum=sum+$1}END{print sum}')
-  nt_mafft_check_bmge=$(grep -h '>' "${runfolder}/1_align/1.3_${aligner}_check_bmge"/*.ali | sort -u | wc -l)
+  if [ -d "${runfolder}/1_align/1.3_${aligner}_check_bmge" ] ; then
+    nf_mafft_check_bmge=$(find "${runfolder}/1_align/1.3_${aligner}_check_bmge" -name '*.ali' | wc -l)
+    ns_mafft_check_bmge=$(grep -c -h '>' "${runfolder}/1_align/1.3_${aligner}_check_bmge"/*.ali | awk '{sum=sum+$1}END{print sum}')
+    nt_mafft_check_bmge=$(grep -h '>' "${runfolder}/1_align/1.3_${aligner}_check_bmge"/*.ali | sort -u | wc -l)
+  else
+    nf_mafft_check_bmge='NA'
+    ns_mafft_check_bmge='NA'
+    nt_mafft_check_bmge='NA'
+  fi
 
   # Count files and sequences in 1.4_mafft_check_bmge_treeshrink
-  nf_mafft_check_bmge_treeshrink=$(find "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink" -name '*.ali' | wc -l)
-  ns_mafft_check_bmge_treeshrink=$(grep -c -h '>' "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink"/*.ali | awk '{sum=sum+$1}END{print sum}')
-  nt_mafft_check_bmge_treeshrink=$(grep -h '>' "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink"/*.ali | sort -u | wc -l)
+  if [ -d "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink"] ; then
+    nf_mafft_check_bmge_treeshrink=$(find "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink" -name '*.ali' | wc -l)
+    ns_mafft_check_bmge_treeshrink=$(grep -c -h '>' "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink"/*.ali | awk '{sum=sum+$1}END{print sum}')
+    nt_mafft_check_bmge_treeshrink=$(grep -h '>' "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink"/*.ali | sort -u | wc -l)
+  else
+    nf_mafft_check_bmge_treeshrink='NA'
+    ns_mafft_check_bmge_treeshrink='NA'
+    nt_mafft_check_bmge_treeshrink='NA'
+  fi
 
   # Count taxa in astral tree
-  nt_astral=$(sed 's/[(,]/\n/g' "${runfolder}/2_trees/2.2_mafft_check_bmge_treeshrink_pargenes/astral_run/output_species_tree.newick" | grep -c .)
+  if [ -e "${runfolder}/2_trees/2.2_mafft_check_bmge_treeshrink_pargenes/astral_run/output_species_tree.newick" ] ; then
+    nt_astral=$(sed 's/[(,]/\n/g' "${runfolder}/2_trees/2.2_mafft_check_bmge_treeshrink_pargenes/astral_run/output_species_tree.newick" | grep -c .)
+  fi
+  # TODO: find correct tree if no mafft or bmge
 
   # Count taxa in input trees to astral
   minntax=
