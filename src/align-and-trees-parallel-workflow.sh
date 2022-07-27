@@ -14,15 +14,22 @@ modeltestperjobcores='4'  # TODO: Adjust? This value needs to be at least 4!
 threadsforaligner='2'     # TODO: Adjust?
 #threadsforrealigner='2'   # TODO: Adjust?
 
-bmgejar="/home/nylander/src/BMGE-1.12/BMGE.jar"              # <<<<<<<<<< CHANGE HERE
-pargenes="/home/nylander/src/ParGenes/pargenes/pargenes.py"  # <<<<<<<<<< CHANGE HERE
-treeshrink="/home/nylander/src/TreeShrink/run_treeshrink.py" # <<<<<<<<<< CHANGE HERE
+bmgejar="/home/nylander/src/BMGE-1.12/BMGE.jar"                # <<<<<<<<<< CHANGE HERE
+pargenes="/home/nylander/src/ParGenes/pargenes/pargenes.py"    # <<<<<<<<<< CHANGE HERE
+treeshrink="/home/nylander/src/TreeShrink/run_treeshrink.py"   # <<<<<<<<<< CHANGE HERE
+macse="home/nylander/jb/johaberg-all/src/omm_macse_v10.02.sif" # <<<<<<<<<< CHANGE HERE
+
 
 aligner="mafft" # Name of aligner, not path to binary
 alignerbin="mafft"
 alignerbinopts=" --auto --thread ${threadsforaligner} --quiet"
 realigner="mafft" # Name of realigner, not path to binary
 realignerbinopts="${alignerbinopts}"
+
+#aligner="macse"
+#alignerbin="/home/nylander/jb/johaberg-all/src/omm_macse_v10.02.sif"
+#alignerbinopts=" -java_mem 2000m"
+
 
 raxmlng="raxml-ng"
 fastagap="fastagap.pl"
@@ -227,6 +234,7 @@ export phylip2fasta
 export aligner
 export realigner
 
+
 # Functions
 checkNtaxaInPhylip() {
 
@@ -244,6 +252,7 @@ checkNtaxaInPhylip() {
 }
 export -f checkNtaxaInPhylip
 
+
 checkNtaxaInFasta() {
 
   # Function for checking and removing fasta files with less than N taxa
@@ -260,6 +269,7 @@ checkNtaxaInFasta() {
 }
 export -f checkNtaxaInFasta
 
+
 align() {
 
   # Alignments with mafft. Convert lower case mafft output to uppercase.
@@ -275,6 +285,34 @@ align() {
   find "${inputfolder}" -type f -name '*.fas' | \
     parallel ''"${alignerbin}"' '"${alignerbinopts}"' {} | '"sed '/>/ ! s/[a-z]/\U&/g'"' > '"${outputfolder}"'/{/.}.'"${aligner}"'.ali' >> "${logfile}" 2>&1
 }
+
+
+runMacse() {
+
+  # Run MACSE alignments 
+  # Input: ${input}/*.fas
+  # Output: 1_align/1.2_macse
+  # Call: runMacse "${input}" "${runfolder}/1_align/1.2_macse"
+  # Note: use ${aligner} instead of 'macse', and
+  # ${alignerbinopts} instead of "--java_mem 2000m"
+  # TODO:
+
+  inputfolder="$1"
+
+  runPara() {
+      f="$1"
+      g=$(basename "${f}" .fas)
+      "${macse}" \
+        --in_seq_file "${f}" \
+        --out_dir "${g}" \
+        --out_file_prefix "${g}" \
+        --java_mem 2000m
+      }
+  find "${inputfolder}" -type f -name '*.fas' | \
+    parallel runPara {} >> "${logfile}" 2>&1
+}
+export -f runMacse
+
 
 checkAlignmentWithRaxml() {
 
@@ -298,6 +336,7 @@ checkAlignmentWithRaxml() {
   cd .. || exit
 }
 
+
 runBmge() {
 
   # Run BMGE
@@ -316,6 +355,7 @@ runBmge() {
   cd .. || exit
 }
 
+
 checkNtaxa() {
 
   # Check and remove if any of the .ali files have less than 4 taxa
@@ -331,6 +371,7 @@ checkNtaxa() {
     parallel 'checkNtaxaInFasta {} '"${min}"''>> "${logfile}" 2>&1
 }
 
+
 checkNtaxaOutputAli() {
 
   # Check and remove if any of the output.ali files have less than 4 taxa
@@ -345,6 +386,7 @@ checkNtaxaOutputAli() {
   find "${inputfolder}" -type f -name 'output.ali' | \
     parallel 'checkNtaxaInFasta {} '"${min}"''>> "${logfile}" 2>&1
 }
+
 
 pargenesFixedModel() {
 
@@ -364,6 +406,7 @@ pargenesFixedModel() {
     --datatype "${datatype}" \
     --raxml-global-parameters-string "--model ${modelforpargenesfixed}" >> "${logfile}" 2>&1
 }
+
 
 setupTreeshrink() {
 
@@ -396,6 +439,7 @@ setupTreeshrink() {
    parallel copyAndConvert {} >> "${logfile}" 2>&1
 }
 
+
 setupTreeshrinkNoAlignerNoBmge() {
 
  # Setup data for TreeShrink
@@ -424,6 +468,7 @@ setupTreeshrinkNoAlignerNoBmge() {
  find "${inputfolderone}" -type f -name '*.raxml.bestTree' | \
    parallel copyAndConvertNoAlignerNoBmge {} >> "${logfile}" 2>&1
 }
+
 
 setupTreeshrinkNoBmge() {
 
@@ -456,6 +501,7 @@ setupTreeshrinkNoBmge() {
    parallel copyAndConvertNoBmge {} >> "${logfile}" 2>&1
 }
 
+
 runTreeshrink() {
 
   # Run TreeShrink
@@ -470,6 +516,7 @@ runTreeshrink() {
     --tree 'raxml.bestTree' \
     --alignment "alignment.ali" >> "${logfile}" 2>&1
 }
+
 
 realignerOutputAli() {
 
@@ -487,6 +534,7 @@ realignerOutputAli() {
     parallel 'b=$(basename {//} .ali); '"${realigner}"' '"${realignerbinopts}"' <('"${fastagap}"' {}) | '"sed '/>/ ! s/[a-z]/\U&/g'"' > '"${outputfolder}"'/"${b//_/\.}"' >> "${logfile}" 2>&1
 }
 
+
 realignerAli() {
 
   # Realign using realigner (search for ".ali" files). Convert mafft output to upper case.
@@ -502,6 +550,7 @@ realignerAli() {
   find "${inputfolder}" -type f -name '*.ali' | \
     parallel 'b=$(basename {//} .ali); '"${realigner}"' '"${realignerbinopts}"' <('"${fastagap}"' {}) | sed '/>/ ! s/[a-z]/\U&/g' > '"${outputfolder}"'/"${b//_/\.}"' >> "${logfile}" 2>&1
 }
+
 
 pargenesModeltestAstral() {
 
@@ -524,6 +573,7 @@ pargenesModeltestAstral() {
     --modeltest-perjob-cores "${modeltestperjobcores}" \
     --use-astral >> "${logfile}" 2>&1
 }
+
 
 count() {
 
@@ -572,7 +622,7 @@ count() {
   fi
 
   # Count files and sequences in 1.4_mafft_check_bmge_treeshrink
-  if [ -d "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink"] ; then
+  if [ -d "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink" ] ; then
     nf_mafft_check_bmge_treeshrink=$(find "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink" -name '*.ali' | wc -l)
     ns_mafft_check_bmge_treeshrink=$(grep -c -h '>' "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink"/*.ali | awk '{sum=sum+$1}END{print sum}')
     nt_mafft_check_bmge_treeshrink=$(grep -h '>' "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink"/*.ali | sort -u | wc -l)
@@ -604,13 +654,14 @@ count() {
   done < "${astraltrees}"
 }
 
+
 createReadme() {
 
 # Print README.md
 # Input:
 # Output: README.md
 # Call: createReadme
-# TODO:
+# TODO: Not all folders are present if we run with -A and/or -B
 
 readme="${runfolder}/README.md"
 outputfolder=$(basename "${runfolder}")
@@ -692,7 +743,6 @@ else
       parallel cp -s {} "${runfolder}/1_align/1.0_input/{/.}.ali"
 fi
 
-
 if [ ! "${Bflag}" ] ; then # do bmge
   if [ ! "${Aflag}" ] ; then # did mafft
     runBmge "${runfolder}/1_align/1.2_${aligner}_check/" "${runfolder}/1_align/1.3_${aligner}_check_bmge" # input:*.mafft.ali, output: *.bmge.ali
@@ -750,7 +800,7 @@ fi
 
 count
 
-#createReadme
+createReadme
 
 # End
 echo -e "\n## ATPW [$(date "+%F %T")]: Reached end of the script\n" 2>&1 | tee -a "${logfile}"
