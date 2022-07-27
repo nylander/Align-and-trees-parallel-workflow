@@ -146,7 +146,7 @@ if [ $# -ne 2 ]; then
   echo 1>&2 "Usage: $0 [options] /path/to/folder/with/fas/files /path/to/output/folder"
   exit 1
 else
-  unaligned=$(readlink -f "$1")
+  input=$(readlink -f "$1")
   runfolder=$(readlink -f "$2")
 fi
 
@@ -163,16 +163,16 @@ else
   echo -e "\n## ATPW [$(date "+%F %T")]: Created output folder ${runfolder}" 2>&1 | tee "${logfile}"
 fi
 
-if [ -d "${unaligned}" ] ; then
-    nfas=$(find "${unaligned}" -name '*.fas' | wc -l)
+if [ -d "${input}" ] ; then
+    nfas=$(find "${input}" -name '*.fas' | wc -l)
   if [ "${nfas}" -gt 1 ] ; then
-    echo -e "\n## ATPW [$(date "+%F %T")]: Found ${nfas} .fas files in folder ${unaligned}" 2>&1 | tee "${logfile}"
+    echo -e "\n## ATPW [$(date "+%F %T")]: Found ${nfas} .fas files in folder ${input}" 2>&1 | tee "${logfile}"
   else
-    echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! Could not find .fas files in folder ${unaligned}" 2>&1 | tee "${logfile}"
+    echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! Could not find .fas files in folder ${input}" 2>&1 | tee "${logfile}"
       exit 1
   fi
 else
-  echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! Folder ${unaligned} can not be found" 2>&1 | tee "${logfile}"
+  echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! Folder ${input} can not be found" 2>&1 | tee "${logfile}"
   exit 1
 fi
 
@@ -249,7 +249,7 @@ align() {
   # Alignments with mafft. Convert lower case mafft output to uppercase.
   # Input: inputfolder/*.fas
   # Output: 1_align/1.1_mafft/*.ali
-  # Call: align "${unaligned}" "${runfolder}/1_align/1.1_${aligner}"
+  # Call: align "${input}" "${runfolder}/1_align/1.1_${aligner}"
   # TODO: use threads
 
   local inputfolder="$1"
@@ -456,10 +456,10 @@ count() {
   # Call: count
   # TODO: Rewrite to avoid hard codes parts
   
-  # Count files and sequences in unaligned
-  nf_unaligned=$(find "${unaligned}" -name '*.fas' | wc -l)
-  ns_unaligned=$(grep -c -h '>' "${unaligned}"/*.fas | awk '{sum=sum+$1}END{print sum}')
-  nt_unaligned=$(grep -h '>' "${unaligned}"/*.fas | sort -u | wc -l)
+  # Count files and sequences in input
+  nf_input=$(find "${input}" -name '*.fas' | wc -l)
+  ns_input=$(grep -c -h '>' "${input}"/*.fas | awk '{sum=sum+$1}END{print sum}')
+  nt_input=$(grep -h '>' "${input}"/*.fas | sort -u | wc -l)
 
   # Count files and sequences in 1.1_mafft
   nf_mafft=$(find  "${runfolder}/1_align/1.1_${aligner}" -name '*.ali' | wc -l)
@@ -525,9 +525,9 @@ Run completed: $(date "+%F %T")
 
 ## Input
 
-\`${unaligned}\`
+\`${input}\`
 
-with ${nf_unaligned} fasta files (${datatype} format). Total of ${ns_unaligned} sequences from ${nt_unaligned} sequence names.
+with ${nf_input} fasta files (${datatype} format). Total of ${ns_input} sequences from ${nt_input} sequence names.
 
 ## Output
 
@@ -558,7 +558,7 @@ with ${nf_unaligned} fasta files (${datatype} format). Total of ${ns_unaligned} 
 
 | Step | Tool | Nfiles | Nseqs | Ntax |
 | ---  | --- | --- | --- | --- |
-| 1. | Unaligned | ${nf_unaligned} | ${ns_unaligned} | ${nt_unaligned} |
+| 1. | Unaligned | ${nf_input} | ${ns_input} | ${nt_input} |
 | 2. | Mafft | ${nf_mafft} | ${ns_mafft} | ${nt_mafft} |
 | 3. | Check w. raxml | ${nf_mafft_check} | ${ns_mafft_check} | ${nt_mafft_check} |
 | 4. | BMGE | ${nf_mafft_check_bmge} | ${ns_mafft_check_bmge} | ${nt_mafft_check_bmge} |
@@ -569,7 +569,7 @@ EOF
 }
 
 # MAIN
-align "${unaligned}" "${runfolder}/1_align/1.1_${aligner}"
+align "${input}" "${runfolder}/1_align/1.1_${aligner}"
 
 checkAlignmentWithRaxml "${runfolder}/1_align/1.1_${aligner}" "${runfolder}/1_align/1.2_${aligner}_check"
 
