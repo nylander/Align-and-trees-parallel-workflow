@@ -103,7 +103,7 @@ done
 modelforraxmltest='GTR'
 datatypeforbmge='DNA'
 modelforpargenesfixed='GTR+G8+F'
-if [ "${datatype}" = 'aa' ] ; then
+if [ "${datatype}" == 'aa' ] ; then
   datatypeforbmge='AA'
   modelforraxmltest='LG'
   modelforpargenesfixed='LG+G8+F'
