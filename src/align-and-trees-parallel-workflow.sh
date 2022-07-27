@@ -187,6 +187,8 @@ elif [ "${dflag}" ] ; then
   if [[ "${lcdval}" != @(nt|aa) ]] ; then
     echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! -d should be 'nt' or 'aa'" 2>&1 | tee "${logfile}"
     exit 1
+  else
+    datatype="${lcdval}"
   fi
 fi
 if [ "${datatype}" == 'aa' ] ; then
