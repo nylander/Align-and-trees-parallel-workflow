@@ -748,7 +748,7 @@ else
 fi
 
 
-#count
+count
 
 #createReadme
 
