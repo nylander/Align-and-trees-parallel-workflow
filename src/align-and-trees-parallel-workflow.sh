@@ -180,7 +180,7 @@ fi
 
 ## Check options
 if [ ! "${dflag}" ] ; then
-  echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! Need to supply data type ('nt' or 'aa') with '-d'\n" 2>&1 | tee "${logfile}"
+  echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! Need to supply data type ('nt' or 'aa') with '-d'" 2>&1 | tee "${logfile}"
   exit 1
 elif [ "${dflag}" ] ; then
   lcdval=${dval,,} # to lowercase
@@ -198,11 +198,11 @@ if [ "${datatype}" == 'aa' ] ; then
 fi
 
 if [ "${Aflag}" ] ; then
-  echo -e "\n## ATPW [$(date "+%F %T")]: Data is assumed to be aligned. Skip first alignment step.\n" 2>&1 | tee "${logfile}"
+  echo -e "\n## ATPW [$(date "+%F %T")]: Data is assumed to be aligned. Skipping first alignment step." 2>&1 | tee "${logfile}"
 fi
 
 if [ "${Bflag}" ] ; then
-  echo -e "\n## ATPW [$(date "+%F %T")]: Skip the BMGE step.\n" 2>&1 | tee "${logfile}"
+  echo -e "\n## ATPW [$(date "+%F %T")]: Skipping the BMGE step." 2>&1 | tee "${logfile}"
 fi
 
 if [ "${tflag}" ] ; then
@@ -328,7 +328,7 @@ checkNtaxa() {
   local min="$2"
   echo -e "\n## ATPW [$(date "+%F %T")]: Check and remove if any files have less than 4 taxa" 2>&1 | tee -a "${logfile}"
   find "${inputfolder}" -type f -name '*.ali' | \
-    parallel 'checkNtaxaInFasta '"${min}"''>> "${logfile}" 2>&1
+    parallel 'checkNtaxaInFasta {} '"${min}"''>> "${logfile}" 2>&1
 }
 
 checkNtaxaOutputAli() {
@@ -341,9 +341,9 @@ checkNtaxaOutputAli() {
 
   local inputfolder="$1"
   local min="$2"
-  echo -e "\n## ATPW [$(date "+%F %T")]: Check and remove if any of the files from BMGE have less than 4 taxa" 2>&1 | tee -a "${logfile}"
+  echo -e "\n## ATPW [$(date "+%F %T")]: Check and remove if any files have less than 4 taxa" 2>&1 | tee -a "${logfile}"
   find "${inputfolder}" -type f -name 'output.ali' | \
-    parallel 'checkNtaxaInFasta '"${min}"''>> "${logfile}" 2>&1
+    parallel 'checkNtaxaInFasta {} '"${min}"''>> "${logfile}" 2>&1
 }
 
 pargenesFixedModel() {
@@ -393,7 +393,7 @@ setupTreeshrink() {
  export -f copyAndConvert
 
  find "${inputfolderone}" -type f -name '*.raxml.bestTree' | \
-   parallel copyAndConvert >> "${logfile}" 2>&1
+   parallel copyAndConvert {} >> "${logfile}" 2>&1
 }
 
 setupTreeshrinkNoAlignerNoBmge() {
@@ -422,7 +422,7 @@ setupTreeshrinkNoAlignerNoBmge() {
  export -f copyAndConvertNoAlignerNoBmge
 
  find "${inputfolderone}" -type f -name '*.raxml.bestTree' | \
-   parallel copyAndConvertNoAlignerNoBmge >> "${logfile}" 2>&1
+   parallel copyAndConvertNoAlignerNoBmge {} >> "${logfile}" 2>&1
 }
 
 setupTreeshrinkNoBmge() {
@@ -453,7 +453,7 @@ setupTreeshrinkNoBmge() {
  export -f copyAndConvertNoBmge
 
  find "${inputfolderone}" -type f -name '*.raxml.bestTree' | \
-   parallel copyAndConvertNoBmge >> "${logfile}" 2>&1
+   parallel copyAndConvertNoBmge {} >> "${logfile}" 2>&1
 }
 
 runTreeshrink() {
@@ -583,12 +583,11 @@ count() {
   fi
 
   # Count taxa in astral tree
-  if [ -e "${runfolder}/2_trees/2.2_mafft_check_bmge_treeshrink_pargenes/astral_run/output_species_tree.newick" ] ; then
-    nt_astral=$(sed 's/[(,]/\n/g' "${runfolder}/2_trees/2.2_mafft_check_bmge_treeshrink_pargenes/astral_run/output_species_tree.newick" | grep -c .)
-  fi
-  # TODO: find correct tree if no mafft or bmge
+  astraltree=$(find "${runfolder}" -name 'output_species_tree.newick')
+  nt_astral=$(sed 's/[(,]/\n/g' "${astraltree}"  | grep -c .)
 
   # Count taxa in input trees to astral
+  astraltrees=$(find "${runfolder}" -name 'gene_trees.newick')
   minntax=
   maxntax=0
   while read -r tree ; do
@@ -602,7 +601,7 @@ count() {
     elif [ "${ntax}" -lt "${minntax}" ] ; then
       minntax="${ntax}"
     fi
-  done < "${runfolder}/2_trees/2.2_mafft_check_bmge_treeshrink_pargenes/astral_run/gene_trees.newick"
+  done < "${astraltrees}"
 }
 
 createReadme() {
