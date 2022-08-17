@@ -1,6 +1,6 @@
 INSTALL for Align-and-trees-workflow
 
-Last modified: Tue May 31, 2022
+Last modified: ons aug 17, 2022  03:24
 Sign: JN
 
 The workflow have been tested on Ubuntu Linux 20.04
@@ -11,8 +11,16 @@ their dependencies, needs to be installed.
 Also note that the path to some of theses programs, as well as both hardware- and
 data type specific settings needs to be manually set in the main script before running.
 
+For testing the installation, try:
+
+    $ ./src/align-and-trees-parallel-workflow.sh -d nt data test
+
 
 Softare used (and version):
+
+Python (Python 3.8.10)
+
+`sudo apt install python3.8`
 
 BMGE (v1.12)
 
