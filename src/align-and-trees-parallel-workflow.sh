@@ -1,9 +1,9 @@
 #!/bin/bash -l
 
-set -euo pipefail
+set -uo pipefail
 
 # Default settings
-version="0.7"
+version="0.7.1"
 logfile=
 modeltestcriterion="BIC"
 datatype='nt'
@@ -333,7 +333,6 @@ collectMacse() {
 export -f collectMacse
 
 
-
 checkAlignmentWithRaxml() {
 
   # Check alignments with raxml-ng
@@ -347,13 +346,11 @@ checkAlignmentWithRaxml() {
   echo -e "\n## ATPW [$(date "+%F %T")]: Check alignments with raxml-ng" | tee -a "${logfile}"
   mkdir -p "${outputfolder}"
   ln -s -f "${inputfolder}"/*.ali "${outputfolder}"
-  cd "${outputfolder}" || exit
-  find -L . -type f -name '*.ali' | \
+  find -L "${outputfolder}" -type f -name '*.ali' | \
     parallel ''"${raxmlng}"' --check --msa {} --threads 1 --model '"${modelforraxmltest}"'' >> "${logfile}" 2>&1
-  find . -type f -name '*.log' | \
+  find "${outputfolder}" -type f -name '*.log' | \
     parallel 'if grep -q "^ERROR" {} ; then echo "## ATPW: Found error in {}"; rm -v {=s/\.raxml\.log//=} ; fi' >> "${logfile}" 2>&1
-  rm ./*.log ./*.raxml.reduced.phy
-  cd .. || exit
+  rm "${outputfolder}"/*.log "${outputfolder}"/*.raxml.reduced.phy
 }
 
 
