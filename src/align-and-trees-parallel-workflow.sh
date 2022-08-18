@@ -777,7 +777,7 @@ else
 fi
 
 if [ "${doalign}" ] ; then # did mafft
-  if [ "${dbmge}" ] ; then # did bmge
+  if [ "${domge}" ] ; then # did bmge
     pargenesFixedModel "${runfolder}/1_align/1.3_${aligner}_check_bmge" "${runfolder}/2_trees/2.1_${aligner}_check_bmge_pargenes"
   else # no bmge
     pargenesFixedModel "${runfolder}/1_align/1.3_${aligner}_check" "${runfolder}/2_trees/2.1_${aligner}_check_pargenes"
