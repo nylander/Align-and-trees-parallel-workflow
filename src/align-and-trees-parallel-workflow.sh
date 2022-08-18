@@ -839,7 +839,7 @@ if [ "${doalign}" ] ; then
   if [ "${dobmge}" ] ; then
     pargenesFixedModel "${runfolder}/1_align/1.3_${aligner}_check_bmge" "${runfolder}/2_trees/2.1_${aligner}_check_bmge_pargenes"
   else
-    pargenesFixedModel "${runfolder}/1_align/1.3_${aligner}_check" "${runfolder}/2_trees/2.1_${aligner}_check_pargenes"
+    pargenesFixedModel "${runfolder}/1_align/1.2_${aligner}_check" "${runfolder}/2_trees/2.1_${aligner}_check_pargenes"
   fi
 else
   if [ "${dobmge}" ] ; then
@@ -854,7 +854,7 @@ if [ "${doalign}" ] ; then
   if [ "${dobmge}" ] ; then
     setupTreeshrink "${runfolder}/2_trees/2.1_${aligner}_check_bmge_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.3_${aligner}_check_bmge" "${runfolder}/3_treeshrink/3.1_treeshrink"
   else
-    setupTreeshrinkNoBmge "${runfolder}/2_trees/2.1_${aligner}_check_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.3_${aligner}_check" "${runfolder}/3_treeshrink/3.1_treeshrink"
+    setupTreeshrinkNoBmge "${runfolder}/2_trees/2.1_${aligner}_check_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.2_${aligner}_check" "${runfolder}/3_treeshrink/3.1_treeshrink"
   fi
 else
   if [ "${dobmge}" ] ; then
