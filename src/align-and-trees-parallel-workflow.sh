@@ -780,11 +780,12 @@ if [ "${doalign}" ] ; then
   align "${input}" "${runfolder}/1_align/1.1_${aligner}"
   checkAlignmentWithRaxml "${runfolder}/1_align/1.1_${aligner}" "${runfolder}/1_align/1.2_${aligner}_check"
 else
-  mkdir -p "${runfolder}/1_align/1.0_input"
+  mkdir -p "${runfolder}/1_align/1.1_input"
   find "${input}" -name '*.fas' | \
-      parallel cp -s {} "${runfolder}/1_align/1.0_input/{/.}.ali"
-  checkNtaxa "${runfolder}/1_align/1.0_input" 4 .ali
-  checkAlignmentWithRaxml "${runfolder}/1_align/1.0_input" "${runfolder}/1_align/1.0_input_check"
+      parallel cp -s {} "${runfolder}/1_align/1.1_input/{/.}.ali"
+  checkNtaxa "${runfolder}/1_align/1.1_input" 4 .ali
+  checkAlignmentWithRaxml "${runfolder}/1_align/1.1_input" "${runfolder}/1_align/1.2_input_check"
+  rm -rf "${runfolder}/1_align/1.1_input"
 fi
 
 # bmge or not
@@ -793,7 +794,7 @@ if [ "${dobmge}" ] ; then
     runBmge "${runfolder}/1_align/1.2_${aligner}_check/" "${runfolder}/1_align/1.3_${aligner}_check_bmge"
     checkNtaxa "${runfolder}/1_align/1.3_${aligner}_check_bmge" 4 .ali
   else
-    runBmge "${runfolder}/1_align/1.0_input_check" "${runfolder}/1_align/1.3_input_check_bmge"
+    runBmge "${runfolder}/1_align/1.2_input_check" "${runfolder}/1_align/1.3_input_check_bmge"
     checkNtaxa "${runfolder}/1_align/1.3_input_check_bmge" 4 .ali
   fi
 fi
@@ -807,9 +808,9 @@ if [ "${doalign}" ] ; then
   fi
 else
   if [ "${dobmge}" ] ; then
-    pargenesFixedModel "${runfolder}/1_align/1.0_input_check_bmge" "${runfolder}/2_trees/2.1_input_check_bmge_pargenes"
+    pargenesFixedModel "${runfolder}/1_align/1.3_input_check_bmge" "${runfolder}/2_trees/2.1_input_check_bmge_pargenes"
   else
-    pargenesFixedModel "${runfolder}/1_align/1.0_input_check" "${runfolder}/2_trees/2.1_input_check_pargenes"
+    pargenesFixedModel "${runfolder}/1_align/1.2_input_check" "${runfolder}/2_trees/2.1_input_check_pargenes"
   fi
 fi
 
@@ -822,9 +823,9 @@ if [ "${doalign}" ] ; then
   fi
 else
   if [ "${dobmge}" ] ; then
-    setupTreeshrink "${runfolder}/2_trees/2.1_input_check_bmge_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.0_input_check_bmge" "${runfolder}/3_treeshrink/3.1_treeshrink"
+    setupTreeshrink "${runfolder}/2_trees/2.1_input_check_bmge_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.3_input_check_bmge" "${runfolder}/3_treeshrink/3.1_treeshrink"
   else
-    setupTreeshrinkNoAlignerNoBmge "${runfolder}/2_trees/2.1_input_check_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.0_input_check" "${runfolder}/3_treeshrink/3.1_treeshrink"
+    setupTreeshrinkNoAlignerNoBmge "${runfolder}/2_trees/2.1_input_check_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.2_input_check" "${runfolder}/3_treeshrink/3.1_treeshrink"
   fi
 fi
 
