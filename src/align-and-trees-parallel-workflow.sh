@@ -785,7 +785,7 @@ else
       parallel cp -s {} "${runfolder}/1_align/1.1_input/{/.}.ali"
   checkNtaxa "${runfolder}/1_align/1.1_input" 4 .ali
   checkAlignmentWithRaxml "${runfolder}/1_align/1.1_input" "${runfolder}/1_align/1.2_input_check"
-  rm -rf "${runfolder}/1_align/1.1_input"
+  #rm -rf "${runfolder}/1_align/1.1_input"
 fi
 
 # bmge or not
