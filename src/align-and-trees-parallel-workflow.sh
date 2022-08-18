@@ -54,8 +54,9 @@ Options:
            -d type   -- Specify data type: nt or aa. (Mandatory)
            -t number -- Specify the number of threads. Default: ${ncores}
            -m crit   -- Model test criterion: BIC, AIC or AICC. Default: ${modeltestcriterion}
-           -A        -- Do not run initial alignment (assume aligned input). Default is to assume unaligned input.
-           -B        -- Do not run BMGE. Default is to use BMGE.
+           -A        -- Do not run mafft (assume aligned input)
+           -B        -- Do not run BMGE
+           -T        -- Do not run TreeShrink
            -v        -- Print version
            -h        -- Print help message
 
@@ -113,13 +114,15 @@ modelforpargenesfixed='GTR+G8+F'
 # Arguments and defaults
 doalign=1
 dobmge=1
+dotreeshrink=1
 Aflag=
 Bflag=
+Tflag=
 dflag=
 tflag=
 mflag=
 
-while getopts 'ABd:t:m:vh' OPTION
+while getopts 'ABTd:t:m:vh' OPTION
 do
   case $OPTION in
   A) Aflag=1
@@ -127,6 +130,9 @@ do
      ;;
   B) Bflag=1
      dobmge=
+     ;;
+  T) Tflag=1
+     dotreeshrink=
      ;;
   d) dflag=1
      dval="$OPTARG"
@@ -554,10 +560,6 @@ setupTreeshrinkBmgeNoAligner () {
 }
 
 
-
-
-
-
 runTreeshrink() {
 
   # Run TreeShrink
@@ -656,7 +658,7 @@ count() {
   nt_0_input='NA'
 
 
-  # Count files and sequences in input
+  # Count files and sequences in raw input
   nf_input=$(find "${input}" -name '*.fas' | wc -l)
   ns_input=$(grep -c -h '>' "${input}"/*.fas | awk '{sum=sum+$1}END{print sum}')
   nt_input=$(grep -h '>' "${input}"/*.fas | sort -u | wc -l)
@@ -698,12 +700,6 @@ count() {
 
 
   fi
-
- 
-
-
-
-
 
 
 
@@ -834,72 +830,84 @@ if [ "${dobmge}" ] ; then
   fi
 fi
 
-# pargenes, fixed model
-if [ "${doalign}" ] ; then
-  if [ "${dobmge}" ] ; then
-    pargenesFixedModel "${runfolder}/1_align/1.3_${aligner}_check_bmge" "${runfolder}/2_trees/2.1_${aligner}_check_bmge_pargenes"
+# TODO: treeshrink or not
+if [ "${dotreeshrink}" ]; then
+  mkdir -p "${runfolder}/3_treeshrink"
+
+  # pargenes, fixed model
+  if [ "${doalign}" ] ; then
+    if [ "${dobmge}" ] ; then
+      pargenesFixedModel "${runfolder}/1_align/1.3_${aligner}_check_bmge" "${runfolder}/2_trees/2.1_${aligner}_check_bmge_pargenes"
+    else
+      pargenesFixedModel "${runfolder}/1_align/1.2_${aligner}_check" "${runfolder}/2_trees/2.1_${aligner}_check_pargenes"
+    fi
   else
-    pargenesFixedModel "${runfolder}/1_align/1.2_${aligner}_check" "${runfolder}/2_trees/2.1_${aligner}_check_pargenes"
+    if [ "${dobmge}" ] ; then
+      pargenesFixedModel "${runfolder}/1_align/1.3_input_check_bmge" "${runfolder}/2_trees/2.1_input_check_bmge_pargenes"
+    else
+      pargenesFixedModel "${runfolder}/1_align/1.2_input_check" "${runfolder}/2_trees/2.1_input_check_pargenes"
+    fi
   fi
-else
-  if [ "${dobmge}" ] ; then
-    pargenesFixedModel "${runfolder}/1_align/1.3_input_check_bmge" "${runfolder}/2_trees/2.1_input_check_bmge_pargenes"
+  
+  # setup treeshrink
+  if [ "${doalign}" ] ; then
+    if [ "${dobmge}" ] ; then
+      setupTreeshrink "${runfolder}/2_trees/2.1_${aligner}_check_bmge_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.3_${aligner}_check_bmge" "${runfolder}/3_treeshrink/3.1_treeshrink"
+    else
+      setupTreeshrinkNoBmge "${runfolder}/2_trees/2.1_${aligner}_check_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.2_${aligner}_check" "${runfolder}/3_treeshrink/3.1_treeshrink"
+    fi
   else
-    pargenesFixedModel "${runfolder}/1_align/1.2_input_check" "${runfolder}/2_trees/2.1_input_check_pargenes"
+    if [ "${dobmge}" ] ; then
+      setupTreeshrinkBmgeNoAligner "${runfolder}/2_trees/2.1_input_check_bmge_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.3_input_check_bmge" "${runfolder}/3_treeshrink/3.1_treeshrink"
+    else
+      setupTreeshrinkNoAlignerNoBmge "${runfolder}/2_trees/2.1_input_check_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.2_input_check" "${runfolder}/3_treeshrink/3.1_treeshrink"
+    fi
+  fi
+  
+  # treeshrink
+  runTreeshrink "${runfolder}/3_treeshrink/3.1_treeshrink"
+  checkNtaxaOutputAli "${runfolder}/3_treeshrink/3.1_treeshrink" 4
+  
+  # realign
+  if [ "${doalign}" ] ; then
+    if [ "${dobmge}" ] ; then
+      realignerOutputAli "${runfolder}/3_treeshrink/3.1_treeshrink/" "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink"
+    else
+      realignerOutputAli "${runfolder}/3_treeshrink/3.1_treeshrink/" "${runfolder}/1_align/1.4_${aligner}_check_treeshrink"
+    fi
+  else
+    if [ "${dobmge}" ] ; then
+      realignerOutputAli "${runfolder}/3_treeshrink/3.1_treeshrink/" "${runfolder}/1_align/1.4_input_check_bmge_treeshrink"
+    else
+      realignerOutputAli "${runfolder}/3_treeshrink/3.1_treeshrink/" "${runfolder}/1_align/1.4_input_check_treeshrink"
+    fi
   fi
 fi
 
-# setup treeshrink
-if [ "${doalign}" ] ; then
-  if [ "${dobmge}" ] ; then
-    setupTreeshrink "${runfolder}/2_trees/2.1_${aligner}_check_bmge_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.3_${aligner}_check_bmge" "${runfolder}/3_treeshrink/3.1_treeshrink"
+# TODO: treeshrink or not
+if [ "${dotreeshrink}" ]; then
+  # pargenes, modeltest, astral
+  if [ "${doalign}" ] ; then
+    if [ "${dobmge}" ] ; then
+      pargenesModeltestAstral "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink" "${runfolder}/2_trees/2.2_${aligner}_check_bmge_treeshrink_pargenes"
+    else
+      pargenesModeltestAstral "${runfolder}/1_align/1.4_${aligner}_check_treeshrink" "${runfolder}/2_trees/2.2_${aligner}_check_treeshrink_pargenes"
+    fi
   else
-    setupTreeshrinkNoBmge "${runfolder}/2_trees/2.1_${aligner}_check_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.2_${aligner}_check" "${runfolder}/3_treeshrink/3.1_treeshrink"
+    if [ "${dobmge}" ] ; then
+      pargenesModeltestAstral "${runfolder}/1_align/1.4_input_check_bmge_treeshrink" "${runfolder}/2_trees/2.2_input_check_bmge_treeshrink_pargenes"
+    else
+      pargenesModeltestAstral "${runfolder}/1_align/1.4_input_check_treeshrink" "${runfolder}/2_trees/2.2_input_check_treeshrink_pargenes"
+    fi
   fi
 else
-  if [ "${dobmge}" ] ; then
-    setupTreeshrinkBmgeNoAligner "${runfolder}/2_trees/2.1_input_check_bmge_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.3_input_check_bmge" "${runfolder}/3_treeshrink/3.1_treeshrink"
-  else
-    setupTreeshrinkNoAlignerNoBmge "${runfolder}/2_trees/2.1_input_check_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.2_input_check" "${runfolder}/3_treeshrink/3.1_treeshrink"
-  fi
+  echo "TODO: run pargenes on non-treesrink folders"
 fi
 
-# treeshrink
-runTreeshrink "${runfolder}/3_treeshrink/3.1_treeshrink"
-checkNtaxaOutputAli "${runfolder}/3_treeshrink/3.1_treeshrink" 4
-
-# realign
-if [ "${doalign}" ] ; then
-  if [ "${dobmge}" ] ; then
-    realignerOutputAli "${runfolder}/3_treeshrink/3.1_treeshrink/" "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink"
-  else
-    realignerOutputAli "${runfolder}/3_treeshrink/3.1_treeshrink/" "${runfolder}/1_align/1.4_${aligner}_check_treeshrink"
-  fi
-else
-  if [ "${dobmge}" ] ; then
-    realignerOutputAli "${runfolder}/3_treeshrink/3.1_treeshrink/" "${runfolder}/1_align/1.4_input_check_bmge_treeshrink"
-  else
-    realignerOutputAli "${runfolder}/3_treeshrink/3.1_treeshrink/" "${runfolder}/1_align/1.4_input_check_treeshrink"
-  fi
-fi
-
-# pargenes, modeltest, astral
-if [ "${doalign}" ] ; then
-  if [ "${dobmge}" ] ; then
-    pargenesModeltestAstral "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink" "${runfolder}/2_trees/2.2_${aligner}_check_bmge_treeshrink_pargenes"
-  else
-    pargenesModeltestAstral "${runfolder}/1_align/1.4_${aligner}_check_treeshrink" "${runfolder}/2_trees/2.2_${aligner}_check_treeshrink_pargenes"
-  fi
-else
-  if [ "${dobmge}" ] ; then
-    pargenesModeltestAstral "${runfolder}/1_align/1.4_input_check_bmge_treeshrink" "${runfolder}/2_trees/2.2_input_check_bmge_treeshrink_pargenes"
-  else
-    pargenesModeltestAstral "${runfolder}/1_align/1.4_input_check_treeshrink" "${runfolder}/2_trees/2.2_input_check_treeshrink_pargenes"
-  fi
-fi
-
+# TODO: finish count
 #count
 
+# TODO: finish createReadme
 #createReadme
 
 # End
