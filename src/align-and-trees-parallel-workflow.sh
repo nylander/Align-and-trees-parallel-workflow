@@ -3,7 +3,7 @@
 set -uo pipefail
 
 # Default settings
-version="0.7.1"
+version="0.7.2"
 logfile=
 modeltestcriterion="BIC"
 datatype='nt'
@@ -18,7 +18,6 @@ bmgejar="/home/nylander/src/BMGE-1.12/BMGE.jar"                # <<<<<<<<<< CHAN
 pargenes="/home/nylander/src/ParGenes/pargenes/pargenes.py"    # <<<<<<<<<< CHANGE HERE
 treeshrink="/home/nylander/src/TreeShrink/run_treeshrink.py"   # <<<<<<<<<< CHANGE HERE
 macse="home/nylander/jb/johaberg-all/src/omm_macse_v10.02.sif" # <<<<<<<<<< CHANGE HERE
-
 
 aligner="mafft" # Name of aligner, not path to binary
 alignerbin="mafft"
@@ -375,17 +374,18 @@ runBmge() {
 
 checkNtaxa() {
 
-  # Check and remove if any of the .ali files have less than 4 taxa
-  # Input: 1_align/1.3_mafft_check_bmge/*.mafft.bmge.ali
-  # Output: remove /1_align/1.3_mafft_check_bmge/*.mafft.bmge.ali files
-  # Call: checkNtaxa 1_align/1.3_mafft_check_bmge/ 4
+  # Check and remove if any of the .suffix files have less than 4 taxa
+  # Input: input/*.suffix
+  # Output: remove input/*.suffix files
+  # Call: checkNtaxaFas input 4 .suffix
   # TODO: Have this function create yet another folder? Use symlinks for files from inputfolder?
 
   local inputfolder="$1"
   local min="$2"
+  local suffix="$3"
   echo -e "\n## ATPW [$(date "+%F %T")]: Check and remove if any files have less than 4 taxa" 2>&1 | tee -a "${logfile}"
-  find "${inputfolder}" -type f -name '*.ali' | \
-    parallel 'checkNtaxaInFasta {} '"${min}"''>> "${logfile}" 2>&1
+  find "${inputfolder}" -type f -name "*${suffix}" | \
+    parallel 'checkNtaxaInFasta {} '"${min}"'' >> "${logfile}" 2>&1
 }
 
 
@@ -752,22 +752,24 @@ EOF
 # TODO: rewrite to avoid all hard coded paths
 
 if [ ! "${Aflag}" ] ; then # do mafft
-  align "${input}" "${runfolder}/1_align/1.1_${aligner}" # input: *.fas, output: *.mafft.ali
-  checkAlignmentWithRaxml "${runfolder}/1_align/1.1_${aligner}" "${runfolder}/1_align/1.2_${aligner}_check" # input: *.ali, output: *.mafft.ali
+  checkNtaxa "${input}" 4 .fas
+  align "${input}" "${runfolder}/1_align/1.1_${aligner}"
+  checkAlignmentWithRaxml "${runfolder}/1_align/1.1_${aligner}" "${runfolder}/1_align/1.2_${aligner}_check"
 else
   mkdir -p "${runfolder}/1_align/1.0_input"
   find "${input}" -name '*.fas' | \
       parallel cp -s {} "${runfolder}/1_align/1.0_input/{/.}.ali"
+  checkNtaxa "${runfolder}/1_align/1.0_input" 4 .ali
 fi
 
 if [ ! "${Bflag}" ] ; then # do bmge
   if [ ! "${Aflag}" ] ; then # did mafft
-    runBmge "${runfolder}/1_align/1.2_${aligner}_check/" "${runfolder}/1_align/1.3_${aligner}_check_bmge" # input:*.mafft.ali, output: *.bmge.ali
-    checkNtaxa "${runfolder}/1_align/1.3_${aligner}_check_bmge" 4 # input: *.ali, output: *.ali
+    runBmge "${runfolder}/1_align/1.2_${aligner}_check/" "${runfolder}/1_align/1.3_${aligner}_check_bmge"
+    checkNtaxa "${runfolder}/1_align/1.3_${aligner}_check_bmge" 4 .ali
   fi
 else
-  runBmge "${runfolder}/1_align/1.0_input" "${runfolder}/1_align/1.3_bmge" # input:*.ali, output: *.bmge.ali <<<<<<<<<<<<<<<<<< our input is *.fas
-  checkNtaxa "${runfolder}/1_align/1.3_bmge" 4 # input: *.ali, output: *.ali <<<<<<<<<<<<<<<<<< our input is *.fas
+  runBmge "${runfolder}/1_align/1.0_input" "${runfolder}/1_align/1.3_bmge"
+  checkNtaxa "${runfolder}/1_align/1.3_bmge" 4 .ali
 fi
 
 if [ ! "${Aflag}" ] ; then # did mafft
@@ -813,7 +815,6 @@ if [ ! "${Aflag}" ] ; then # did mafft
 else
   pargenesModeltestAstral "${runfolder}/1_align/1.4_treeshrink" "${runfolder}/2_trees/2.2_treeshrink_pargenes"
 fi
-
 
 count
 
