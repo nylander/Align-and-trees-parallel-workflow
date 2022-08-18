@@ -3,7 +3,7 @@
 set -uo pipefail
 
 # Default settings
-version="0.7.2"
+version="0.7.3"
 logfile=
 modeltestcriterion="BIC"
 datatype='nt'
@@ -604,54 +604,73 @@ count() {
   # Call: count
   # TODO: Rewrite to avoid hard codes parts
   
+  nf_mafft='NA'
+  ns_mafft='NA'
+  nt_mafft='NA'
+  nf_mafft_check='NA'
+  ns_mafft_check='NA'
+  nt_mafft_check='NA'
+  nf_mafft_check_bmge='NA'
+  ns_mafft_check_bmge='NA'
+  nt_mafft_check_bmge='NA'
+  nf_mafft_check_bmge_treeshrink='NA'
+  ns_mafft_check_bmge_treeshrink='NA'
+  nt_mafft_check_bmge_treeshrink='NA'
+  nf_0_input='NA'
+  ns_0_input='NA'
+  nt_0_input='NA'
+
+
   # Count files and sequences in input
   nf_input=$(find "${input}" -name '*.fas' | wc -l)
   ns_input=$(grep -c -h '>' "${input}"/*.fas | awk '{sum=sum+$1}END{print sum}')
   nt_input=$(grep -h '>' "${input}"/*.fas | sort -u | wc -l)
 
-  # Count files and sequences in 1.1_mafft
-  if [ -d "${runfolder}/1_align/1.1_${aligner}" ] ; then
-    nf_mafft=$(find  "${runfolder}/1_align/1.1_${aligner}" -name '*.ali' | wc -l)
-    ns_mafft=$(grep -c -h '>' "${runfolder}/1_align/1.1_${aligner}"/*.ali | awk '{sum=sum+$1}END{print sum}')
-    nt_mafft=$(grep -h '>' "${runfolder}/1_align/1.1_${aligner}"/*.ali | sort -u | wc -l)
+  if [ "${doalign}" ] ; then
+    # Count files and sequences in 1.1_mafft
+    if [ -d "${runfolder}/1_align/1.1_${aligner}" ] ; then
+      nf_mafft=$(find  "${runfolder}/1_align/1.1_${aligner}" -name '*.ali' | wc -l)
+      ns_mafft=$(grep -c -h '>' "${runfolder}/1_align/1.1_${aligner}"/*.ali | awk '{sum=sum+$1}END{print sum}')
+      nt_mafft=$(grep -h '>' "${runfolder}/1_align/1.1_${aligner}"/*.ali | sort -u | wc -l)
+    fi
+    # Count files and sequences in 1.2_mafft_check
+    if [ -d "${runfolder}/1_align/1.2_${aligner}_check" ] ; then
+      nf_mafft_check=$(find -L "${runfolder}/1_align/1.2_${aligner}_check" -name '*.ali' | wc -l)
+      ns_mafft_check=$(grep -c -h '>' "${runfolder}/1_align/1.2_${aligner}_check"/*.ali | awk '{sum=sum+$1}END{print sum}')
+      nt_mafft_check=$(grep -h '>' "${runfolder}/1_align/1.2_${aligner}_check"/*.ali | sort -u | wc -l)
+    fi
+    if [ "${dobmge}" ] ; then
+      # Count files and sequences in 1.3_mafft_check_bmge
+      if [ -d "${runfolder}/1_align/1.3_${aligner}_check_bmge" ] ; then
+        nf_mafft_check_bmge=$(find "${runfolder}/1_align/1.3_${aligner}_check_bmge" -name '*.ali' | wc -l)
+        ns_mafft_check_bmge=$(grep -c -h '>' "${runfolder}/1_align/1.3_${aligner}_check_bmge"/*.ali | awk '{sum=sum+$1}END{print sum}')
+        nt_mafft_check_bmge=$(grep -h '>' "${runfolder}/1_align/1.3_${aligner}_check_bmge"/*.ali | sort -u | wc -l)
+      fi
+      if [ -d "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink" ] ; then
+        # Count files and sequences in 1.4_mafft_check_bmge_treeshrink
+        nf_mafft_check_bmge_treeshrink=$(find "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink" -name '*.ali' | wc -l)
+        ns_mafft_check_bmge_treeshrink=$(grep -c -h '>' "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink"/*.ali | awk '{sum=sum+$1}END{print sum}')
+        nt_mafft_check_bmge_treeshrink=$(grep -h '>' "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink"/*.ali | sort -u | wc -l)
+      fi
+    fi
   else
-    nf_mafft='NA'
-    ns_mafft='NA'
-    nt_mafft='NA'
+    if [ -d "${runfolder}/1_align/1.0_input" ] ; then
+      # Count files and sequences in 1.0_input
+      nf_0_input=$(find  "${runfolder}/1_align/1.0_input" -name '*.ali' | wc -l)
+      ns_0_input=$(grep -c -h '>' "${runfolder}/1_align/1.0_input"/*.ali | awk '{sum=sum+$1}END{print sum}')
+      nt_0_input=$(grep -h '>' "${runfolder}/1_align/1.0_input"/*.ali | sort -u | wc -l)
+    fi
+
+
   fi
 
-  # Count files and sequences in 1.2_mafft_check
-  if [ -d "${runfolder}/1_align/1.2_${aligner}_check" ] ; then
-    nf_mafft_check=$(find -L "${runfolder}/1_align/1.2_${aligner}_check" -name '*.ali' | wc -l)
-    ns_mafft_check=$(grep -c -h '>' "${runfolder}/1_align/1.2_${aligner}_check"/*.ali | awk '{sum=sum+$1}END{print sum}')
-    nt_mafft_check=$(grep -h '>' "${runfolder}/1_align/1.2_${aligner}_check"/*.ali | sort -u | wc -l)
-  else
-    nf_mafft_check='NA'
-    ns_mafft_check='NA'
-    nt_mafft_check='NA'
-  fi
+ 
 
-  # Count files and sequences in 1.3_mafft_check_bmge
-  if [ -d "${runfolder}/1_align/1.3_${aligner}_check_bmge" ] ; then
-    nf_mafft_check_bmge=$(find "${runfolder}/1_align/1.3_${aligner}_check_bmge" -name '*.ali' | wc -l)
-    ns_mafft_check_bmge=$(grep -c -h '>' "${runfolder}/1_align/1.3_${aligner}_check_bmge"/*.ali | awk '{sum=sum+$1}END{print sum}')
-    nt_mafft_check_bmge=$(grep -h '>' "${runfolder}/1_align/1.3_${aligner}_check_bmge"/*.ali | sort -u | wc -l)
-  else
-    nf_mafft_check_bmge='NA'
-    ns_mafft_check_bmge='NA'
-    nt_mafft_check_bmge='NA'
-  fi
 
-  # Count files and sequences in 1.4_mafft_check_bmge_treeshrink
-  if [ -d "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink" ] ; then
-    nf_mafft_check_bmge_treeshrink=$(find "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink" -name '*.ali' | wc -l)
-    ns_mafft_check_bmge_treeshrink=$(grep -c -h '>' "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink"/*.ali | awk '{sum=sum+$1}END{print sum}')
-    nt_mafft_check_bmge_treeshrink=$(grep -h '>' "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink"/*.ali | sort -u | wc -l)
-  else
-    nf_mafft_check_bmge_treeshrink='NA'
-    ns_mafft_check_bmge_treeshrink='NA'
-    nt_mafft_check_bmge_treeshrink='NA'
-  fi
+
+
+
+
 
   # Count taxa in astral tree
   astraltree=$(find "${runfolder}" -name 'output_species_tree.newick')
@@ -755,6 +774,7 @@ EOF
 
 # TODO: rewrite to avoid all hard coded paths
 
+# Align or not, and check files with raxml
 if [ "${doalign}" ] ; then
   checkNtaxa "${input}" 4 .fas
   align "${input}" "${runfolder}/1_align/1.1_${aligner}"
@@ -764,18 +784,21 @@ else
   find "${input}" -name '*.fas' | \
       parallel cp -s {} "${runfolder}/1_align/1.0_input/{/.}.ali"
   checkNtaxa "${runfolder}/1_align/1.0_input" 4 .ali
+  checkAlignmentWithRaxml "${runfolder}/1_align/1.0_input" "${runfolder}/1_align/1.0_input_check"
 fi
 
+# bmge or not
 if [ "${dobmge}" ] ; then
   if [ "${doalign}" ] ; then
     runBmge "${runfolder}/1_align/1.2_${aligner}_check/" "${runfolder}/1_align/1.3_${aligner}_check_bmge"
     checkNtaxa "${runfolder}/1_align/1.3_${aligner}_check_bmge" 4 .ali
   else
-    runBmge "${runfolder}/1_align/1.0_input" "${runfolder}/1_align/1.3_bmge"
-    checkNtaxa "${runfolder}/1_align/1.3_bmge" 4 .ali
+    runBmge "${runfolder}/1_align/1.0_input_check" "${runfolder}/1_align/1.3_input_check_bmge"
+    checkNtaxa "${runfolder}/1_align/1.3_input_check_bmge" 4 .ali
   fi
 fi
 
+# pargenes, fixed model
 if [ "${doalign}" ] ; then
   if [ "${dobmge}" ] ; then
     pargenesFixedModel "${runfolder}/1_align/1.3_${aligner}_check_bmge" "${runfolder}/2_trees/2.1_${aligner}_check_bmge_pargenes"
@@ -783,9 +806,10 @@ if [ "${doalign}" ] ; then
     pargenesFixedModel "${runfolder}/1_align/1.3_${aligner}_check" "${runfolder}/2_trees/2.1_${aligner}_check_pargenes"
   fi
 else
-  pargenesFixedModel "${runfolder}/1_align/1.0_input" "${runfolder}/2_trees/2.1_pargenes"
+  pargenesFixedModel "${runfolder}/1_align/1.0_input_check" "${runfolder}/2_trees/2.1_input_check_pargenes"
 fi
 
+# setup for treeshrink
 if [ "${doalign}" ] ; then
   if [ "${dobmge}" ] ; then
     setupTreeshrink "${runfolder}/2_trees/2.1_${aligner}_check_bmge_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.3_${aligner}_check_bmge" "${runfolder}/3_treeshrink/3.1_treeshrink"
@@ -793,7 +817,7 @@ if [ "${doalign}" ] ; then
     setupTreeshrinkNoBmge "${runfolder}/2_trees/2.1_${aligner}_check_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.3_${aligner}_check" "${runfolder}/3_treeshrink/3.1_treeshrink"
   fi
 else
-  setupTreeshrinkNoAlignerNoBmge "${runfolder}/2_trees/2.1_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.0_input" "${runfolder}/3_treeshrink/3.1_treeshrink"
+  setupTreeshrinkNoAlignerNoBmge "${runfolder}/2_trees/2.1_input_check_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.0_input_check" "${runfolder}/3_treeshrink/3.1_treeshrink"
 fi
 
 runTreeshrink "${runfolder}/3_treeshrink/3.1_treeshrink"
@@ -807,7 +831,7 @@ if [ "${doalign}" ] ; then
     realignerOutputAli "${runfolder}/3_treeshrink/3.1_treeshrink/" "${runfolder}/1_align/1.4_${aligner}_check_treeshrink"
   fi
 else
-  realignerOutputAli "${runfolder}/3_treeshrink/3.1_treeshrink/" "${runfolder}/1_align/1.4_treeshrink"
+  realignerOutputAli "${runfolder}/3_treeshrink/3.1_treeshrink/" "${runfolder}/1_align/1.4_input_check_treeshrink"
 fi
 
 if [ "${doalign}" ] ; then
@@ -817,12 +841,12 @@ if [ "${doalign}" ] ; then
     pargenesModeltestAstral "${runfolder}/1_align/1.4_${aligner}_check_treeshrink" "${runfolder}/2_trees/2.2_${aligner}_check_treeshrink_pargenes"
   fi
 else
-  pargenesModeltestAstral "${runfolder}/1_align/1.4_treeshrink" "${runfolder}/2_trees/2.2_treeshrink_pargenes"
+  pargenesModeltestAstral "${runfolder}/1_align/1.4_input_check_treeshrink" "${runfolder}/2_trees/2.2_input_check_treeshrink_pargenes"
 fi
 
-count
+#count
 
-createReadme
+#createReadme
 
 # End
 echo -e "\n## ATPW [$(date "+%F %T")]: Reached end of the script\n" 2>&1 | tee -a "${logfile}"
