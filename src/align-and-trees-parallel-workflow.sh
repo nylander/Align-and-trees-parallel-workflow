@@ -755,7 +755,7 @@ EOF
 
 # TODO: rewrite to avoid all hard coded paths
 
-if [ "${doalign}" ] ; then # do mafft
+if [ "${doalign}" ] ; then
   checkNtaxa "${input}" 4 .fas
   align "${input}" "${runfolder}/1_align/1.1_${aligner}"
   checkAlignmentWithRaxml "${runfolder}/1_align/1.1_${aligner}" "${runfolder}/1_align/1.2_${aligner}_check"
@@ -766,8 +766,8 @@ else
   checkNtaxa "${runfolder}/1_align/1.0_input" 4 .ali
 fi
 
-if [ "${dobmge}" ] ; then # do bmge
-  if [ "${doalign}" ] ; then # did mafft
+if [ "${dobmge}" ] ; then
+  if [ "${doalign}" ] ; then
     runBmge "${runfolder}/1_align/1.2_${aligner}_check/" "${runfolder}/1_align/1.3_${aligner}_check_bmge"
     checkNtaxa "${runfolder}/1_align/1.3_${aligner}_check_bmge" 4 .ali
   else
@@ -776,20 +776,20 @@ if [ "${dobmge}" ] ; then # do bmge
   fi
 fi
 
-if [ "${doalign}" ] ; then # did mafft
-  if [ "${dobmge}" ] ; then # did bmge
+if [ "${doalign}" ] ; then
+  if [ "${dobmge}" ] ; then
     pargenesFixedModel "${runfolder}/1_align/1.3_${aligner}_check_bmge" "${runfolder}/2_trees/2.1_${aligner}_check_bmge_pargenes"
-  else # no bmge
+  else
     pargenesFixedModel "${runfolder}/1_align/1.3_${aligner}_check" "${runfolder}/2_trees/2.1_${aligner}_check_pargenes"
   fi
 else
   pargenesFixedModel "${runfolder}/1_align/1.0_input" "${runfolder}/2_trees/2.1_pargenes"
 fi
 
-if [ "${doalign}" ] ; then # did mafft
-  if [ "${dobmge}" ] ; then # did bmge
+if [ "${doalign}" ] ; then
+  if [ "${dobmge}" ] ; then
     setupTreeshrink "${runfolder}/2_trees/2.1_${aligner}_check_bmge_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.3_${aligner}_check_bmge" "${runfolder}/3_treeshrink/3.1_treeshrink"
-  else # no bmge
+  else
     setupTreeshrinkNoBmge "${runfolder}/2_trees/2.1_${aligner}_check_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.3_${aligner}_check" "${runfolder}/3_treeshrink/3.1_treeshrink"
   fi
 else
@@ -800,20 +800,20 @@ runTreeshrink "${runfolder}/3_treeshrink/3.1_treeshrink"
 
 checkNtaxaOutputAli "${runfolder}/3_treeshrink/3.1_treeshrink" 4
 
-if [ "${doalign}" ] ; then # did mafft
-  if [ "${dobmge}" ] ; then # did bmge
+if [ "${doalign}" ] ; then
+  if [ "${dobmge}" ] ; then
     realignerOutputAli "${runfolder}/3_treeshrink/3.1_treeshrink/" "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink"
-  else # no bmge
+  else
     realignerOutputAli "${runfolder}/3_treeshrink/3.1_treeshrink/" "${runfolder}/1_align/1.4_${aligner}_check_treeshrink"
   fi
 else
   realignerOutputAli "${runfolder}/3_treeshrink/3.1_treeshrink/" "${runfolder}/1_align/1.4_treeshrink"
 fi
 
-if [ "${doalign}" ] ; then # did mafft
-  if [ "${dobmge}" ] ; then # did bmge
+if [ "${doalign}" ] ; then
+  if [ "${dobmge}" ] ; then
     pargenesModeltestAstral "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink" "${runfolder}/2_trees/2.2_${aligner}_check_bmge_treeshrink_pargenes"
-  else # no bmge
+  else
     pargenesModeltestAstral "${runfolder}/1_align/1.4_${aligner}_check_treeshrink" "${runfolder}/2_trees/2.2_${aligner}_check_treeshrink_pargenes"
   fi
 else
