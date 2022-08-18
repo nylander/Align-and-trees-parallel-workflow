@@ -522,6 +522,41 @@ setupTreeshrinkNoBmge() {
    parallel copyAndConvertNoBmge {} >> "${logfile}" 2>&1
 }
 
+setupTreeshrinkBmgeNoAligner () {
+
+ # Setup data for TreeShrink
+ # Input: 3_treeshrink/3.1_treeshrink
+ # Output: 3_treeshrink/3.1_treeshrink
+ # Call: setupTreeshrink "${runfolder}/2_trees/2.1_mafft_check_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.3_mafft_check" "${runfolder}/3_treeshrink/3.1_treeshrink"
+ # TODO:
+ inputfolderone="$1"     # where to look for trees
+ inputfoldertwo="$2"     # where to look for alignments
+ outputfolderthree="$3"  # output
+ export inputfolderone
+ export inputfoldertwo
+ export outputfolderthree
+ mkdir -p "${outputfolderthree}"
+
+ copyAndConvertBmgeNoAligner () {
+   local f=
+   f=$(basename "$1" .raxml.bestTree) # f=p3896_EOG7SFVKF_bmge_ali
+   mkdir -p "${outputfolderthree}/${f}"
+   ln -s "$1" "${outputfolderthree}/${f}/raxml.bestTree"
+   sear="_bmge_ali"
+   repl=".bmge.ali"
+   local a=${f/$sear/$repl} # a=p3896_EOG7SFVKF.bmge.ali
+   ln -s "${inputfoldertwo}/${a}" "${outputfolderthree}/${f}/alignment.ali"
+ }
+ export -f copyAndConvertBmgeNoAligner
+
+ find "${inputfolderone}" -type f -name '*.raxml.bestTree' | \
+   parallel copyAndConvertBmgeNoAligner {} >> "${logfile}" 2>&1
+}
+
+
+
+
+
 
 runTreeshrink() {
 
@@ -814,7 +849,7 @@ else
   fi
 fi
 
-# setup for treeshrink
+# setup treeshrink
 if [ "${doalign}" ] ; then
   if [ "${dobmge}" ] ; then
     setupTreeshrink "${runfolder}/2_trees/2.1_${aligner}_check_bmge_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.3_${aligner}_check_bmge" "${runfolder}/3_treeshrink/3.1_treeshrink"
@@ -823,7 +858,7 @@ if [ "${doalign}" ] ; then
   fi
 else
   if [ "${dobmge}" ] ; then
-    setupTreeshrink "${runfolder}/2_trees/2.1_input_check_bmge_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.3_input_check_bmge" "${runfolder}/3_treeshrink/3.1_treeshrink"
+    setupTreeshrinkBmgeNoAligner "${runfolder}/2_trees/2.1_input_check_bmge_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.3_input_check_bmge" "${runfolder}/3_treeshrink/3.1_treeshrink"
   else
     setupTreeshrinkNoAlignerNoBmge "${runfolder}/2_trees/2.1_input_check_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.2_input_check" "${runfolder}/3_treeshrink/3.1_treeshrink"
   fi
