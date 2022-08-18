@@ -806,7 +806,11 @@ if [ "${doalign}" ] ; then
     pargenesFixedModel "${runfolder}/1_align/1.3_${aligner}_check" "${runfolder}/2_trees/2.1_${aligner}_check_pargenes"
   fi
 else
-  pargenesFixedModel "${runfolder}/1_align/1.0_input_check" "${runfolder}/2_trees/2.1_input_check_pargenes"
+  if [ "${dobmge}" ] ; then
+    pargenesFixedModel "${runfolder}/1_align/1.0_input_check_bmge" "${runfolder}/2_trees/2.1_input_check_bmge_pargenes"
+  else
+    pargenesFixedModel "${runfolder}/1_align/1.0_input_check" "${runfolder}/2_trees/2.1_input_check_pargenes"
+  fi
 fi
 
 # setup for treeshrink
@@ -817,13 +821,18 @@ if [ "${doalign}" ] ; then
     setupTreeshrinkNoBmge "${runfolder}/2_trees/2.1_${aligner}_check_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.3_${aligner}_check" "${runfolder}/3_treeshrink/3.1_treeshrink"
   fi
 else
-  setupTreeshrinkNoAlignerNoBmge "${runfolder}/2_trees/2.1_input_check_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.0_input_check" "${runfolder}/3_treeshrink/3.1_treeshrink"
+  if [ "${dobmge}" ] ; then
+    setupTreeshrink "${runfolder}/2_trees/2.1_input_check_bmge_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.0_input_check_bmge" "${runfolder}/3_treeshrink/3.1_treeshrink"
+  else
+    setupTreeshrinkNoAlignerNoBmge "${runfolder}/2_trees/2.1_input_check_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.0_input_check" "${runfolder}/3_treeshrink/3.1_treeshrink"
+  fi
 fi
 
+# treeshrink
 runTreeshrink "${runfolder}/3_treeshrink/3.1_treeshrink"
-
 checkNtaxaOutputAli "${runfolder}/3_treeshrink/3.1_treeshrink" 4
 
+# realign
 if [ "${doalign}" ] ; then
   if [ "${dobmge}" ] ; then
     realignerOutputAli "${runfolder}/3_treeshrink/3.1_treeshrink/" "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink"
@@ -831,9 +840,14 @@ if [ "${doalign}" ] ; then
     realignerOutputAli "${runfolder}/3_treeshrink/3.1_treeshrink/" "${runfolder}/1_align/1.4_${aligner}_check_treeshrink"
   fi
 else
-  realignerOutputAli "${runfolder}/3_treeshrink/3.1_treeshrink/" "${runfolder}/1_align/1.4_input_check_treeshrink"
+  if [ "${dobmge}" ] ; then
+    realignerOutputAli "${runfolder}/3_treeshrink/3.1_treeshrink/" "${runfolder}/1_align/1.4_input_check_bmge_treeshrink"
+  else
+    realignerOutputAli "${runfolder}/3_treeshrink/3.1_treeshrink/" "${runfolder}/1_align/1.4_input_check_treeshrink"
+  fi
 fi
 
+# pargenes, modeltest, astral
 if [ "${doalign}" ] ; then
   if [ "${dobmge}" ] ; then
     pargenesModeltestAstral "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink" "${runfolder}/2_trees/2.2_${aligner}_check_bmge_treeshrink_pargenes"
@@ -841,7 +855,11 @@ if [ "${doalign}" ] ; then
     pargenesModeltestAstral "${runfolder}/1_align/1.4_${aligner}_check_treeshrink" "${runfolder}/2_trees/2.2_${aligner}_check_treeshrink_pargenes"
   fi
 else
-  pargenesModeltestAstral "${runfolder}/1_align/1.4_input_check_treeshrink" "${runfolder}/2_trees/2.2_input_check_treeshrink_pargenes"
+  if [ "${dobmge}" ] ; then
+    pargenesModeltestAstral "${runfolder}/1_align/1.4_input_check_bmge_treeshrink" "${runfolder}/2_trees/2.2_input_check_bmge_treeshrink_pargenes"
+  else
+    pargenesModeltestAstral "${runfolder}/1_align/1.4_input_check_treeshrink" "${runfolder}/2_trees/2.2_input_check_treeshrink_pargenes"
+  fi
 fi
 
 #count
