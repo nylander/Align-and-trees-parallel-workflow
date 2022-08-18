@@ -817,7 +817,7 @@ if [ "${doalign}" ] ; then
 else
   mkdir -p "${runfolder}/1_align/1.1_input"
   find "${input}" -name '*.fas' | \
-      parallel cp -s {} "${runfolder}/1_align/1.1_input/{/.}.ali"
+      parallel cp {} "${runfolder}/1_align/1.1_input/{/.}.ali"
   checkNtaxa "${runfolder}/1_align/1.1_input" 4 .ali
   checkAlignmentWithRaxml "${runfolder}/1_align/1.1_input" "${runfolder}/1_align/1.2_input_check"
   #rm -rf "${runfolder}/1_align/1.1_input"
