@@ -770,10 +770,10 @@ if [ "${dobmge}" ] ; then # do bmge
   if [ "${doalign}" ] ; then # did mafft
     runBmge "${runfolder}/1_align/1.2_${aligner}_check/" "${runfolder}/1_align/1.3_${aligner}_check_bmge"
     checkNtaxa "${runfolder}/1_align/1.3_${aligner}_check_bmge" 4 .ali
+  else
+    runBmge "${runfolder}/1_align/1.0_input" "${runfolder}/1_align/1.3_bmge"
+    checkNtaxa "${runfolder}/1_align/1.3_bmge" 4 .ali
   fi
-else
-  runBmge "${runfolder}/1_align/1.0_input" "${runfolder}/1_align/1.3_bmge"
-  checkNtaxa "${runfolder}/1_align/1.3_bmge" 4 .ali
 fi
 
 if [ "${doalign}" ] ; then # did mafft
