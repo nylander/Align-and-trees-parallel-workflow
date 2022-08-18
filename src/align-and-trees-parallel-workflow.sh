@@ -111,7 +111,7 @@ modelforpargenesfixed='GTR+G8+F'
 
 
 # Arguments and defaults
-doalignment=1
+doalign=1
 dobmge=1
 Aflag=
 Bflag=
@@ -123,7 +123,7 @@ while getopts 'ABd:t:m:vh' OPTION
 do
   case $OPTION in
   A) Aflag=1
-     doalignment=0
+     doalign=0
      ;;
   B) Bflag=1
      dobmge=0
