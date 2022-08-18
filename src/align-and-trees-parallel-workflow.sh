@@ -123,10 +123,10 @@ while getopts 'ABd:t:m:vh' OPTION
 do
   case $OPTION in
   A) Aflag=1
-     doalign=0
+     doalign=
      ;;
   B) Bflag=1
-     dobmge=0
+     dobmge=
      ;;
   d) dflag=1
      dval="$OPTARG"
