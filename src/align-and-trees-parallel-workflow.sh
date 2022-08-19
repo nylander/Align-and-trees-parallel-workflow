@@ -962,8 +962,8 @@ EOF
 
 # Align or not, and check files with raxml
 if [ "${doalign}" ] ; then
-  checkNtaxa "${input}" "${mintaxfilter}" .fas
   align "${input}" "${runfolder}/1_align/1.1_${aligner}"
+  checkNtaxa "${runfolder}/1_align/1.1_${aligner}" "${mintaxfilter}" .ali
   checkAlignmentWithRaxml "${runfolder}/1_align/1.1_${aligner}" "${runfolder}/1_align/1.2_${aligner}_check"
 else
   mkdir -p "${runfolder}/1_align/1.1_input"
