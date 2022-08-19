@@ -878,9 +878,10 @@ EOF
     echo -e "1. [\`1_align/1.1_"${aligner}"/*.ali\`]("${aligner_folder_path}")" >> "${readme}"
     echo -e "2. [\`1_align/1.2_"${aligner}"_check/*.ali\`]("${aligner_check_folder_path}")" >> "${readme}"
     if [ "${dobmge}" ] ; then
-      echo -e "3. [\`1_align/1.3_"${aligner}"_check_bmge/*.ali\`]("${aligner_check_bmge_folder_path}")" >> "${readme}"
       if [ "${dotreeshrink}" ] ; then
         echo -e "4. [\`1_align/1.4_"${aligner}"_check_bmge_treeshrink/*.ali\`]("${aligner_check_bmge_threeshrink_folder_path}")" >> "${readme}"
+      else
+        echo -e "3. [\`1_align/1.3_"${aligner}"_check_bmge/*.ali\`]("${aligner_check_bmge_folder_path}")" >> "${readme}"
       fi
     fi
   else
