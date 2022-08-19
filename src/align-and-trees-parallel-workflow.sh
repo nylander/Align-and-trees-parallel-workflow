@@ -861,37 +861,37 @@ Total of ${ns_raw_input} sequences from ${nt_raw_input} sequence names.
 
 #### Logfile:
 
-[\`ATPW.log\`](${logfile_path})
+[\`ATPW.log\`](${logfile_path#$runfolder/})
 
 #### The ASTRAL-species tree (${nt_astral} terminals):
 
-[\`output_species_tree.newick\`](${astral_tree_path})
+[\`output_species_tree.newick\`](${astral_tree_path#$runfolder/})
 
 #### Gene trees (min Ntax=${minntax}, max Ntax=${maxntax}):
 
-[\`gene_trees.newick\`](${gene_trees_path})
+[\`gene_trees.newick\`](${gene_trees_path#$runfolder/})
 
 #### Alignments:
 
 EOF
 
   if [ "${doalign}" ] ; then
-    echo -e "1. [\`1_align/1.1_"${aligner}"/*.ali\`](${aligner_folder_path})" >> "${readme}"
-    echo -e "2. [\`1_align/1.2_"${aligner}"_check/*.ali\`](${aligner_check_folder_path})" >> "${readme}"
+    echo -e "1. [\`1_align/1.1_"${aligner}"/*.ali\`](${aligner_folder_path#$runfolder/})" >> "${readme}"
+    echo -e "2. [\`1_align/1.2_"${aligner}"_check/*.ali\`](${aligner_check_folder_path#$runfolder/})" >> "${readme}"
     if [ "${dobmge}" ] ; then
       if [ "${dotreeshrink}" ] ; then
-        echo -e "4. [\`1_align/1.4_"${aligner}"_check_bmge_treeshrink/*.ali\`]("${aligner_check_bmge_threeshrink_folder_path}")" >> "${readme}"
+        echo -e "4. [\`1_align/1.4_"${aligner}"_check_bmge_treeshrink/*.ali\`]("${aligner_check_bmge_threeshrink_folder_path#$runfolder/}")" >> "${readme}"
       else
-        echo -e "3. [\`1_align/1.3_"${aligner}"_check_bmge/*.ali\`](${aligner_check_bmge_folder_path})" >> "${readme}"
+        echo -e "3. [\`1_align/1.3_"${aligner}"_check_bmge/*.ali\`](${aligner_check_bmge_folder_path#$runfolder/})" >> "${readme}"
       fi
     fi
   else
-    echo -e "1. [\`1_align/1.1_input/*.ali\`]("${input_folder_path}")" >> "${readme}"
-    echo -e "2. [\`1_align/1.2_input_check/*.ali\`]("${input_check_folder_path}")" >> "${readme}"
+    echo -e "1. [\`1_align/1.1_input/*.ali\`]("${input_folder_path#$runfolder/}")" >> "${readme}"
+    echo -e "2. [\`1_align/1.2_input_check/*.ali\`]("${input_check_folder_path#$runfolder/}")" >> "${readme}"
     if [ "${dobmge}" ] ; then
-      echo -e "3. [\`1_align/1.3_input_check_bmge/*.ali\`]("${input_check_bmge_folder_path}")" >> "${readme}"
+      echo -e "3. [\`1_align/1.3_input_check_bmge/*.ali\`]("${input_check_bmge_folder_path#$runfolder/}")" >> "${readme}"
       if [ "${dotreeshrink}" ] ; then
-        echo -e "4. [\`1_align/1.4_input_check_bmge_treeshrink/*.ali\`]("$input_check_bmge_threeshrink_folder_path}")" >> "${readme}"
+        echo -e "4. [\`1_align/1.4_input_check_bmge_treeshrink/*.ali\`]("${input_check_bmge_threeshrink_folder_path#$runfolder/}")" >> "${readme}"
       fi
     fi
   fi
@@ -932,7 +932,9 @@ EOF
   fi
 }
 
+##################################################
 # MAIN
+##################################################
 
 # TODO: rewrite to avoid all hard coded paths
 
