@@ -811,15 +811,15 @@ createReadme() {
     if [ "${dobmge}" ] ; then
       if [ "${dotreeshrink}" ] ; then
         aligner_check_bmge_threeshrink_folder_path=$(find "${runfolder}" -type d -name "1.4_${aligner}_check_bmge_treeshrink")
-        steps="mafft, bmge, treeshrink, raxml-ng, astral"
+        steps='mafft, bmge, treeshrink, raxml-ng, astral'
       else
         aligner_check_bmge_folder_path=$(find "${runfolder}" -type d -name "1.3_${aligner}_check_bmge")
-        steps="mafft, bmge, raxml-ng, astral"
+        steps='mafft, bmge, raxml-ng, astral'
       fi
     else
       if [ "${dotreeshrink}" ] ; then
         aligner_check_threeshrink_folder_path=$(find "${runfolder}" -type d -name "1.4_${aligner}_check_treeshrink")
-        steps="mafft, treeshrink, raxml-ng, astral"
+        steps='mafft, treeshrink, raxml-ng, astral'
       fi
     fi
   else
@@ -828,15 +828,15 @@ createReadme() {
     if [ "${dobmge}" ] ; then
       if [ "${dotreeshrink}" ] ; then
         input_check_bmge_threeshrink_folder_path=$(find "${runfolder}" -type d -name '1.4_input_check_bmge_treeshrink')
-        steps="bmge, treeshrink, raxml-ng, astral"
+        steps='bmge, treeshrink, raxml-ng, astral'
       else
         input_check_bmge_folder_path=$(find "${runfolder}" -type d -name '1.3_input_check_bmge')
-        steps="bmge, raxml-ng, astral"
+        steps='bmge, raxml-ng, astral'
       fi
     else
       if [ "${dotreeshrink}" ] ; then
         input_check_threeshrink_folder_path=$(find "${runfolder}" -type d -name '1.4_input_check_treeshrink')
-        steps="treeshrink, raxml-ng, astral"
+        steps='treeshrink, raxml-ng, astral'
       fi
     fi
   fi
