@@ -872,7 +872,7 @@ createReadme() {
 
   #### Alignments:
 
-  EOF
+EOF
 
   if [ "${doalign}" ] ; then
     echo -e "1. [\`1_align/1.1_"${aligner}"/*.ali\`]("${aligner_folder_path}")" >> "${readme}"
