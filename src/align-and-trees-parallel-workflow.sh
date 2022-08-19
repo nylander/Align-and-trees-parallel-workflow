@@ -849,6 +849,7 @@ Run completed: $(date "+%F %T")
 ## Input data
 
 \`${input}\`, with ${nf_raw_input} fasta files (${datatype} format).
+
 Total of ${ns_raw_input} sequences from ${nt_raw_input} sequence names.
 
 ## Output
@@ -907,11 +908,11 @@ EOF
     if [ "${dobmge}" ] ; then
       echo -e "| 3. | BMGE | ${nf_aligner_check_bmge} | ${ns_aligner_check_bmge} | ${nt_aligner_check_bmge} |" >> "${readme}"
       if [ "${dotreeshrink}" ] ; then
-        echo -e "| 4. | TreeShrink | ${nf_aligner_check_bmge_treeshrink} | ${ns_aligner_check_bmge_treeshrink} | ${nt_aligner_check_bmge_treeshrink} |" >> "${readme}"
+        echo -e "| 4. | TreeShrinkA | ${nf_aligner_check_bmge_treeshrink} | ${ns_aligner_check_bmge_treeshrink} | ${nt_aligner_check_bmge_treeshrink} |" >> "${readme}"
       fi
     fi
     if [ "${dotreeshrink}" ] ; then
-        echo -e "| 4. | TreeShrink | ${nf_aligner_check_treeshrink} | ${ns_aligner_check_treeshrink} | ${nt_aligner_check_treeshrink} |" >> "${readme}"
+        echo -e "| 4. | TreeShrinkB | ${nf_aligner_check_treeshrink} | ${ns_aligner_check_treeshrink} | ${nt_aligner_check_treeshrink} |" >> "${readme}"
     fi
   else
     echo -e "| 1. | Input | ${nf_input} | ${ns_input} | ${nt_input} |" >> "${readme}"
@@ -919,11 +920,11 @@ EOF
     if [ "${dobmge}" ] ; then
       echo -e "| 3. | BMGE | ${nf_input_check_bmge} | ${ns_input_check_bmge} | ${nt_input_check_bmge} |" >> "${readme}"
       if [ "${dotreeshrink}" ] ; then
-        echo -e "| 4. | TreeShrink | ${nf_input_check_bmge_treeshrink} | ${ns_input_check_bmge_treeshrink} | ${nt_input_check_bmge_treeshrink} |" >> "${readme}"
+        echo -e "| 4. | TreeShrinkC | ${nf_input_check_bmge_treeshrink} | ${ns_input_check_bmge_treeshrink} | ${nt_input_check_bmge_treeshrink} |" >> "${readme}"
       fi
     else
       if [ "${dotreeshrink}" ] ; then
-        echo -e "| 4. | TreeShrink | ${nf_input_check_treeshrink} | ${ns_input_check_treeshrink} | ${nt_input_check_treeshrink} |" >> "${readme}"
+        echo -e "| 4. | TreeShrinkD | ${nf_input_check_treeshrink} | ${ns_input_check_treeshrink} | ${nt_input_check_treeshrink} |" >> "${readme}"
       fi
     fi
   fi
