@@ -423,7 +423,7 @@ checkNtaxa() {
   echo -e "\n## ATPW [$(date "+%F %T")]: Check and remove if any files have less than ${mintaxfilter} taxa" 2>&1 | tee -a "${logfile}"
   find "${inputfolder}" -type f -name "*${suffix}" | \
     parallel 'checkNtaxaInFasta {} '"${min}"'' >> "${logfile}" 2>&1
-  if [ ! $(find ${inputfolder} -maxdepth 1 -type f -name "*${suffix}") ] ; then
+  if [ ! "$(find ${inputfolder} -maxdepth 1 -type f -name "*${suffix}")" ] ; then
     echo -e "\n## ATPW [$(date "+%F %T")]: WARNING! No ${suffix} files left in ${inputfolder}. Quitting." | tee -a "${logfile}"
     exit 1
   fi
