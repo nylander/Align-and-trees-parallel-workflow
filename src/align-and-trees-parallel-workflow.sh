@@ -801,7 +801,7 @@ createReadme() {
 
   # Find locations of output
   astral_tree_path=$(find "${runfolder}" -type f -name 'output_species_tree.newick')
-  gene_trees_path=$(find "${runfolder}" -path '*astral_run/mlsearch_run/results')
+  gene_trees_path=$(find "${runfolder}" -type f -name 'gene_trees.newick')
   logfile_path=$(find "${runfolder}" -type f -name 'ATPW.log')
 
   if [ "${doalign}" ] ; then
@@ -868,7 +868,7 @@ Total of ${ns_raw_input} sequences from ${nt_raw_input} sequence names.
 
 #### Gene trees (min Ntax=${minntax}, max Ntax=${maxntax}):
 
-[\`${gene_trees_path}/*/*.raxml.bestTree\`](${gene_trees_path})
+[\`gene_trees.newick\`](${gene_trees_path})
 
 #### Alignments:
 
@@ -908,11 +908,11 @@ EOF
     if [ "${dobmge}" ] ; then
       echo -e "| 3. | BMGE | ${nf_aligner_check_bmge} | ${ns_aligner_check_bmge} | ${nt_aligner_check_bmge} |" >> "${readme}"
       if [ "${dotreeshrink}" ] ; then
-        echo -e "| 4. | TreeShrinkA | ${nf_aligner_check_bmge_treeshrink} | ${ns_aligner_check_bmge_treeshrink} | ${nt_aligner_check_bmge_treeshrink} |" >> "${readme}"
+        echo -e "| 4. | TreeShrink | ${nf_aligner_check_bmge_treeshrink} | ${ns_aligner_check_bmge_treeshrink} | ${nt_aligner_check_bmge_treeshrink} |" >> "${readme}"
       fi
     else
       if [ "${dotreeshrink}" ] ; then
-        echo -e "| 4. | TreeShrinkB | ${nf_aligner_check_treeshrink} | ${ns_aligner_check_treeshrink} | ${nt_aligner_check_treeshrink} |" >> "${readme}"
+        echo -e "| 4. | TreeShrink | ${nf_aligner_check_treeshrink} | ${ns_aligner_check_treeshrink} | ${nt_aligner_check_treeshrink} |" >> "${readme}"
       fi
     fi
   else
@@ -921,11 +921,11 @@ EOF
     if [ "${dobmge}" ] ; then
       echo -e "| 3. | BMGE | ${nf_input_check_bmge} | ${ns_input_check_bmge} | ${nt_input_check_bmge} |" >> "${readme}"
       if [ "${dotreeshrink}" ] ; then
-        echo -e "| 4. | TreeShrinkC | ${nf_input_check_bmge_treeshrink} | ${ns_input_check_bmge_treeshrink} | ${nt_input_check_bmge_treeshrink} |" >> "${readme}"
+        echo -e "| 4. | TreeShrink | ${nf_input_check_bmge_treeshrink} | ${ns_input_check_bmge_treeshrink} | ${nt_input_check_bmge_treeshrink} |" >> "${readme}"
       fi
     else
       if [ "${dotreeshrink}" ] ; then
-        echo -e "| 4. | TreeShrinkD | ${nf_input_check_treeshrink} | ${ns_input_check_treeshrink} | ${nt_input_check_treeshrink} |" >> "${readme}"
+        echo -e "| 4. | TreeShrink | ${nf_input_check_treeshrink} | ${ns_input_check_treeshrink} | ${nt_input_check_treeshrink} |" >> "${readme}"
       fi
     fi
   fi
