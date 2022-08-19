@@ -1030,11 +1030,11 @@ else
   echo "TODO: run pargenes on non-treesrink folders"
 fi
 
-# TODO: finish count
+# Count
 echo -e "\n## ATPW [$(date "+%F %T")]: Count sequences in output" | tee -a "${logfile}"
 count
 
-# TODO: finish createReadme
+# Create Readme
 echo -e "\n## ATPW [$(date "+%F %T")]: Create summary README.md file" | tee -a "${logfile}"
 createReadme
 
