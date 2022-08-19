@@ -3,7 +3,7 @@
 set -uo pipefail
 
 # Default settings
-version="0.7.3"
+version="0.7.4"
 logfile=
 modeltestcriterion="BIC"
 datatype='nt'
