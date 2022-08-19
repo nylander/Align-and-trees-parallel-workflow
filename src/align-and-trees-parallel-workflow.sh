@@ -185,7 +185,7 @@ else
   logfile="${runfolder}/ATPW.log"
   echo -e "\n## ATPW [$(date "+%F %T")]: Start" 2>&1 | tee "${logfile}"
   echo -e "\n## ATPW [$(date "+%F %T")]: Created output folder ${runfolder}" 2>&1 | tee "${logfile}"
-  echo -e "\n## ATPW [$(date "+%F %T")]: Created logfile ${logfile} in ${runfolder}" 2>&1 | tee "${logfile}"
+  echo -e "\n## ATPW [$(date "+%F %T")]: Created logfile ATPW.log in output folder" 2>&1 | tee "${logfile}"
 fi
 
 if [ -d "${input}" ] ; then
