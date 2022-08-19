@@ -809,11 +809,11 @@ createReadme() {
     aligner_folder_path=$(find "${runfolder}" -type d -name "1.1_${aligner}")
     aligner_check_folder_path=$(find "${runfolder}" -type d -name "1.2_${aligner}_check")
     if [ "${dobmge}" ] ; then
+      aligner_check_bmge_folder_path=$(find "${runfolder}" -type d -name "1.3_${aligner}_check_bmge")
       if [ "${dotreeshrink}" ] ; then
         aligner_check_bmge_threeshrink_folder_path=$(find "${runfolder}" -type d -name "1.4_${aligner}_check_bmge_treeshrink")
         steps='mafft, bmge, treeshrink, raxml-ng, astral'
       else
-        aligner_check_bmge_folder_path=$(find "${runfolder}" -type d -name "1.3_${aligner}_check_bmge")
         steps='mafft, bmge, raxml-ng, astral'
       fi
     else
@@ -826,11 +826,11 @@ createReadme() {
     input_folder_path=$(find "${runfolder}" -type d -name '1.1_input')
     input_check_folder_path=$(find "${runfolder}" -type d -name '1.2_input_check')
     if [ "${dobmge}" ] ; then
+      input_check_bmge_folder_path=$(find "${runfolder}" -type d -name '1.3_input_check_bmge')
       if [ "${dotreeshrink}" ] ; then
         input_check_bmge_threeshrink_folder_path=$(find "${runfolder}" -type d -name '1.4_input_check_bmge_treeshrink')
         steps='bmge, treeshrink, raxml-ng, astral'
       else
-        input_check_bmge_folder_path=$(find "${runfolder}" -type d -name '1.3_input_check_bmge')
         steps='bmge, raxml-ng, astral'
       fi
     else
