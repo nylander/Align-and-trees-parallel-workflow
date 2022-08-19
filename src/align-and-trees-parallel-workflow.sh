@@ -4,10 +4,11 @@ set -uo pipefail
 # TODO: put back -e
 
 # Default settings
-version="0.7.5"
+version="0.7.6"
 logfile=
 modeltestcriterion="BIC"
 datatype='nt'
+mintaxfilter=4
 
 nprocs=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null)
 ncores="${nprocs}"        # TODO: Do we need to adjust?
@@ -63,6 +64,7 @@ Options:
            -d type   -- Specify data type: nt or aa. (Mandatory)
            -n number -- Specify the number of threads. Default: ${ncores}
            -m crit   -- Model test criterion: BIC, AIC or AICC. Default: ${modeltestcriterion}
+           -f number -- Minimum number of taxa when filtering alignments. Default: ${mintaxfilter}
            -A        -- Do not run mafft (assume aligned input)
            -B        -- Do not run BMGE
            -T        -- Do not run TreeShrink
@@ -73,12 +75,14 @@ Examples:
            $(basename "$0") -d nt -t 8 data out
 
 Input:
-           Folder with fasta formatted sequence files (files need to have suffix ".fas").
+           Folder with fasta formatted sequence files.
+           Files need to have suffix ".fas"!
 
 Output:
-           Folders with filtered alignments and species- and gene-trees.
+           Folders with filtered alignments and species-
+           and gene-trees.
            Summary README.md file.
-           Log file.
+           Log file ATPW.log.
 
 Notes:
            See INSTALL file for software needed.
@@ -131,7 +135,7 @@ dflag=
 nflag=
 mflag=
 
-while getopts 'ABTd:t:m:vh' OPTION
+while getopts 'ABTf:d:n:m:vh' OPTION
 do
   case $OPTION in
   A) Aflag=1
@@ -143,10 +147,13 @@ do
   T) Tflag=1
      dotreeshrink=
      ;;
+  f) fflag=1
+     fval="$OPTARG"
+     ;;
   d) dflag=1
      dval="$OPTARG"
      ;;
-  t) nflag=1
+  n) nflag=1
      nval="$OPTARG"
      ;;
   m) mflag=1
@@ -247,6 +254,10 @@ if [ "${mflag}" ] ; then
   else
     modeltestcriterion="${lcmval}"
   fi
+fi
+
+if [ "${fflag}" ] ; then
+  mintaxfilter="${fval}"
 fi
 
 
@@ -408,7 +419,7 @@ checkNtaxa() {
   local inputfolder="$1"
   local min="$2"
   local suffix="$3"
-  echo -e "\n## ATPW [$(date "+%F %T")]: Check and remove if any files have less than 4 taxa" 2>&1 | tee -a "${logfile}"
+  echo -e "\n## ATPW [$(date "+%F %T")]: Check and remove if any files have less than ${mintaxfilter} taxa" 2>&1 | tee -a "${logfile}"
   find "${inputfolder}" -type f -name "*${suffix}" | \
     parallel 'checkNtaxaInFasta {} '"${min}"'' >> "${logfile}" 2>&1
 }
@@ -424,7 +435,7 @@ checkNtaxaOutputAli() {
 
   local inputfolder="$1"
   local min="$2"
-  echo -e "\n## ATPW [$(date "+%F %T")]: Check and remove if any files have less than 4 taxa" 2>&1 | tee -a "${logfile}"
+  echo -e "\n## ATPW [$(date "+%F %T")]: Check and remove if any files have less than ${mintaxfilter} taxa" 2>&1 | tee -a "${logfile}"
   find "${inputfolder}" -type f -name 'output.ali' | \
     parallel 'checkNtaxaInFasta {} '"${min}"''>> "${logfile}" 2>&1
 }
@@ -951,14 +962,14 @@ EOF
 
 # Align or not, and check files with raxml
 if [ "${doalign}" ] ; then
-  checkNtaxa "${input}" 4 .fas
+  checkNtaxa "${input}" "${mintaxfilter}" .fas
   align "${input}" "${runfolder}/1_align/1.1_${aligner}"
   checkAlignmentWithRaxml "${runfolder}/1_align/1.1_${aligner}" "${runfolder}/1_align/1.2_${aligner}_check"
 else
   mkdir -p "${runfolder}/1_align/1.1_input"
   find "${input}" -name '*.fas' | \
     parallel cp {} "${runfolder}/1_align/1.1_input/{/.}.ali"
-  checkNtaxa "${runfolder}/1_align/1.1_input" 4 .ali
+  checkNtaxa "${runfolder}/1_align/1.1_input" "${mintaxfilter}" .ali
   checkAlignmentWithRaxml "${runfolder}/1_align/1.1_input" "${runfolder}/1_align/1.2_input_check"
   #rm -rf "${runfolder}/1_align/1.1_input"
 fi
@@ -967,10 +978,10 @@ fi
 if [ "${dobmge}" ] ; then
   if [ "${doalign}" ] ; then
     runBmge "${runfolder}/1_align/1.2_${aligner}_check/" "${runfolder}/1_align/1.3_${aligner}_check_bmge"
-    checkNtaxa "${runfolder}/1_align/1.3_${aligner}_check_bmge" 4 .ali
+    checkNtaxa "${runfolder}/1_align/1.3_${aligner}_check_bmge" "${mintaxfilter}" .ali
   else
     runBmge "${runfolder}/1_align/1.2_input_check" "${runfolder}/1_align/1.3_input_check_bmge"
-    checkNtaxa "${runfolder}/1_align/1.3_input_check_bmge" 4 .ali
+    checkNtaxa "${runfolder}/1_align/1.3_input_check_bmge" "${mintaxfilter}" .ali
   fi
 fi
 
@@ -1010,7 +1021,7 @@ if [ "${dotreeshrink}" ]; then
 
   # treeshrink
   runTreeshrink "${runfolder}/3_treeshrink/3.1_treeshrink"
-  checkNtaxaOutputAli "${runfolder}/3_treeshrink/3.1_treeshrink" 4
+  checkNtaxaOutputAli "${runfolder}/3_treeshrink/3.1_treeshrink" "${mintaxfilter}"
 
   # realign
   if [ "${doalign}" ] ; then
