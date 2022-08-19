@@ -910,9 +910,10 @@ EOF
       if [ "${dotreeshrink}" ] ; then
         echo -e "| 4. | TreeShrinkA | ${nf_aligner_check_bmge_treeshrink} | ${ns_aligner_check_bmge_treeshrink} | ${nt_aligner_check_bmge_treeshrink} |" >> "${readme}"
       fi
-    fi
-    if [ "${dotreeshrink}" ] ; then
+    else
+      if [ "${dotreeshrink}" ] ; then
         echo -e "| 4. | TreeShrinkB | ${nf_aligner_check_treeshrink} | ${ns_aligner_check_treeshrink} | ${nt_aligner_check_treeshrink} |" >> "${readme}"
+      fi
     fi
   else
     echo -e "| 1. | Input | ${nf_input} | ${ns_input} | ${nt_input} |" >> "${readme}"
