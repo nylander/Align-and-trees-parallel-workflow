@@ -801,7 +801,7 @@ createReadme() {
 
   # Find locations of output
   astral_tree_path=$(find "${runfolder}" -type f -name 'output_species_tree.newick')
-  gene_trees_path=$(find "${runfolder}" -type d -path '*astral_run/mlsearch_run/results')
+  gene_trees_path=$(find "${runfolder}" -path '*astral_run/mlsearch_run/results')
   logfile_path=$(find "${runfolder}" -type f -name 'ATPW.log')
 
   if [ "${doalign}" ] ; then
@@ -836,52 +836,51 @@ createReadme() {
 
 
   cat <<- EOF > "${readme}"
-  # Summary
+# Align and Trees in Parallel - Summary
 
-  ## Workflow
+## Workflow
 
-  Name: \`$(basename "$0")\`
+Name: \`$(basename "$0")\`
 
-  Version: "${version}"
+Version: ${version}
 
-  Run completed: $(date "+%F %T")
+Run completed: $(date "+%F %T")
 
-  ## Input
+## Input data
 
-  \`"${input}"\`
+\`${input}\`, with ${nf_raw_input} fasta files (${datatype} format).
+Total of ${ns_raw_input} sequences from ${nt_raw_input} sequence names.
 
-  with "${nf_raw_input}" fasta files ("${datatype}" format). Total of "${ns_raw_input}" sequences from "${nt_raw_input}" sequence names.
+## Output
 
-  ## Output
+#### Run folder:
 
-  #### Run folder:
+\`${runfolder}\`
 
-  \`"${runfolder}"\`
+#### Logfile:
 
-  #### Logfile:
+[\`ATPW.log\`](${logfile_path})
 
-  [\`ATPW.log\`]("${logfile_path}")
+#### The ASTRAL-species tree (${nt_astral} terminals):
 
-  #### The ASTRAL-species tree (${nt_astral} terminals):
+[\`output_species_tree.newick\`](${astral_tree_path})
 
-  [\`output_species_tree.newick\`]("${astral_tree_path}")
+#### Gene trees (min Ntax=${minntax}, max Ntax=${maxntax}):
 
-  #### Gene trees (min Ntax=${minntax}, max Ntax=${maxntax}):
+[\`${gene_trees_path}/*/*.raxml.bestTree\`](${gene_trees_path})
 
-  [\`"${gene_trees_path}"/*/*.raxml.bestTree\`]("${gene_trees_path}")
-
-  #### Alignments:
+#### Alignments:
 
 EOF
 
   if [ "${doalign}" ] ; then
-    echo -e "1. [\`1_align/1.1_"${aligner}"/*.ali\`]("${aligner_folder_path}")" >> "${readme}"
-    echo -e "2. [\`1_align/1.2_"${aligner}"_check/*.ali\`]("${aligner_check_folder_path}")" >> "${readme}"
+    echo -e "1. [\`1_align/1.1_"${aligner}"/*.ali\`](${aligner_folder_path})" >> "${readme}"
+    echo -e "2. [\`1_align/1.2_"${aligner}"_check/*.ali\`](${aligner_check_folder_path})" >> "${readme}"
     if [ "${dobmge}" ] ; then
       if [ "${dotreeshrink}" ] ; then
         echo -e "4. [\`1_align/1.4_"${aligner}"_check_bmge_treeshrink/*.ali\`]("${aligner_check_bmge_threeshrink_folder_path}")" >> "${readme}"
       else
-        echo -e "3. [\`1_align/1.3_"${aligner}"_check_bmge/*.ali\`]("${aligner_check_bmge_folder_path}")" >> "${readme}"
+        echo -e "3. [\`1_align/1.3_"${aligner}"_check_bmge/*.ali\`](${aligner_check_bmge_folder_path})" >> "${readme}"
       fi
     fi
   else
@@ -895,7 +894,8 @@ EOF
     fi
   fi
 
-  echo - e "## Filtering summary" >> "${readme}"
+  echo "" >> "${readme}"
+  echo -e "## Filtering summary" >> "${readme}"
   echo "" >> "${readme}"
   echo -e "| Step | Tool | Nfiles | Nseqs | Ntax |" >> "${readme}"
   echo -e "| ---  | --- | --- | --- | --- |" >> "${readme}"
@@ -921,9 +921,10 @@ EOF
       if [ "${dotreeshrink}" ] ; then
         echo -e "| 4. | TreeShrink | ${nf_input_check_bmge_treeshrink} | ${ns_input_check_bmge_treeshrink} | ${nt_input_check_bmge_treeshrink} |" >> "${readme}"
       fi
-    fi
-    if [ "${dotreeshrink}" ] ; then
+    else
+      if [ "${dotreeshrink}" ] ; then
         echo -e "| 4. | TreeShrink | ${nf_input_check_treeshrink} | ${ns_input_check_treeshrink} | ${nt_input_check_treeshrink} |" >> "${readme}"
+      fi
     fi
   fi
 }
