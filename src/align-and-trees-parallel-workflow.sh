@@ -870,7 +870,7 @@ createReadme() {
 
 - Name: \`$(basename "$0")\`
 - Version: ${version}
-- Main repo: \<https://github.com/nylander/Align-and-trees-parallel-workflow\>
+- Main repo: <https://github.com/nylander/Align-and-trees-parallel-workflow>
 - Run completed: $(date "+%F %T")
 - Steps: ${steps}
 
