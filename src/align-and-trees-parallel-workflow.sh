@@ -801,7 +801,7 @@ createReadme() {
 
   # Find locations of output
   astral_tree_path=$(find "${runfolder}" -type f -name 'output_species_tree.newick')
-  gene_trees_path=$(find "${runfolder}" -type d -name '*astral_run/mlsearch_run/results/')
+  gene_trees_path=$(find "${runfolder}" -type d -path '*astral_run/mlsearch_run/results/')
   logfile_path=$(find "${runfolder}" -type f -name 'ATPW.log')
 
   if [ "${doalign}" ] ; then
@@ -864,7 +864,7 @@ createReadme() {
 
   #### The ASTRAL-species tree (${nt_astral} terminals):
 
-  [\`output_species_tree.newick`]("${astral_tree_path}")
+  [\`output_species_tree.newick\`]("${astral_tree_path}")
 
   #### Gene trees (min Ntax=${minntax}, max Ntax=${maxntax}):
 
