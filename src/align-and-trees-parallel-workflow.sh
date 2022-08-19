@@ -801,7 +801,7 @@ createReadme() {
 
   # Find locations of output
   astral_tree_path=$(find "${runfolder}" -type f -name 'output_species_tree.newick')
-  gene_trees_path=$(find "${runfolder}" -type d -path '*astral_run/mlsearch_run/results/')
+  gene_trees_path=$(find "${runfolder}" -type d -path '*astral_run/mlsearch_run/results')
   logfile_path=$(find "${runfolder}" -type f -name 'ATPW.log')
 
   if [ "${doalign}" ] ; then
