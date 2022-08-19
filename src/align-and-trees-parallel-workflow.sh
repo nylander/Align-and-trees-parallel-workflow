@@ -805,17 +805,17 @@ createReadme() {
   logfile_path=$(find "${runfolder}" -type f -name 'ATPW.log')
 
   if [ "${doalign}" ] ; then
-    aligner_folder_path=$(find "${runfolder}" -type d -name "'1.1_"${aligner}"'")
-    aligner_check_folder_path=$(find "${runfolder}" -type d -name "'1.2_"${aligner}"_check'")
+    aligner_folder_path=$(find "${runfolder}" -type d -name "1.1_${aligner}")
+    aligner_check_folder_path=$(find "${runfolder}" -type d -name "1.2_${aligner}_check")
     if [ "${dobmge}" ] ; then
       if [ "${dotreeshrink}" ] ; then
-        aligner_check_bmge_threeshrink_folder_path=$(find "${runfolder}" -type d -name "'1.4_"${aligner}"_check_bmge_treeshrink'")
+        aligner_check_bmge_threeshrink_folder_path=$(find "${runfolder}" -type d -name "1.4_${aligner}_check_bmge_treeshrink")
       else
-        aligner_check_bmge_folder_path=$(find "${runfolder}" -type d -name "'1.3_"${aligner}"_check_bmge'")
+        aligner_check_bmge_folder_path=$(find "${runfolder}" -type d -name "1.3_${aligner}_check_bmge")
       fi
     else
       if [ "${dotreeshrink}" ] ; then
-        aligner_check_threeshrink_folder_path=$(find "${runfolder}" -type d -name "'1.4_"${aligner}"_check_treeshrink'")
+        aligner_check_threeshrink_folder_path=$(find "${runfolder}" -type d -name "1.4_${aligner}_check_treeshrink")
       fi
     fi
   else
