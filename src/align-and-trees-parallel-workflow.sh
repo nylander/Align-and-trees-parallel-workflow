@@ -4,7 +4,7 @@ set -uo pipefail
 # TODO: put back -e
 
 # Default settings
-version="0.7.4"
+version="0.7.5"
 logfile=
 modeltestcriterion="BIC"
 datatype='nt'
@@ -38,12 +38,20 @@ phylip2fasta="phylip2fasta.pl"
 
 # Usage
 function usage {
-cat <<End_Of_Usage
+cat << End_Of_Usage
 
 $(basename "$0") version ${version}
 
 What:
            Phylogenetics in parallel
+
+           Performs the following steps:
+           1. Do multiple sequence alignment (optional)
+           2. Filter using BMGE (optional)
+           3. Filter using TreeShrink (optional)
+           4. Estimate gene trees with raxml-ng using
+              automatic model selection
+           5. Estimate species tree using ASTRAL
 
 By:
            Johan Nylander
@@ -53,7 +61,7 @@ Usage:
 
 Options:
            -d type   -- Specify data type: nt or aa. (Mandatory)
-           -t number -- Specify the number of threads. Default: ${ncores}
+           -n number -- Specify the number of threads. Default: ${ncores}
            -m crit   -- Model test criterion: BIC, AIC or AICC. Default: ${modeltestcriterion}
            -A        -- Do not run mafft (assume aligned input)
            -B        -- Do not run BMGE
@@ -120,7 +128,7 @@ Aflag=
 Bflag=
 Tflag=
 dflag=
-tflag=
+nflag=
 mflag=
 
 while getopts 'ABTd:t:m:vh' OPTION
@@ -138,8 +146,8 @@ do
   d) dflag=1
      dval="$OPTARG"
      ;;
-  t) tflag=1
-     tval="$OPTARG"
+  t) nflag=1
+     nval="$OPTARG"
      ;;
   m) mflag=1
      mval="$OPTARG"
@@ -220,9 +228,15 @@ if [ "${Bflag}" ] ; then
   echo -e "\n## ATPW [$(date "+%F %T")]: Skipping the BMGE step." 2>&1 | tee "${logfile}"
 fi
 
-if [ "${tflag}" ] ; then
-  threads="${tval}"
-  ncores="${threads}" # TODO: differentiate these variables
+if [ "${Tflag}" ] ; then
+  echo -e "\n## ATPW [$(date "+%F %T")]: Skipping the TreeShrink step." 2>&1 | tee "${logfile}"
+  echo -e "\n## ATPW [$(date "+%F %T")]: The -T flag is currently not implemented. Quitting"
+  exit
+fi
+
+if [ "${nflag}" ] ; then
+  nthreads="${nval}"
+  ncores="${nthreads}" # TODO: differentiate these variables
 fi
 
 if [ "${mflag}" ] ; then
