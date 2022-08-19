@@ -185,6 +185,7 @@ else
   logfile="${runfolder}/ATPW.log"
   echo -e "\n## ATPW [$(date "+%F %T")]: Start" 2>&1 | tee "${logfile}"
   echo -e "\n## ATPW [$(date "+%F %T")]: Created output folder ${runfolder}" 2>&1 | tee "${logfile}"
+  echo -e "\n## ATPW [$(date "+%F %T")]: Created logfile ${logfile} in ${runfolder}" 2>&1 | tee "${logfile}"
 fi
 
 if [ -d "${input}" ] ; then
@@ -904,7 +905,7 @@ EOF
 
   if [ "${doalign}" ] ; then
     echo -e "| 1. | "${aligner}" | ${nf_aligner} | ${ns_aligner} | ${nt_aligner} |" >> "${readme}"
-    echo -e "| 2. | Check w. raxml | ${nf_aligner_check} | ${ns_aligner_check} | ${nt_aligner_check} |" >> "${readme}"
+    echo -e "| 2. | Check w. RAxML | ${nf_aligner_check} | ${ns_aligner_check} | ${nt_aligner_check} |" >> "${readme}"
     if [ "${dobmge}" ] ; then
       echo -e "| 3. | BMGE | ${nf_aligner_check_bmge} | ${ns_aligner_check_bmge} | ${nt_aligner_check_bmge} |" >> "${readme}"
       if [ "${dotreeshrink}" ] ; then
@@ -917,7 +918,7 @@ EOF
     fi
   else
     echo -e "| 1. | Input | ${nf_input} | ${ns_input} | ${nt_input} |" >> "${readme}"
-    echo -e "| 2. | Check w. raxml | ${nf_input_check} | ${ns_input_check} | ${nt_input_check} |" >> "${readme}"
+    echo -e "| 2. | Check w. RAxML | ${nf_input_check} | ${ns_input_check} | ${nt_input_check} |" >> "${readme}"
     if [ "${dobmge}" ] ; then
       echo -e "| 3. | BMGE | ${nf_input_check_bmge} | ${ns_input_check_bmge} | ${nt_input_check_bmge} |" >> "${readme}"
       if [ "${dotreeshrink}" ] ; then
