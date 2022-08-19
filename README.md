@@ -1,6 +1,6 @@
 # Align-and-trees-parallel-workflow
 
-- Last modified: mån aug 01, 2022  11:45
+- Last modified: fre aug 19, 2022  07:25
 - Sign: Johan.Nylander\@nrm.se
 
 ## Description
@@ -28,11 +28,13 @@ Steps 1. and 2. are optional (see [Options](#options)).
 
 ## Options
 
-    -d type   -- Specify data type: nt or aa (Mandatory)
-    -t number -- Specify the number of threads
-    -m crit   -- Model test criterion: BIC, AIC or AICc
-    -A        -- Do not run initial alignment (assume aligned input)
+    -d type   -- Specify data type: nt or aa. (Mandatory)
+    -n number -- Specify the number of threads. Default: Number of computer cores
+    -m crit   -- Model test criterion: BIC, AIC or AICc. Default: BIC
+    -f number -- Minimum number of taxa when filtering alignments. Default: 4
+    -A        -- Do not run mafft (assume aligned input)
     -B        -- Do not run BMGE
+    -T        -- Do not run TreeShrink
     -v        -- Print version
     -h        -- Print help message
 
@@ -51,6 +53,8 @@ the input files are already aligned, the workflow needs to be started with the
 `-A` option.
 
 ## Output
+
+From a default run (mafft, bmge, threeshrink, astral)
 
 - Alignments in `outputfolder/1_align/`
 - Gene trees in `outputfolder/2_trees/2.2_mafft_check_bmge_treeshrink_pargenes/mlsearch_run/results`
