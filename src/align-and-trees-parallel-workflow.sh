@@ -1017,10 +1017,12 @@ else
 fi
 
 # TODO: finish count
+echo -e "\n## ATPW [$(date "+%F %T")]: Count sequences in output" | tee -a "${logfile}"
 count
 
 # TODO: finish createReadme
-#createReadme
+echo -e "\n## ATPW [$(date "+%F %T")]: Create summary README.md file" | tee -a "${logfile}"
+createReadme
 
 # End
 echo -e "\n## ATPW [$(date "+%F %T")]: Reached end of the script\n" 2>&1 | tee -a "${logfile}"
