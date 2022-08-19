@@ -4,7 +4,7 @@ set -uo pipefail
 # TODO: put back -e
 
 # Default settings
-version="0.7.6"
+version="0.7.7"
 logfile=
 modeltestcriterion="BIC"
 datatype='nt'
