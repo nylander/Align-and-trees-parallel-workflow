@@ -132,10 +132,11 @@ Aflag=
 Bflag=
 Tflag=
 dflag=
-nflag=
+fflag=
 mflag=
+nflag=
 
-while getopts 'ABTf:d:n:m:vh' OPTION
+while getopts 'ABTd:f:n:m:vh' OPTION
 do
   case $OPTION in
   A) Aflag=1
@@ -147,11 +148,11 @@ do
   T) Tflag=1
      dotreeshrink=
      ;;
-  f) fflag=1
-     fval="$OPTARG"
-     ;;
   d) dflag=1
      dval="$OPTARG"
+     ;;
+  f) fflag=1
+     fval="$OPTARG"
      ;;
   n) nflag=1
      nval="$OPTARG"
