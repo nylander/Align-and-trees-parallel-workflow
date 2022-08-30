@@ -4,7 +4,7 @@ set -uo pipefail
 # TODO: put back -e
 
 # Default settings
-version="0.7.7"
+version="0.7.8"
 logfile=
 modeltestcriterion="BIC"
 datatype='nt'
@@ -16,10 +16,10 @@ modeltestperjobcores='4'  # TODO: Adjust? This value needs to be at least 4!
 threadsforaligner='2'     # TODO: Adjust?
 #threadsforrealigner='2'   # TODO: Adjust?
 
-bmgejar="/home/nylander/src/BMGE-1.12/BMGE.jar"                # <<<<<<<<<< CHANGE HERE
-pargenes="/home/nylander/src/ParGenes/pargenes/pargenes.py"    # <<<<<<<<<< CHANGE HERE
-treeshrink="/home/nylander/src/TreeShrink/run_treeshrink.py"   # <<<<<<<<<< CHANGE HERE
-macse="home/nylander/jb/johaberg-all/src/omm_macse_v10.02.sif" # <<<<<<<<<< CHANGE HERE
+BMGEJAR="${BMGEJAR:-/home/nylander/src/BMGE-1.12/BMGE.jar}"                 # <<<<<<<<<< CHANGE HERE
+PARGENES="${PARGENES:-/home/nylander/src/ParGenes/pargenes/pargenes.py}"    # <<<<<<<<<< CHANGE HERE
+TREESHRINK="${TREESHRINK:-/home/nylander/src/TreeShrink/run_treeshrink.py}" # <<<<<<<<<< CHANGE HERE
+MACSE="${MACSE:-/home/nylander/jb/johaberg-all/src/omm_macse_v10.02.sif}"   # <<<<<<<<<< CHANGE HERE
 
 aligner="mafft" # Name of aligner, not path to binary
 alignerbin="mafft"
@@ -112,8 +112,8 @@ for p in \
   "${phylip2fasta}" \
   "${raxmlng}" \
   "${realigner}" \
-  "${pargenes}" \
-  "${treeshrink}" ; do
+  "${PARGENES}" \
+  "${TREESHRINK}" ; do
   prog_exists "${p}"
 done
 
@@ -337,7 +337,7 @@ runMacse() {
   runPara() {
       f="$1"
       g=$(basename "${f}" .fas)
-      "${macse}" \
+      "${MACSE}" \
         --in_seq_file "${f}" \
         --out_dir "${g}" \
         --out_file_prefix "${g}" \
@@ -404,7 +404,7 @@ runBmge() {
   mkdir -p "${outputfolder}"
   cd "${outputfolder}" || exit
   find -L "${inputfolder}/" -type f -name '*.ali' | \
-    parallel 'java -jar '"${bmgejar}"' -i {} -t '"${datatypeforbmge}"' -of {/.}.bmge.ali' >> "${logfile}" 2>&1
+    parallel 'java -jar '"${BMGEJAR}"' -i {} -t '"${datatypeforbmge}"' -of {/.}.bmge.ali' >> "${logfile}" 2>&1
   cd .. || exit
 }
 
@@ -463,7 +463,7 @@ pargenesFixedModel() {
   local inputfolder="$1"
   local outputfolder="$2"
   echo -e "\n## ATPW [$(date "+%F %T")]: Run pargenes with fixed model" 2>&1 | tee -a "${logfile}"
-  "${pargenes}" \
+  "${PARGENES}" \
     --alignments-dir "${inputfolder}" \
     --output-dir "${outputfolder}" \
     --cores "${ncores}" \
@@ -606,7 +606,7 @@ runTreeshrink() {
 
   local inputfolder="$1"
   echo -e "\n## ATPW [$(date "+%F %T")]: Run treeshrink" 2>&1 | tee -a "${logfile}"
-  "${treeshrink}" \
+  "${TREESHRINK}" \
     --indir "${inputfolder}" \
     --tree 'raxml.bestTree' \
     --alignment "alignment.ali" >> "${logfile}" 2>&1
@@ -658,7 +658,7 @@ pargenesModeltestAstral() {
   local inputfolder="$1"
   local outputfolder="$2"
   echo -e "\n## ATPW [$(date "+%F %T")]: Run pargenes with model selection, finish with ASTRAL" 2>&1 | tee -a "${logfile}"
-  "${pargenes}" \
+  "${PARGENES}" \
     --alignments-dir "${inputfolder}" \
     --output-dir "${outputfolder}" \
     --cores "${ncores}" \
