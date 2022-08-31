@@ -1,0 +1,171 @@
+Bootstrap: docker
+From: ubuntu:20.04
+
+# sudo singularity build atpw.sif atpw.def
+# sudo singularity build --sandbox atpw-sandbox docker://ubuntu:20.04
+# sudo singularity shell --writable atpw-sandbox
+# sudo singularity build atpw.sif atpw-sandbox
+# Last modified: ons aug 31, 2022  11:43
+# Sign: JN
+
+
+%environment
+
+    LC_ALL=C
+    export LC_ALL
+    ATPWHOME=/opt/ATPW
+    export ATPWHOME
+    ATPWBIN=/opt/ATPW/bin
+    export ATPWBIN
+    PYTHON_VERSION=3.8
+    export PYTHON_VERSION
+    RAXML_VERSION=1.1.0
+    export RAXML_VERSION
+    BMGE_VERSION=1.12
+    export BMGE_VERSION
+    BMGEJAR=${ATPWHOME}/BMGE-${BMGE_VERSION}/BMGE.jar
+    export BMGEJAR
+    PARGENES=${ATPWHOME}/ParGenes/pargenes/pargenes.py
+    export PARGENES
+    TREESHRINK=${ATPWHOME}/TreeShrink/run_treeshrink.py
+    export TREESHRINK
+    SINGULARITYENV_APPEND_PATH=${ATPBIN}
+    SINGULARITYENV_APPEND_PATH=${ATPWHOME}/ParGenes/pargenes/pargenes_binaries
+    #SINGULARITYENV_PREPEND_PATH=/root/ParGenes/pargenes_binaries
+
+%files
+
+    /home/nylander/Documents/Projects/GIT/Align-and-trees-parallel-workflow/src/align-and-trees-parallel-workflow.sh /opt
+
+%post
+
+    ATPWHOME=/opt/ATPW
+    export ATPWHOME
+    ATPWBIN=/opt/ATPW/bin
+    export ATPWBIN
+    DEBIAN_FRONTEND=noninteractive
+    export DEBIAN_FRONTEND
+    OMPI_ALLOW_RUN_AS_ROOT=1
+    export OMPI_ALLOW_RUN_AS_ROOT
+    OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+    export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM
+    PYTHON_VERSION=3.8
+    export PYTHON_VERSION
+    RAXML_VERSION=1.1.0
+    export RAXML_VERSION
+    BMGE_VERSION=1.12
+    export BMGE_VERSION
+
+    apt-get update && apt-get -y upgrade
+
+    apt-get -y --no-install-recommends install \
+        build-essential \
+        git \
+        curl \
+        unzip \
+        vim \
+        wget \
+        python${PYTHON_VERSION} \
+        python${PYTHON_VERSION}-dev \
+        python3-setuptools \
+        r-base-dev=3.6.3-2 \
+        parallel \
+        mafft \
+        perl \
+        flex \
+        bison \
+        cmake \
+        bioperl \
+        bioperl-run \
+        liblist-moreutils-perl \
+        libopenmpi-dev \
+        default-jre
+
+    ln -s /usr/bin/python${PYTHON_VERSION} /usr/bin/python
+
+
+    #R --slave -e 'install.packages(c("ape", "PBD", "BMS"), repos="https://cloud.r-project.org/")'
+
+    #curl -O https://bootstrap.pypa.io/get-pip.py && \
+    #python get-pip.py && \
+    #rm get-pip.py
+
+    mkdir -p ${ATPWHOME}/bin
+    # Redundant below?
+    PATH=${ATPWBIN}:${ATPWHOME}/ParGenes/pargenes_binaries:$PATH
+    export PATH
+
+    # ATPW from tmp cloud storage. Until we manage to get the files section
+    # When we have a public repo, we can of course clone
+    #wget -O ${ATPWBIN}/align-and-trees-parallel-workflow.sh "https://owncloud.nrm.se/index.php/s/GysbhVyJPZfAADc/download"
+    mv /opt/align-and-trees-parallel-workflow.sh ${ATPWBIN}/
+    chmod +x ${ATPWBIN}/align-and-trees-parallel-workflow.sh
+
+    # RAxML-NG (v1.1.0)
+    cd ${ATPWHOME}
+    wget https://github.com/amkozlov/raxml-ng/releases/download/${RAXML_VERSION}/raxml-ng_v${RAXML_VERSION}_linux_x86_64.zip
+    unzip -p raxml-ng_v${RAXML_VERSION}_linux_x86_64.zip raxml-ng > ${ATPWBIN}/raxml-ng
+    chmod +x ${ATPWBIN}/raxml-ng
+    rm raxml-ng_v${RAXML_VERSION}_linux_x86_64.zip
+
+    # TreeShrink (v1.3.9). Needs R > 4!
+    cd ${ATPWHOME}
+    git clone https://github.com/uym2/TreeShrink.git
+    cd TreeShrink
+    bash ./install_BMS.sh
+    python setup.py install
+    chmod +x run_treeshrink.py
+    cd -
+
+    # catfasta2phyml.pl
+    cd ${ATPWHOME}
+    git clone https://github.com/nylander/catfasta2phyml.git
+    cp catfasta2phyml/catfasta2phyml.pl ${ATPWBIN}/
+    chmod +x ${ATPWBIN}/catfasta2phyml.pl
+
+    # fastagap.pl
+    cd ${ATPWHOME}
+    git clone https://github.com/nylander/fastagap.git
+    cp fastagap/fastagap.pl ${ATPWBIN}/
+    chmod +x ${ATPWBIN}/fastagap.pl
+
+    # phylip2fasta.pl
+    cd ${ATPWHOME}
+    git clone https://github.com/nylander/phy2fas.git
+    cp phy2fas/phylip2fasta.pl ${ATPWBIN}/
+    chmod +x ${ATPWBIN}/phylip2fasta.pl
+
+    # BMGE (v1.12)
+    cd ${ATPWHOME}
+    wget http://ftp.pasteur.fr/pub/gensoft/projects/BMGE/BMGE-${BMGE_VERSION}.tar.gz
+    tar xzf BMGE-${BMGE_VERSION}.tar.gz
+    rm BMGE-${BMGE_VERSION}.tar.gz
+
+    # ParGenes
+    cd ${ATPWHOME}
+    git config --global --add safe.directory /opt/ATPW/ParGenes
+    git clone --recursive https://github.com/BenoitMorel/ParGenes.git
+    cd ParGenes
+    ./install.sh
+    chmod -R o+rX ${ATPWHOME}/ParGenes/pargenes/pargenes_binaries/*
+    cd -
+
+    #chmod -R o+rX ${ATPWHOME}
+
+    rm -rf /var/lib/apt/lists/*
+    apt-get clean
+    unset DEBIAN_FRONTEND
+
+%help
+
+    Singularity container with Align-and-trees-parallel-workflow
+
+%labels
+
+    Author johan.nylander@nrm.se
+    Version v0.7.8
+
+%runscript
+
+    ${ATPWBIN}/align-and-trees-parallel-workflow.sh "$@"
+
