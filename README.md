@@ -1,6 +1,6 @@
 # Align-and-trees-parallel-workflow
 
-- Last modified: tis aug 30, 2022  02:37
+- Last modified: tor sep 01, 2022  11:12
 - Sign: Johan.Nylander\@nrm.se
 
 ## Description
@@ -9,7 +9,7 @@ Script for running a "standard" phylogenetic workflow on fasta-formatted input.
 In particular, parallel execution is done whenever possible.
 
 The default steps on unfiltered and unaligned fasta files as input (see [Input
-data](#input-data)) are,
+data](#input-data)) are:
 
 1. Create multiple sequence alignments with
    [MAFFT](https://mafft.cbrc.jp/alignment/software/)
@@ -26,7 +26,7 @@ data](#input-data)) are,
 7. Estimate species tree from individual trees using
    [ASTRAL](https://github.com/smirarab/ASTRAL)
 
-Steps 1. and 2. are optional (see [Options](#options)).
+Using MAFFT, BMGE, and TreeShrink are optional (see [Options](#options)).
 
 ## Usage
 
