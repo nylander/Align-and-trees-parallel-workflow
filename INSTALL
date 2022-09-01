@@ -1,22 +1,24 @@
-INSTALL for Align-and-trees-workflow
+# INSTALL for Align-and-trees-workflow
 
-Last modified: ons aug 17, 2022  03:24
-Sign: JN
+- Last modified: tor sep 01, 2022  10:42
+- Sign: JN
 
-The workflow have been tested on Ubuntu Linux 20.04
+The workflow have been tested on Ubuntu Linux 20.04.
 
-Apart from standard bash commands, a number of additional software, including
-their dependencies, needs to be installed.
+Apart from standard bash commands (tested using bash v. 5.1.16), a number of
+additional software, including their dependencies, needs to be installed.
 
-Also note that the path to some of theses programs, as well as both hardware- and
-data type specific settings needs to be manually set in the main script before running.
+Also note that the path to some of theses programs, as well as both hardware-
+and data type specific settings needs to be manually set in the main script
+before running.
 
-For testing the installation, try:
+As an alternative to local installation, one may run the workflow using a
+[singularity]() container. A definition file for building the container is
+provided [atpw.def](singularity/atpw.def). See
+[README.md](singularity/README.md)
 
-    $ ./src/align-and-trees-parallel-workflow.sh -d nt data test
 
-
-Softare used (and version):
+## Softare used (and version):
 
 Python (Python 3.8.10)
 
@@ -60,4 +62,9 @@ phylip2fasta.pl (v0.3):
 
 
 
+## Testing
+
+For testing the installation, try:
+
+    $ ./src/align-and-trees-parallel-workflow.sh -d nt data test
 
