@@ -5,7 +5,7 @@ From: ubuntu:20.04
 # sudo singularity build --sandbox atpw-sandbox docker://ubuntu:20.04
 # sudo singularity shell --writable atpw-sandbox
 # sudo singularity build atpw.sif atpw-sandbox
-# Last modified: ons aug 31, 2022  11:43
+# Last modified: tor sep 01, 2022  11:18
 # Sign: JN
 
 
@@ -34,7 +34,7 @@ From: ubuntu:20.04
     #SINGULARITYENV_PREPEND_PATH=/root/ParGenes/pargenes_binaries
 
 %files
-
+    # TODO: this step will change (to git clone ...) when the repo is made public
     /home/nylander/Documents/Projects/GIT/Align-and-trees-parallel-workflow/src/align-and-trees-parallel-workflow.sh /opt
 
 %post
