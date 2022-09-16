@@ -4,11 +4,12 @@ set -uo pipefail
 # TODO: put back -e
 
 # Default settings
-version="0.7.8"
+version="0.7.9"
 logfile=
 modeltestcriterion="BIC"
 datatype='nt'
 mintaxfilter=4
+maxinvariantsites=100.00 # percent
 
 nprocs=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null)
 ncores="${nprocs}"        # TODO: Do we need to adjust?
@@ -451,6 +452,55 @@ checkNtaxaOutputAli() {
 
 }
 
+
+removeInvariant() {
+
+  # Remove file if alignment has more than (or equal to) maxinvariantsites percent invariant sites
+  # Input: Alignment (*.ali)
+  # Output: REMOVES file
+  # Call: from checkInvariant function
+
+  local infile="$1"
+  local maxi=${2:-100}
+  local alifile="${infile%.raxml.log}"
+  local aliname=$(basename "${alifile}")
+  if grep -q "^Invariant sites" "${infile}" ; then
+    perc=$(grep 'Invariant sites:' "${infile}" | grep -Eo "[0-9]+\.[0-9]+")
+    if [ $(echo "${perc} >= ${maxi}" | bc -l) -eq 1 ]; then
+      echo "## ATPW: ${aliname} have ${perc} percent invariant sites: Removing!" 2>&1 | tee -a "${logfile}"
+      rm "${alifile}"
+    fi
+  fi
+}
+export -f removeInvariant
+
+checkInvariant() {
+
+  # Check if invariant alignments with raxml-ng
+  # Input: alignment_folder
+  # Output: REMOVES files in alignment_folder
+  # Call: checkInvariants "${folder}" "${maxinvariantsites}"
+  # TODO:
+
+  local inputfolder="$1"
+  local maxinvariant=${2:-100} # default 100 (i.e., remove if Invariable sites: 100.00 %)
+  echo -e "\n## ATPW [$(date "+%F %T")]: Check and remove if any files have more or equal than ${maxinvariant} percent invariable sites" 2>&1 | tee -a "${logfile}"
+
+  find -L "${inputfolder}" -type f -name '*.ali' | \
+    parallel ''"${raxmlng}"' --check --msa {} --threads 1 --model '"${modelforraxmltest}"'' >> "${logfile}" 2>&1
+
+  find "${inputfolder}" -type f -name '*.log' | \
+    parallel 'removeInvariant {} '"${maxinvariant}"''
+
+  rm "${inputfolder}"/*.log
+  rm "${inputfolder}"/*.raxml.reduced.phy
+
+  if [ ! "$(find ${inputfolder} -type f -name '*.ali')" ]; then
+    echo -e "\n## ATPW [$(date "+%F %T")]: WARNING! No alignment files left in ${inputfolder}. Quitting." | tee -a "${logfile}"
+    exit 1
+  fi
+
+}
 
 pargenesFixedModel() {
 
@@ -977,12 +1027,14 @@ if [ "${doalign}" ] ; then
   align "${input}" "${runfolder}/1_align/1.1_${aligner}"
   checkNtaxa "${runfolder}/1_align/1.1_${aligner}" "${mintaxfilter}" .ali
   checkAlignmentWithRaxml "${runfolder}/1_align/1.1_${aligner}" "${runfolder}/1_align/1.2_${aligner}_check"
+  # checkInvariant "input" "output"
 else
   mkdir -p "${runfolder}/1_align/1.1_input"
   find "${input}" -name '*.fas' | \
     parallel cp {} "${runfolder}/1_align/1.1_input/{/.}.ali"
   checkNtaxa "${runfolder}/1_align/1.1_input" "${mintaxfilter}" .ali
   checkAlignmentWithRaxml "${runfolder}/1_align/1.1_input" "${runfolder}/1_align/1.2_input_check"
+  # checkInvariant "input" "output"
   #rm -rf "${runfolder}/1_align/1.1_input"
 fi
 
@@ -991,9 +1043,11 @@ if [ "${dobmge}" ] ; then
   if [ "${doalign}" ] ; then
     runBmge "${runfolder}/1_align/1.2_${aligner}_check/" "${runfolder}/1_align/1.3_${aligner}_check_bmge"
     checkNtaxa "${runfolder}/1_align/1.3_${aligner}_check_bmge" "${mintaxfilter}" .ali
+  # checkInvariant "input" "output"
   else
     runBmge "${runfolder}/1_align/1.2_input_check" "${runfolder}/1_align/1.3_input_check_bmge"
     checkNtaxa "${runfolder}/1_align/1.3_input_check_bmge" "${mintaxfilter}" .ali
+  # checkInvariant "input" "output"
   fi
 fi
 
