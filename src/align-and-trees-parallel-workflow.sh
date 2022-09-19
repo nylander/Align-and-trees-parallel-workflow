@@ -1,7 +1,8 @@
 #!/bin/bash -l
 
-set -uo pipefail
 # TODO: put back -e
+set -uo pipefail
+
 
 # Default settings
 version="0.7.9"
@@ -12,9 +13,9 @@ mintaxfilter=4
 maxinvariantsites=100.00 # percent
 
 nprocs=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null)
-ncores="${nprocs}"        # TODO: Do we need to adjust?
-modeltestperjobcores='4'  # TODO: Adjust? This value needs to be at least 4!
-threadsforaligner='2'     # TODO: Adjust?
+ncores="${nprocs}"         # TODO: Do we need to adjust?
+modeltestperjobcores='4'   # TODO: Adjust? This value needs to be at least 4!
+threadsforaligner='2'      # TODO: Adjust?
 #threadsforrealigner='2'   # TODO: Adjust?
 
 BMGEJAR="${BMGEJAR:-/home/nylander/src/BMGE-1.12/BMGE.jar}"                 # <<<<<<<<<< CHANGE HERE
@@ -45,52 +46,52 @@ cat << End_Of_Usage
 $(basename "$0") version ${version}
 
 What:
-           Phylogenetics in parallel
+          Phylogenetics in parallel
 
-           Performs the following steps:
-           1. Do multiple sequence alignment (optional)
-           2. Filter using BMGE (optional)
-           3. Filter using TreeShrink (optional)
-           4. Estimate gene trees with raxml-ng using
-              automatic model selection
-           5. Estimate species tree using ASTRAL
+          Performs the following steps:
+
+          1. Do multiple sequence alignment (optional)
+          2. Filter using BMGE (optional)
+          3. Filter using TreeShrink (optional)
+          4. Estimate gene trees with raxml-ng using
+             automatic model selection
+          5. Estimate species tree using ASTRAL
 
 By:
-           Johan Nylander
+          Johan Nylander
 
 Usage:
-           $(basename "$0") -d nt|aa [options] infolder outfolder
+          $(basename "$0") -d nt|aa [options] infolder outfolder
 
 Options:
-           -d type   -- Specify data type: nt or aa. (Mandatory)
-           -n number -- Specify the number of threads. Default: ${ncores}
-           -m crit   -- Model test criterion: BIC, AIC or AICC. Default: ${modeltestcriterion}
-           -f number -- Minimum number of taxa when filtering alignments. Default: ${mintaxfilter}
-           -A        -- Do not run mafft (assume aligned input)
-           -B        -- Do not run BMGE
-           -T        -- Do not run TreeShrink
-           -v        -- Print version
-           -h        -- Print help message
+          -d type   -- Specify data type: nt or aa. (Mandatory)
+          -n number -- Specify the number of threads. Default: ${ncores}
+          -m crit   -- Model test criterion: BIC, AIC or AICC. Default: ${modeltestcriterion}
+          -f number -- Minimum number of taxa when filtering alignments. Default: ${mintaxfilter}
+          -A        -- Do not run mafft (assume aligned input)
+          -B        -- Do not run BMGE
+          -T        -- Do not run TreeShrink
+          -v        -- Print version
+          -h        -- Print help message
 
 Examples:
-           $(basename "$0") -d nt -t 8 data out
+          $(basename "$0") -d nt -t 8 data out
 
 Input:
-           Folder with fasta formatted sequence files.
-           Files need to have suffix ".fas"!
+          Folder with fasta formatted sequence files.
+          Files need to have suffix ".fas"!
 
 Output:
-           Folders with filtered alignments and species-
-           and gene-trees.
-           Summary README.md file.
-           Log file ATPW.log.
+          Folders with filtered alignments and species-
+          and gene-trees.
+          Summary README.md file.
+          Log file ATPW.log.
 
 Notes:
-           See INSTALL file for software needed.
+          See INSTALL file for software needed.
 
-
-License:   Copyright (C) 2022 nylander <johan.nylander@nrm.se>
-           Distributed under terms of the MIT license.
+License:  Copyright (C) 2022 nylander <johan.nylander@nrm.se>
+          Distributed under terms of the MIT license.
 
 End_Of_Usage
 
@@ -99,9 +100,9 @@ End_Of_Usage
 
 # Check programs
 prog_exists() {
-    if [ ! -x "$(command -v "$1")" ] ; then
-    echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! No executable file $1"
-    exit 1
+  if [ ! -x "$(command -v "$1")" ] ; then
+  echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! No executable file $1"
+  exit 1
   fi
 }
 export -f prog_exists
@@ -193,32 +194,32 @@ else
   mkdir -p "${runfolder}/2_trees"
   logfile="${runfolder}/ATPW.log"
   echo -e "\n## ATPW [$(date "+%F %T")]: Start" 2>&1 | tee "${logfile}"
-  echo -e "\n## ATPW [$(date "+%F %T")]: Created output folder ${runfolder}" 2>&1 | tee "${logfile}"
-  echo -e "\n## ATPW [$(date "+%F %T")]: Created logfile ${logfile}" 2>&1 | tee "${logfile}"
+  echo -e "\n## ATPW [$(date "+%F %T")]: Created output folder ${runfolder}" 2>&1 | tee -a "${logfile}"
+  echo -e "\n## ATPW [$(date "+%F %T")]: Created logfile ${logfile}" 2>&1 | tee -a "${logfile}"
 fi
 
 if [ -d "${input}" ] ; then
     nfas=$(find "${input}" -name '*.fas' | wc -l)
   if [ "${nfas}" -gt 1 ] ; then
-    echo -e "\n## ATPW [$(date "+%F %T")]: Found ${nfas} .fas files in folder ${input}" 2>&1 | tee "${logfile}"
+    echo -e "\n## ATPW [$(date "+%F %T")]: Found ${nfas} .fas files in folder ${input}" 2>&1 | tee -a "${logfile}"
   else
-    echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! Could not find .fas files in folder ${input}" 2>&1 | tee "${logfile}"
+    echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! Could not find .fas files in folder ${input}" 2>&1 | tee -a "${logfile}"
       exit 1
   fi
 else
-  echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! Folder ${input} can not be found" 2>&1 | tee "${logfile}"
+  echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! Folder ${input} can not be found" 2>&1 | tee -a "${logfile}"
   exit 1
 fi
 
 
 ## Check options
 if [ ! "${dflag}" ] ; then
-  echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! Need to supply data type ('nt' or 'aa') with '-d'" 2>&1 | tee "${logfile}"
+  echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! Need to supply data type ('nt' or 'aa') with '-d'" 2>&1 | tee -a "${logfile}"
   exit 1
 elif [ "${dflag}" ] ; then
   lcdval=${dval,,} # to lowercase
   if [[ "${lcdval}" != @(nt|aa) ]] ; then
-    echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! -d should be 'nt' or 'aa'" 2>&1 | tee "${logfile}"
+    echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! -d should be 'nt' or 'aa'" 2>&1 | tee -a "${logfile}"
     exit 1
   else
     datatype="${lcdval}"
@@ -231,15 +232,15 @@ if [ "${datatype}" == 'aa' ] ; then
 fi
 
 if [ "${Aflag}" ] ; then
-  echo -e "\n## ATPW [$(date "+%F %T")]: Data is assumed to be aligned. Skipping first alignment step." 2>&1 | tee "${logfile}"
+  echo -e "\n## ATPW [$(date "+%F %T")]: Data is assumed to be aligned. Skipping first alignment step." 2>&1 | tee -a "${logfile}"
 fi
 
 if [ "${Bflag}" ] ; then
-  echo -e "\n## ATPW [$(date "+%F %T")]: Skipping the BMGE step." 2>&1 | tee "${logfile}"
+  echo -e "\n## ATPW [$(date "+%F %T")]: Skipping the BMGE step." 2>&1 | tee -a "${logfile}"
 fi
 
 if [ "${Tflag}" ] ; then
-  echo -e "\n## ATPW [$(date "+%F %T")]: Skipping the TreeShrink step." 2>&1 | tee "${logfile}"
+  echo -e "\n## ATPW [$(date "+%F %T")]: Skipping the TreeShrink step." 2>&1 | tee -a "${logfile}"
   echo -e "\n## ATPW [$(date "+%F %T")]: The -T flag is currently not implemented. Quitting"
   exit
 fi
@@ -252,7 +253,7 @@ fi
 if [ "${mflag}" ] ; then
   lcmval=${mval,,} # to lowercase
   if [[ "${lcdval}" != @(bic|aic|aicc) ]] ; then
-    echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! -m should be 'bic', 'aic', or 'aicc'" 2>&1 | tee "${logfile}"
+    echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! -m should be 'bic', 'aic', or 'aicc'" 2>&1 | tee -a "${logfile}"
   else
     modeltestcriterion="${lcmval}"
   fi
@@ -336,14 +337,14 @@ runMacse() {
   inputfolder="$1"
 
   runPara() {
-      f="$1"
-      g=$(basename "${f}" .fas)
-      "${MACSE}" \
-        --in_seq_file "${f}" \
-        --out_dir "${g}" \
-        --out_file_prefix "${g}" \
-        --java_mem 2000m
-      }
+    f="$1"
+    g=$(basename "${f}" .fas)
+    "${MACSE}" \
+      --in_seq_file "${f}" \
+      --out_dir "${g}" \
+      --out_file_prefix "${g}" \
+      --java_mem 2000m
+    }
   find "${inputfolder}" -type f -name '*.fas' | \
     parallel runPara {} >> "${logfile}" 2>&1
 }
@@ -365,7 +366,6 @@ collectMacse() {
     #done
 
   echo "Not implemented"
-
 }
 export -f collectMacse
 
@@ -428,7 +428,6 @@ checkNtaxa() {
     echo -e "\n## ATPW [$(date "+%F %T")]: WARNING! No ${suffix} files left in ${inputfolder}. Quitting." | tee -a "${logfile}"
     exit 1
   fi
-
 }
 
 
@@ -449,7 +448,6 @@ checkNtaxaOutputAli() {
     echo -e "\n## ATPW [$(date "+%F %T")]: WARNING! No output.ali files left in ${inputfolder}. Quitting." | tee -a "${logfile}"
     exit 1
   fi
-
 }
 
 
@@ -474,6 +472,7 @@ removeInvariant() {
 }
 export -f removeInvariant
 
+
 checkInvariant() {
 
   # Check if invariant alignments with raxml-ng
@@ -485,22 +484,18 @@ checkInvariant() {
   local inputfolder="$1"
   local maxinvariant=${2:-100} # default 100 (i.e., remove if Invariable sites: 100.00 %)
   echo -e "\n## ATPW [$(date "+%F %T")]: Check and remove if any files have more or equal than ${maxinvariant} percent invariable sites" 2>&1 | tee -a "${logfile}"
-
   find -L "${inputfolder}" -type f -name '*.ali' | \
     parallel ''"${raxmlng}"' --check --msa {} --threads 1 --model '"${modelforraxmltest}"'' >> "${logfile}" 2>&1
-
   find "${inputfolder}" -type f -name '*.log' | \
     parallel 'removeInvariant {} '"${maxinvariant}"''
-
   rm "${inputfolder}"/*.log
   rm "${inputfolder}"/*.raxml.reduced.phy
-
   if [ ! "$(find ${inputfolder} -type f -name '*.ali')" ]; then
     echo -e "\n## ATPW [$(date "+%F %T")]: WARNING! No alignment files left in ${inputfolder}. Quitting." | tee -a "${logfile}"
     exit 1
   fi
-
 }
+
 
 pargenesFixedModel() {
 
@@ -1027,14 +1022,14 @@ if [ "${doalign}" ] ; then
   align "${input}" "${runfolder}/1_align/1.1_${aligner}"
   checkNtaxa "${runfolder}/1_align/1.1_${aligner}" "${mintaxfilter}" .ali
   checkAlignmentWithRaxml "${runfolder}/1_align/1.1_${aligner}" "${runfolder}/1_align/1.2_${aligner}_check"
-  # checkInvariant "input" "output"
+  checkInvariant "${runfolder}/1_align/1.2_${aligner}_check" "${maxinvariantsites}"
 else
   mkdir -p "${runfolder}/1_align/1.1_input"
   find "${input}" -name '*.fas' | \
     parallel cp {} "${runfolder}/1_align/1.1_input/{/.}.ali"
   checkNtaxa "${runfolder}/1_align/1.1_input" "${mintaxfilter}" .ali
   checkAlignmentWithRaxml "${runfolder}/1_align/1.1_input" "${runfolder}/1_align/1.2_input_check"
-  # checkInvariant "input" "output"
+  checkInvariant "${runfolder}/1_align/1.2_input_check" "${maxinvariantsites}"
   #rm -rf "${runfolder}/1_align/1.1_input"
 fi
 
@@ -1043,11 +1038,11 @@ if [ "${dobmge}" ] ; then
   if [ "${doalign}" ] ; then
     runBmge "${runfolder}/1_align/1.2_${aligner}_check/" "${runfolder}/1_align/1.3_${aligner}_check_bmge"
     checkNtaxa "${runfolder}/1_align/1.3_${aligner}_check_bmge" "${mintaxfilter}" .ali
-  # checkInvariant "input" "output"
+    checkInvariant "${runfolder}/1_align/1.3_${aligner}_check_bmge" "${maxinvariantsites}"
   else
     runBmge "${runfolder}/1_align/1.2_input_check" "${runfolder}/1_align/1.3_input_check_bmge"
     checkNtaxa "${runfolder}/1_align/1.3_input_check_bmge" "${mintaxfilter}" .ali
-  # checkInvariant "input" "output"
+    checkInvariant "${runfolder}/1_align/1.3_input_check_bmge" "${maxinvariantsites}"
   fi
 fi
 
@@ -1090,6 +1085,7 @@ if [ "${dotreeshrink}" ]; then
   checkNtaxaOutputAli "${runfolder}/3_treeshrink/3.1_treeshrink" "${mintaxfilter}"
 
   # realign
+  # TODO: checkInvariant, and(?) checkNtaxa
   if [ "${doalign}" ] ; then
     if [ "${dobmge}" ] ; then
       realignerOutputAli "${runfolder}/3_treeshrink/3.1_treeshrink/" "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink"
