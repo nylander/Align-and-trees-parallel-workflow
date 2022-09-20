@@ -1,7 +1,7 @@
 #!/bin/bash -l
 
 # TODO: put back -e
-set -uo pipefail
+set -euo pipefail
 
 
 # Default settings
