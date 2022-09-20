@@ -289,7 +289,7 @@ checkNtaxaInPhylip() {
   b=$(basename "${f}")
   ntax=$(grep -m1 -oP '\K\d+(?=\s)' "${f}")
   if [[ "${ntax}" -lt $n ]] ; then
-    echo -e "${b} have less than ${n} taxa: (${ntax})."
+    echo -e "${b} have less than ${n} taxa: ${ntax}."
       rm -v "${f}"
   fi
 }
