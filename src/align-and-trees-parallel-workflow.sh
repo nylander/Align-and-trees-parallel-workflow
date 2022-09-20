@@ -393,32 +393,12 @@ checkAlignments() {
   find "${inputfolder}" -type f -name '*.log' | \
     parallel 'removeInvariant {} '"${maxinvariant}"''
   if [ ! "$(find ${inputfolder} -type f -name '*.ali')" ]; then
-    echo -e "\n## ATPW [$(date "+%F %T")]: checkAlign WARNING! No alignment files left in ${inputfolder}. Quitting." | tee -a "${logfile}"
+    echo -e "\n## ATPW [$(date "+%F %T")]:checkAlign WARNING! No alignment files left in ${inputfolder}. Quitting." | tee -a "${logfile}"
     exit 1
   fi
   rm "${inputfolder}"/*.log
   rm "${inputfolder}"/*.raxml.reduced.phy
 }
-
-# checkAlignmentWithRaxml() {
-# 
-#   # Check alignments with raxml-ng
-#   # Input: 1_align/1.2_mafft_check/*.mafft.ali
-#   # Output: Folder 1_align/1.2_mafft_check/
-#   # Call: checkAlignmentWithRaxml "${runfolder}/1_align/1.1_${aligner}" "${runfolder}/1_align/1.2_${aligner}_check"
-#   # TODO:
-# 
-#   local inputfolder="$1"
-#   local outputfolder="$2"
-#   echo -e "\n## ATPW [$(date "+%F %T")]: Check alignments with raxml-ng" | tee -a "${logfile}"
-#   mkdir -p "${outputfolder}"
-#   ln -s -f "${inputfolder}"/*.ali "${outputfolder}"
-#   find -L "${outputfolder}" -type f -name '*.ali' | \
-#     parallel ''"${raxmlng}"' --check --msa {} --threads 1 --model '"${modelforraxmltest}"'' >> "${logfile}" 2>&1
-#   find "${outputfolder}" -type f -name '*.log' | \
-#     parallel 'if grep -q "^ERROR" {} ; then echo "## ATPW: Found error in {}"; rm -v {=s/\.raxml\.log//=} ; fi' >> "${logfile}" 2>&1
-#   rm "${outputfolder}"/*.log "${outputfolder}"/*.raxml.reduced.phy
-# }
 
 
 runBmge() {
@@ -495,36 +475,12 @@ removeInvariant() {
   if grep -q "^Invariant sites" "${infile}" ; then
     perc=$(grep 'Invariant sites:' "${infile}" | grep -Eo "[0-9]+\.[0-9]+")
     if [ $(echo "${perc} >= ${maxi}" | bc -l) -eq 1 ]; then
-      echo "## ATPW: ${aliname} have ${perc} percent invariant sites: Removing!" >> "${logfile}"
+      echo "## ATPW [$(date "+%F %T")]: ${aliname} have ${perc} percent invariant sites: Removing!" >> "${logfile}"
       rm "${alifile}"
     fi
   fi
 }
 export -f removeInvariant
-
-
-#checkInvariant() {
-#
-#  # Check if invariant alignments with raxml-ng
-#  # Input: alignment_folder
-#  # Output: REMOVES files in alignment_folder
-#  # Call: checkInvariants "${folder}" "${maxinvariantsites}"
-#  # TODO:
-#
-#  local inputfolder="$1"
-#  local maxinvariant=${2:-100} # default 100 (i.e., remove if Invariable sites: 100.00 %)
-#  echo -e "\n## ATPW [$(date "+%F %T")]: Check and remove if any files have more or equal than ${maxinvariant} percent invariable sites" 2>&1 | tee -a "${logfile}"
-#  find -L "${inputfolder}" -type f -name '*.ali' | \
-#    parallel ''"${raxmlng}"' --check --msa {} --threads 1 --model '"${modelforraxmltest}"'' >> "${logfile}" 2>&1
-#  find "${inputfolder}" -type f -name '*.log' | \
-#    parallel 'removeInvariant {} '"${maxinvariant}"''
-#  rm "${inputfolder}"/*.log
-#  rm "${inputfolder}"/*.raxml.reduced.phy
-#  if [ ! "$(find ${inputfolder} -type f -name '*.ali')" ]; then
-#    echo -e "\n## ATPW [$(date "+%F %T")]: WARNING! No alignment files left in ${inputfolder}. Quitting." | tee -a "${logfile}"
-#    exit 1
-#  fi
-#}
 
 
 pargenesFixedModel() {
@@ -553,7 +509,7 @@ setupTreeshrink() {
  # Input: tmp_treeshrink
  # Output:
  # Call: setupTreeshrink "${runfolder}/2_trees/2.1_mafft_bmge_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.3_mafft_bmge" "${runfolder}/tmp_treeshrink"
- # TODO:
+ # TODO: Make sure this function works with all arg combos
  inputfolderone="$1"     # where to look for trees 2_trees/2.1_mafft_bmge_pargenes/mlsearch_run/results
  inputfoldertwo="$2"     # where to look for alignments
  outputfolderthree="$3"  # output
@@ -580,97 +536,99 @@ setupTreeshrink() {
 }
 
 
-setupTreeshrinkNoAlignerNoBmge() {
+#setupTreeshrinkNoAlignerNoBmge() {
+#
+# # Setup data for TreeShrink
+# # Input: tmp_treeshrink
+# # Output:
+# # Call: setupTreeshrinkNoAlignerNoBmge "${runfolder}/2_trees/2.1_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.0_input" "${runfolder}/tmp_treeshrink"
+# # TODO:
+# inputfolderone="$1"     # where to look for trees
+# inputfoldertwo="$2"     # where to look for alignments
+# outputfolderthree="$3"  # output
+# export inputfolderone
+# export inputfoldertwo
+# export outputfolderthree
+# mkdir -p "${outputfolderthree}"
+#
+# copyAndConvertNoAlignerNoBmge () {
+#   local f=
+#   f=$(basename "$1" .raxml.bestTree) # f=p3896_EOG7SFVKF
+#   mkdir -p "${outputfolderthree}/${f}"
+#   ln -s "$1" "${outputfolderthree}/${f}/raxml.bestTree"
+#   local a=${f/_ali/\.ali} # a=p3896_EOG7SFVKF.ali
+#   ln -s "${inputfoldertwo}/${a}" "${outputfolderthree}/${f}/alignment.ali"
+# }
+# export -f copyAndConvertNoAlignerNoBmge
+#
+# find "${inputfolderone}" -type f -name '*.raxml.bestTree' | \
+#   parallel copyAndConvertNoAlignerNoBmge {} >> "${logfile}" 2>&1
+#}
 
- # Setup data for TreeShrink
- # Input: tmp_treeshrink
- # Output:
- # Call: setupTreeshrinkNoAlignerNoBmge "${runfolder}/2_trees/2.1_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.0_input" "${runfolder}/tmp_treeshrink"
- # TODO:
- inputfolderone="$1"     # where to look for trees
- inputfoldertwo="$2"     # where to look for alignments
- outputfolderthree="$3"  # output
- export inputfolderone
- export inputfoldertwo
- export outputfolderthree
- mkdir -p "${outputfolderthree}"
 
- copyAndConvertNoAlignerNoBmge () {
-   local f=
-   f=$(basename "$1" .raxml.bestTree) # f=p3896_EOG7SFVKF
-   mkdir -p "${outputfolderthree}/${f}"
-   ln -s "$1" "${outputfolderthree}/${f}/raxml.bestTree"
-   local a=${f/_ali/\.ali} # a=p3896_EOG7SFVKF.ali
-   ln -s "${inputfoldertwo}/${a}" "${outputfolderthree}/${f}/alignment.ali"
- }
- export -f copyAndConvertNoAlignerNoBmge
+#setupTreeshrinkNoBmge() {
+#
+# # Setup data for TreeShrink
+# # Input: tmp_treeshrink
+# # Output:
+# # Call: setupTreeshrink "${runfolder}/2_trees/2.1_mafft_check_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.3_mafft_check" "${runfolder}/tmp_treeshrink"
+# # TODO:
+# inputfolderone="$1"     # where to look for trees
+# inputfoldertwo="$2"     # where to look for alignments
+# outputfolderthree="$3"  # output
+# export inputfolderone
+# export inputfoldertwo
+# export outputfolderthree
+# mkdir -p "${outputfolderthree}"
+#
+# copyAndConvertNoBmge () {
+#   local f=
+#   f=$(basename "$1" .raxml.bestTree) # f=p3896_EOG7SFVKF_mafft_ali
+#   mkdir -p "${outputfolderthree}/${f}"
+#   ln -s "$1" "${outputfolderthree}/${f}/raxml.bestTree"
+#   #sear="_${aligner}_ali"
+#   #repl=".${aligner}.ali"
+#   #local a=${f/$sear/$repl} # a=p3896_EOG7SFVKF.mafft.ali
+#   local a=${f/_ali/\.ali}
+#   ln -s "${inputfoldertwo}/${a}" "${outputfolderthree}/${f}/alignment.ali"
+# }
+# export -f copyAndConvertNoBmge
+#
+# find "${inputfolderone}" -type f -name '*.raxml.bestTree' | \
+#   parallel copyAndConvertNoBmge {} >> "${logfile}" 2>&1
+#}
 
- find "${inputfolderone}" -type f -name '*.raxml.bestTree' | \
-   parallel copyAndConvertNoAlignerNoBmge {} >> "${logfile}" 2>&1
-}
-
-
-setupTreeshrinkNoBmge() {
-
- # Setup data for TreeShrink
- # Input: tmp_treeshrink
- # Output:
- # Call: setupTreeshrink "${runfolder}/2_trees/2.1_mafft_check_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.3_mafft_check" "${runfolder}/tmp_treeshrink"
- # TODO:
- inputfolderone="$1"     # where to look for trees
- inputfoldertwo="$2"     # where to look for alignments
- outputfolderthree="$3"  # output
- export inputfolderone
- export inputfoldertwo
- export outputfolderthree
- mkdir -p "${outputfolderthree}"
-
- copyAndConvertNoBmge () {
-   local f=
-   f=$(basename "$1" .raxml.bestTree) # f=p3896_EOG7SFVKF_mafft_ali
-   mkdir -p "${outputfolderthree}/${f}"
-   ln -s "$1" "${outputfolderthree}/${f}/raxml.bestTree"
-   sear="_${aligner}_ali"
-   repl=".${aligner}.ali"
-   local a=${f/$sear/$repl} # a=p3896_EOG7SFVKF.mafft.ali
-   ln -s "${inputfoldertwo}/${a}" "${outputfolderthree}/${f}/alignment.ali"
- }
- export -f copyAndConvertNoBmge
-
- find "${inputfolderone}" -type f -name '*.raxml.bestTree' | \
-   parallel copyAndConvertNoBmge {} >> "${logfile}" 2>&1
-}
-
-setupTreeshrinkBmgeNoAligner () {
-
- # Setup data for TreeShrink
- # Input: tmp_treeshrink
- # Output:
- # Call: setupTreeshrink "${runfolder}/2_trees/2.1_mafft_check_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.3_mafft_check" "${runfolder}/tmp_treeshrink"
- # TODO: CHECK INPUT FILE NAMES
- inputfolderone="$1"     # where to look for trees
- inputfoldertwo="$2"     # where to look for alignments
- outputfolderthree="$3"  # output
- export inputfolderone
- export inputfoldertwo
- export outputfolderthree
- mkdir -p "${outputfolderthree}"
-
- copyAndConvertBmgeNoAligner () {
-   local f=
-   f=$(basename "$1" .raxml.bestTree) # f=p3896_EOG7SFVKF_ali
-   mkdir -p "${outputfolderthree}/${f}"
-   ln -s "$1" "${outputfolderthree}/${f}/raxml.bestTree"
-   sear="_ali"
-   repl=".ali"
-   local a=${f/$sear/$repl} # a=p3896_EOG7SFVKF.ali
-   ln -s "${inputfoldertwo}/${a}" "${outputfolderthree}/${f}/alignment.ali"
- }
- export -f copyAndConvertBmgeNoAligner
-
- find "${inputfolderone}" -type f -name '*.raxml.bestTree' | \
-   parallel copyAndConvertBmgeNoAligner {} >> "${logfile}" 2>&1
-}
+# setupTreeshrinkBmgeNoAligner () {
+# 
+#  # Setup data for TreeShrink
+#  # Input: tmp_treeshrink
+#  # Output:
+#  # Call: setupTreeshrink "${runfolder}/2_trees/2.1_mafft_check_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.3_mafft_check" "${runfolder}/tmp_treeshrink"
+#  # TODO: CHECK INPUT FILE NAMES
+#  inputfolderone="$1"     # where to look for trees
+#  inputfoldertwo="$2"     # where to look for alignments
+#  outputfolderthree="$3"  # output
+#  export inputfolderone
+#  export inputfoldertwo
+#  export outputfolderthree
+#  mkdir -p "${outputfolderthree}"
+# 
+#  copyAndConvertBmgeNoAligner () {
+#    local f=
+#    f=$(basename "$1" .raxml.bestTree) # f=p3896_EOG7SFVKF_ali
+#    mkdir -p "${outputfolderthree}/${f}"
+#    ln -s "$1" "${outputfolderthree}/${f}/raxml.bestTree"
+#    #sear="_ali"
+#    #repl=".ali"
+#    #local a=${f/$sear/$repl} # a=p3896_EOG7SFVKF.ali
+#    local a=${f/_ali/\.ali}
+#    ln -s "${inputfoldertwo}/${a}" "${outputfolderthree}/${f}/alignment.ali"
+#  }
+#  export -f copyAndConvertBmgeNoAligner
+# 
+#  find "${inputfolderone}" -type f -name '*.raxml.bestTree' | \
+#    parallel copyAndConvertBmgeNoAligner {} >> "${logfile}" 2>&1
+# }
 
 
 runTreeshrink() {
@@ -754,115 +712,121 @@ count() {
   # Call: count
   # TODO: Rewrite to avoid hard codes parts
 
-  nf_raw_input='NA'
-  ns_raw_input='NA'
-  nt_raw_input='NA'
-  nf_aligner='NA'
-  ns_aligner='NA'
-  nt_aligner='NA'
-  nf_aligner_check='NA'
-  ns_aligner_check='NA'
-  nt_aligner_check='NA'
-  nf_aligner_check_bmge='NA'
-  ns_aligner_check_bmge='NA'
-  nt_aligner_check_bmge='NA'
-  nf_aligner_check_bmge_treeshrink='NA'
-  ns_aligner_check_bmge_treeshrink='NA'
-  nt_aligner_check_bmge_treeshrink='NA'
-  nf_aligner_check_treeshrink='NA'
-  ns_aligner_check_treeshrink='NA'
-  nt_aligner_check_treeshrink='NA'
-  nf_input='NA'
-  ns_input='NA'
-  nt_input='NA'
-  nf_input_check='NA'
-  ns_input_check='NA'
-  nt_input_check='NA'
-  nf_input_check_bmge='NA'
-  ns_input_check_bmge='NA'
-  nt_input_check_bmge='NA'
-  nf_input_check_bmge_treeshrink='NA'
-  ns_input_check_bmge_treeshrink='NA'
-  nt_input_check_bmge_treeshrink='NA'
-  nf_input_check_treeshrink='NA'
-  ns_input_check_treeshrink='NA'
-  nt_input_check_treeshrink='NA'
+  echo -e "\n## ATPW [$(date "+%F %T")]: Count sequences in output" | tee -a "${logfile}"
+
+  #nf=N files, ns=N seqs, nt=N taxa
+  nf_raw_input='NA' # data
+  ns_raw_input='NA' # data
+  nt_raw_input='NA' # data
+  nf_input='NA' # 1.1_input
+  ns_input='NA' # 1.1_input
+  nt_input='NA' # 1.1_input
+  nf_aligner='NA' # 1.2_mafft
+  ns_aligner='NA' # 1.2_mafft
+  nt_aligner='NA' # 1.2_mafft
+  nf_aligner_bmge='NA' # 1.3_mafft_bmge
+  ns_aligner_bmge='NA' # 1.3_mafft_bmge
+  nt_aligner_bmge='NA' # 1.3_mafft_bmge
+  nf_aligner_bmge_treeshrink='NA' # 1.4_mafft_bmge_treeshrink
+  ns_aligner_bmge_treeshrink='NA' # 1.4_mafft_bmge_treeshrink
+  nt_aligner_bmge_treeshrink='NA' # 1.4_mafft_bmge_treeshrink
+  nf_aligner_treeshrink='NA' # 1.3_mafft_treeshrink
+  ns_aligner_treeshrink='NA' # 1.3_mafft_treeshrink
+  nt_aligner_treeshrink='NA' # 1.3_mafft_treeshrink
+  nf_bmge='NA' # 1.2_bmge
+  ns_bmge='NA' # 1.2_bmge
+  nt_bmge='NA' # 1.2_bmge
+  nf_bmge_treeshrink='NA' # 1.3_bmge_treeshrink
+  ns_bmge_treeshrink='NA' # 1.3_bmge_treeshrink
+  nt_bmge_treeshrink='NA' # 1.3_bmge_treeshrink
+  nf_treeshrink='NA' # 1.2_treeshrink
+  ns_treeshrink='NA' # 1.2_treeshrink
+  nt_treeshrink='NA' # 1.2_treeshrink
 
   # Count files and sequences in raw input
+  # data -> _raw_input
   nf_raw_input=$(find "${input}" -name '*.fas' | wc -l)
   ns_raw_input=$(grep -c -h '>' "${input}"/*.fas | awk '{sum=sum+$1}END{print sum}')
   nt_raw_input=$(grep -h '>' "${input}"/*.fas | sort -u | wc -l)
 
   # Go through any potential output folders
-  # 1.1_mafft
-  if [ -d "${runfolder}/1_align/1.1_${aligner}" ] ; then
-    nf_aligner=$(find "${runfolder}/1_align/1.1_${aligner}" -name '*.ali' | wc -l)
-    ns_aligner=$(grep -c -h '>' "${runfolder}/1_align/1.1_${aligner}"/*.ali | awk '{sum=sum+$1}END{print sum}')
-    nt_aligner=$(grep -h '>' "${runfolder}/1_align/1.1_${aligner}"/*.ali | sort -u | wc -l)
+  # 1.1_input -> _input
+  folder="${runfolder}/1_align/1.1_input"
+  if [ -d "${folder}" ] ; then
+    nf_input=$(find "${folder}" -name '*.ali' | wc -l)
+    ns_input=$(grep -c -h '>' "${folder}"/*.ali | awk '{sum=sum+$1}END{print sum}')
+    nt_input=$(grep -h '>' "${folder}"/*.ali | sort -u | wc -l)
   fi
 
-  # 1.2_mafft_check
-  if [ -d "${runfolder}/1_align/1.2_${aligner}_check" ] ; then
-    nf_aligner_check=$(find -L "${runfolder}/1_align/1.2_${aligner}_check" -name '*.ali' | wc -l)
-    ns_aligner_check=$(grep -c -h '>' "${runfolder}/1_align/1.2_${aligner}_check"/*.ali | awk '{sum=sum+$1}END{print sum}')
-    nt_aligner_check=$(grep -h '>' "${runfolder}/1_align/1.2_${aligner}_check"/*.ali | sort -u | wc -l)
+  # 1.2_mafft -> _aligner
+  folder="${runfolder}/1_align/1.2_${aligner}"
+  if [ -d "${folder}" ] ; then
+    nf_aligner=$(find "${folder}" -name '*.ali' | wc -l)
+    ns_aligner=$(grep -c -h '>' "${folder}"/*.ali | awk '{sum=sum+$1}END{print sum}')
+    nt_aligner=$(grep -h '>' "${folder}"/*.ali | sort -u | wc -l)
   fi
 
-  # 1.3_mafft_check_bmge
-  if [ -d "${runfolder}/1_align/1.3_${aligner}_check_bmge" ] ; then
-    nf_aligner_check_bmge=$(find "${runfolder}/1_align/1.3_${aligner}_check_bmge" -name '*.ali' | wc -l)
-    ns_aligner_check_bmge=$(grep -c -h '>' "${runfolder}/1_align/1.3_${aligner}_check_bmge"/*.ali | awk '{sum=sum+$1}END{print sum}')
-    nt_aligner_check_bmge=$(grep -h '>' "${runfolder}/1_align/1.3_${aligner}_check_bmge"/*.ali | sort -u | wc -l)
+  # 1.3_mafft_bmge -> _aligner_bmge
+  folder="${runfolder}/1_align/1.3_${aligner}_bmge"
+  if [ -d "${folder}" ] ; then
+    nf_aligner_bmge=$(find "${runfolder}/1_align/1.3_${aligner}_check_bmge" -name '*.ali' | wc -l)
+    ns_aligner_bmge=$(grep -c -h '>' "${runfolder}/1_align/1.3_${aligner}_check_bmge"/*.ali | awk '{sum=sum+$1}END{print sum}')
+    nt_aligner_bmge=$(grep -h '>' "${runfolder}/1_align/1.3_${aligner}_check_bmge"/*.ali | sort -u | wc -l)
   fi
 
-  # 1.4_mafft_check_bmge_treeshrink
-  if [ -d "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink" ] ; then
-    nf_aligner_check_bmge_treeshrink=$(find "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink" -name '*.ali' | wc -l)
-    ns_aligner_check_bmge_treeshrink=$(grep -c -h '>' "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink"/*.ali | awk '{sum=sum+$1}END{print sum}')
-    nt_aligner_check_bmge_treeshrink=$(grep -h '>' "${runfolder}/1_align/1.4_${aligner}_check_bmge_treeshrink"/*.ali | sort -u | wc -l)
+  # 1.4_mafft_bmge_treeshrink -> _aligner_bmge_treeshrink
+  folder="${runfolder}/1_align/1.4_${aligner}_bmge_treeshrink"
+  if [ -d "${folder}" ] ; then
+    nf_aligner_bmge_treeshrink=$(find "${folder}" -name '*.ali' | wc -l)
+    ns_aligner_bmge_treeshrink=$(grep -c -h '>' "${folder}"/*.ali | awk '{sum=sum+$1}END{print sum}')
+    nt_aligner_bmge_treeshrink=$(grep -h '>' "${folder}"/*.ali | sort -u | wc -l)
   fi
 
-  # 1.4_mafft_check_treeshrink
-  if [ -d "${runfolder}/1_align/1.4_${aligner}_check_treeshrink" ] ; then
-    nf_aligner_check_treeshrink=$(find "${runfolder}/1_align/1.4_${aligner}_check_treeshrink" -name '*.ali' | wc -l)
-    ns_aligner_check_treeshrink=$(grep -c -h '>' "${runfolder}/1_align/1.4_${aligner}_check_treeshrink"/*.ali | awk '{sum=sum+$1}END{print sum}')
-    nt_aligner_check_treeshrink=$(grep -h '>' "${runfolder}/1_align/1.4_${aligner}_check_treeshrink"/*.ali | sort -u | wc -l)
+  # 1.3_mafft_treeshrink -> _aligner_treeshrink
+  folder="${runfolder}/1_align/1.4_${aligner}_treeshrink"
+  if [ -d "${folder}" ] ; then
+    nf_aligner_treeshrink=$(find "${folder}" -name '*.ali' | wc -l)
+    ns_aligner_treeshrink=$(grep -c -h '>' "${folder}"/*.ali | awk '{sum=sum+$1}END{print sum}')
+    nt_aligner_treeshrink=$(grep -h '>' "${folder}"/*.ali | sort -u | wc -l)
   fi
 
-  # 1.1_input
-  if [ -d "${runfolder}/1_align/1.1_input" ] ; then
-    nf_input=$(find "${runfolder}/1_align/1.1_input" -name '*.ali' | wc -l)
-    ns_input=$(grep -c -h '>' "${runfolder}/1_align/1.1_input"/*.ali | awk '{sum=sum+$1}END{print sum}')
-    nt_input=$(grep -h '>' "${runfolder}/1_align/1.1_input"/*.ali | sort -u | wc -l)
+  # 1.2_bmge -> _bmge
+  folder="${runfolder}/1_align/1.2_bmge"
+  if [ -d "${folder}" ] ; then
+    nf_bmge=$(find "${folder}" -name '*.ali' | wc -l)
+    ns_bmge=$(grep -c -h '>' "${folder}"/*.ali | awk '{sum=sum+$1}END{print sum}')
+    nt_bmge=$(grep -h '>' "${folder}"/*.ali | sort -u | wc -l)
   fi
 
-  # 1.2_input_check
-  if [ -d "${runfolder}/1_align/1.2_input_check" ] ; then
-    nf_input_check=$(find -L "${runfolder}/1_align/1.2_input_check" -name '*.ali' | wc -l)
-    ns_input_check=$(grep -c -h '>' "${runfolder}/1_align/1.2_input_check"/*.ali | awk '{sum=sum+$1}END{print sum}')
-    nt_input_check=$(grep -h '>' "${runfolder}/1_align/1.2_input_check"/*.ali | sort -u | wc -l)
+  # 1.3_bmge_treeshrink -> _bmge_treeshrink
+  folder="${runfolder}/1_align/1.3_bmge_treeshrink"
+  if [ -d "${folder}" ] ; then
+    nf_bmge_treeshrink=$(find -L "${folder}" -name '*.ali' | wc -l)
+    ns_bmge_treeshrink=$(grep -c -h '>' "${folder}"/*.ali | awk '{sum=sum+$1}END{print sum}')
+    nt_bmge_treeshrink=$(grep -h '>' "${folder}"/*.ali | sort -u | wc -l)
   fi
 
-  # 1.3_input_check_bmge
-  if [ -d "${runfolder}/1_align/1.3_input_check_bmge" ] ; then
-    nf_input_check_bmge=$(find "${runfolder}/1_align/1.3_input_check_bmge" -name '*.ali' | wc -l)
-    ns_input_check_bmge=$(grep -c -h '>' "${runfolder}/1_align/1.3_input_check_bmge"/*.ali | awk '{sum=sum+$1}END{print sum}')
-    nt_input_check_bmge=$(grep -h '>' "${runfolder}/1_align/1.3_input_check_bmge"/*.ali | sort -u | wc -l)
+  # 1.2_treeshrink -> _treeshrink
+  folder="${runfolder}/1_align/1.2_treeshrink"
+  if [ -d "${folder}" ] ; then
+    nf_treeshrink=$(find "${folder}" -name '*.ali' | wc -l)
+    ns_treeshrink=$(grep -c -h '>' "${folder}"/*.ali | awk '{sum=sum+$1}END{print sum}')
+    nt_treeshrink=$(grep -h '>' "${folder}"/*.ali | sort -u | wc -l)
   fi
 
-  # 1.4_input_check_bmge_treeshrink
-  if [ -d "${runfolder}/1_align/1.4_input_check_bmge_treeshrink" ] ; then
-    nf_input_check_bmge_treeshrink=$(find "${runfolder}/1_align/1.4_input_check_bmge_treeshrink" -name '*.ali' | wc -l)
-    ns_input_check_bmge_treeshrink=$(grep -c -h '>' "${runfolder}/1_align/1.4_input_check_bmge_treeshrink"/*.ali | awk '{sum=sum+$1}END{print sum}')
-    nt_input_check_bmge_treeshrink=$(grep -h '>' "${runfolder}/1_align/1.4_input_check_bmge_treeshrink"/*.ali | sort -u | wc -l)
-  fi
+  ## 1.4_input_check_bmge_treeshrink
+  #if [ -d "${runfolder}/1_align/1.4_input_check_bmge_treeshrink" ] ; then
+  #  nf_input_check_bmge_treeshrink=$(find "${runfolder}/1_align/1.4_input_check_bmge_treeshrink" -name '*.ali' | wc -l)
+  #  ns_input_check_bmge_treeshrink=$(grep -c -h '>' "${runfolder}/1_align/1.4_input_check_bmge_treeshrink"/*.ali | awk '{sum=sum+$1}END{print sum}')
+  #  nt_input_check_bmge_treeshrink=$(grep -h '>' "${runfolder}/1_align/1.4_input_check_bmge_treeshrink"/*.ali | sort -u | wc -l)
+  #fi
 
-  # 1.4_input_check_treeshrink
-  if [ -d "${runfolder}/1_align/1.4_input_check_treeshrink" ] ; then
-    nf_input_check_treeshrink=$(find "${runfolder}/1_align/1.4_input_check_treeshrink" -name '*.ali' | wc -l)
-    ns_input_check_treeshrink=$(grep -c -h '>' "${runfolder}/1_align/1.4_input_check_treeshrink"/*.ali | awk '{sum=sum+$1}END{print sum}')
-    nt_input_check_treeshrink=$(grep -h '>' "${runfolder}/1_align/1.4_input_check_treeshrink"/*.ali | sort -u | wc -l)
-  fi
+  ## 1.4_input_check_treeshrink
+  #if [ -d "${runfolder}/1_align/1.4_input_check_treeshrink" ] ; then
+  #  nf_input_check_treeshrink=$(find "${runfolder}/1_align/1.4_input_check_treeshrink" -name '*.ali' | wc -l)
+  #  ns_input_check_treeshrink=$(grep -c -h '>' "${runfolder}/1_align/1.4_input_check_treeshrink"/*.ali | awk '{sum=sum+$1}END{print sum}')
+  #  nt_input_check_treeshrink=$(grep -h '>' "${runfolder}/1_align/1.4_input_check_treeshrink"/*.ali | sort -u | wc -l)
+  #fi
 
   # Count taxa in astral tree
   astraltree=$(find "${runfolder}" -name 'output_species_tree.newick')
@@ -894,6 +858,8 @@ createReadme() {
   # Output: README.md
   # Call: createReadme
   # TODO: rewrite to avoid hardcoding
+
+  echo -e "\n## ATPW [$(date "+%F %T")]: Create summary README.md file" | tee -a "${logfile}"
 
   readme="${runfolder}/README.md"
   outputfolder=$(basename "${runfolder}")
@@ -1095,13 +1061,16 @@ if [ "${dotreeshrink}" ]; then
     if [ "${dobmge}" ] ; then
       setupTreeshrink "${runfolder}/2_trees/2.1_${aligner}_bmge_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.3_${aligner}_bmge" "${runfolder}/tmp_treeshrink"
     else
-      setupTreeshrinkNoBmge "${runfolder}/2_trees/2.1_${aligner}_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.2_${aligner}" "${runfolder}/tmp_treeshrink"
+      #setupTreeshrinkNoBmge "${runfolder}/2_trees/2.1_${aligner}_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.2_${aligner}" "${runfolder}/tmp_treeshrink"
+      setupTreeshrink "${runfolder}/2_trees/2.1_${aligner}_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.2_${aligner}" "${runfolder}/tmp_treeshrink"
     fi
   else
     if [ "${dobmge}" ] ; then
-      setupTreeshrinkBmgeNoAligner "${runfolder}/2_trees/2.1_bmge_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.2_bmge" "${runfolder}/tmp_treeshrink"
+      #setupTreeshrinkBmgeNoAligner "${runfolder}/2_trees/2.1_bmge_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.2_bmge" "${runfolder}/tmp_treeshrink"
+      setupTreeshrink "${runfolder}/2_trees/2.1_bmge_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.2_bmge" "${runfolder}/tmp_treeshrink"
     else
-      setupTreeshrinkNoAlignerNoBmge "${runfolder}/2_trees/2.1_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.1_input" "${runfolder}/tmp_treeshrink"
+      #setupTreeshrinkNoAlignerNoBmge "${runfolder}/2_trees/2.1_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.1_input" "${runfolder}/tmp_treeshrink"
+      setupTreeshrink "${runfolder}/2_trees/2.1_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.1_input" "${runfolder}/tmp_treeshrink"
     fi
   fi
 
@@ -1110,18 +1079,21 @@ if [ "${dotreeshrink}" ]; then
   checkNtaxaOutputAli "${runfolder}/tmp_treeshrink" "${mintaxfilter}"
 
   # realign
-  # TODO: checkAlignments, and(?) checkNtaxa
   if [ "${doalign}" ] ; then
     if [ "${dobmge}" ] ; then
       realignerOutputAli "${runfolder}/tmp_treeshrink/" "${runfolder}/1_align/1.4_${aligner}_bmge_treeshrink"
+      checkAlignments "${runfolder}/1_align/1.4_${aligner}_bmge_treeshrink" "${maxinvariantsites}"
     else
       realignerOutputAli "${runfolder}/tmp_treeshrink/" "${runfolder}/1_align/1.3_${aligner}_treeshrink"
+      checkAlignments "${runfolder}/1_align/1.3_${aligner}_treeshrink" "${maxinvariantsites}"
     fi
   else
     if [ "${dobmge}" ] ; then
       realignerOutputAli "${runfolder}/tmp_treeshrink/" "${runfolder}/1_align/1.3_bmge_treeshrink"
+      checkAlignments "${runfolder}/1_align/1.3_bmge_treeshrink" "${maxinvariantsites}"
     else
       realignerOutputAli "${runfolder}/tmp_treeshrink/" "${runfolder}/1_align/1.2_treeshrink"
+      checkAlignments "${runfolder}/1_align/1.2_treeshrink" "${maxinvariantsites}"
     fi
   fi
 fi
@@ -1148,11 +1120,9 @@ else
 fi
 
 # Count
-echo -e "\n## ATPW [$(date "+%F %T")]: Count sequences in output" | tee -a "${logfile}"
-#count
+count
 
-# Create Readme
-echo -e "\n## ATPW [$(date "+%F %T")]: Create summary README.md file" | tee -a "${logfile}"
+# Create README.md
 #createReadme
 
 # Clean up
