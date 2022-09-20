@@ -247,8 +247,8 @@ fi
 
 if [ "${Tflag}" ] ; then
   echo -e "\n## ATPW [$(date "+%F %T")]: Skipping the TreeShrink step." 2>&1 | tee -a "${logfile}"
-  echo -e "\n## ATPW [$(date "+%F %T")]: The -T flag is currently not implemented. Quitting"
-  exit
+  #echo -e "\n## ATPW [$(date "+%F %T")]: The -T flag is currently not implemented. Quitting"
+  #exit
 fi
 
 if [ "${nflag}" ] ; then
@@ -525,9 +525,6 @@ setupTreeshrink() {
    f=$(basename "$1" .raxml.bestTree)
    mkdir -p "${outputfolderthree}/${f}"
    ln -s "$1" "${outputfolderthree}/${f}/raxml.bestTree"
-   #sear="_${aligner}_ali"
-   #repl=".${aligner}.ali"
-   #local a=${f/$sear/$repl} # a=p3896_EOG7SFVKF.mafft.ali
    local a=${f/_ali/\.ali}
    ln -s "${inputfoldertwo}/${a}" "${outputfolderthree}/${f}/alignment.ali"
  }
@@ -536,101 +533,6 @@ setupTreeshrink() {
  find "${inputfolderone}" -type f -name '*.raxml.bestTree' | \
    parallel copyAndConvert {} >> "${logfile}" 2>&1
 }
-
-
-#setupTreeshrinkNoAlignerNoBmge() {
-#
-# # Setup data for TreeShrink
-# # Input: tmp_treeshrink
-# # Output:
-# # Call: setupTreeshrinkNoAlignerNoBmge "${runfolder}/2_trees/2.1_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.0_input" "${runfolder}/tmp_treeshrink"
-# # TODO:
-# inputfolderone="$1"     # where to look for trees
-# inputfoldertwo="$2"     # where to look for alignments
-# outputfolderthree="$3"  # output
-# export inputfolderone
-# export inputfoldertwo
-# export outputfolderthree
-# mkdir -p "${outputfolderthree}"
-#
-# copyAndConvertNoAlignerNoBmge () {
-#   local f=
-#   f=$(basename "$1" .raxml.bestTree) # f=p3896_EOG7SFVKF
-#   mkdir -p "${outputfolderthree}/${f}"
-#   ln -s "$1" "${outputfolderthree}/${f}/raxml.bestTree"
-#   local a=${f/_ali/\.ali} # a=p3896_EOG7SFVKF.ali
-#   ln -s "${inputfoldertwo}/${a}" "${outputfolderthree}/${f}/alignment.ali"
-# }
-# export -f copyAndConvertNoAlignerNoBmge
-#
-# find "${inputfolderone}" -type f -name '*.raxml.bestTree' | \
-#   parallel copyAndConvertNoAlignerNoBmge {} >> "${logfile}" 2>&1
-#}
-
-
-#setupTreeshrinkNoBmge() {
-#
-# # Setup data for TreeShrink
-# # Input: tmp_treeshrink
-# # Output:
-# # Call: setupTreeshrink "${runfolder}/2_trees/2.1_mafft_check_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.3_mafft_check" "${runfolder}/tmp_treeshrink"
-# # TODO:
-# inputfolderone="$1"     # where to look for trees
-# inputfoldertwo="$2"     # where to look for alignments
-# outputfolderthree="$3"  # output
-# export inputfolderone
-# export inputfoldertwo
-# export outputfolderthree
-# mkdir -p "${outputfolderthree}"
-#
-# copyAndConvertNoBmge () {
-#   local f=
-#   f=$(basename "$1" .raxml.bestTree) # f=p3896_EOG7SFVKF_mafft_ali
-#   mkdir -p "${outputfolderthree}/${f}"
-#   ln -s "$1" "${outputfolderthree}/${f}/raxml.bestTree"
-#   #sear="_${aligner}_ali"
-#   #repl=".${aligner}.ali"
-#   #local a=${f/$sear/$repl} # a=p3896_EOG7SFVKF.mafft.ali
-#   local a=${f/_ali/\.ali}
-#   ln -s "${inputfoldertwo}/${a}" "${outputfolderthree}/${f}/alignment.ali"
-# }
-# export -f copyAndConvertNoBmge
-#
-# find "${inputfolderone}" -type f -name '*.raxml.bestTree' | \
-#   parallel copyAndConvertNoBmge {} >> "${logfile}" 2>&1
-#}
-
-# setupTreeshrinkBmgeNoAligner () {
-# 
-#  # Setup data for TreeShrink
-#  # Input: tmp_treeshrink
-#  # Output:
-#  # Call: setupTreeshrink "${runfolder}/2_trees/2.1_mafft_check_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.3_mafft_check" "${runfolder}/tmp_treeshrink"
-#  # TODO: CHECK INPUT FILE NAMES
-#  inputfolderone="$1"     # where to look for trees
-#  inputfoldertwo="$2"     # where to look for alignments
-#  outputfolderthree="$3"  # output
-#  export inputfolderone
-#  export inputfoldertwo
-#  export outputfolderthree
-#  mkdir -p "${outputfolderthree}"
-# 
-#  copyAndConvertBmgeNoAligner () {
-#    local f=
-#    f=$(basename "$1" .raxml.bestTree) # f=p3896_EOG7SFVKF_ali
-#    mkdir -p "${outputfolderthree}/${f}"
-#    ln -s "$1" "${outputfolderthree}/${f}/raxml.bestTree"
-#    #sear="_ali"
-#    #repl=".ali"
-#    #local a=${f/$sear/$repl} # a=p3896_EOG7SFVKF.ali
-#    local a=${f/_ali/\.ali}
-#    ln -s "${inputfoldertwo}/${a}" "${outputfolderthree}/${f}/alignment.ali"
-#  }
-#  export -f copyAndConvertBmgeNoAligner
-# 
-#  find "${inputfolderone}" -type f -name '*.raxml.bestTree' | \
-#    parallel copyAndConvertBmgeNoAligner {} >> "${logfile}" 2>&1
-# }
 
 
 runTreeshrink() {
@@ -1022,7 +924,6 @@ if [ "${dobmge}" ] ; then
   fi
 fi
 
-# TODO: treeshrink or not
 if [ "${dotreeshrink}" ]; then
   mkdir -p "${runfolder}/tmp_treeshrink"
 
@@ -1046,15 +947,12 @@ if [ "${dotreeshrink}" ]; then
     if [ "${dobmge}" ] ; then
       setupTreeshrink "${runfolder}/2_trees/2.1_${aligner}_bmge_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.3_${aligner}_bmge" "${runfolder}/tmp_treeshrink"
     else
-      #setupTreeshrinkNoBmge "${runfolder}/2_trees/2.1_${aligner}_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.2_${aligner}" "${runfolder}/tmp_treeshrink"
       setupTreeshrink "${runfolder}/2_trees/2.1_${aligner}_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.2_${aligner}" "${runfolder}/tmp_treeshrink"
     fi
   else
     if [ "${dobmge}" ] ; then
-      #setupTreeshrinkBmgeNoAligner "${runfolder}/2_trees/2.1_bmge_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.2_bmge" "${runfolder}/tmp_treeshrink"
       setupTreeshrink "${runfolder}/2_trees/2.1_bmge_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.2_bmge" "${runfolder}/tmp_treeshrink"
     else
-      #setupTreeshrinkNoAlignerNoBmge "${runfolder}/2_trees/2.1_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.1_input" "${runfolder}/tmp_treeshrink"
       setupTreeshrink "${runfolder}/2_trees/2.1_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.1_input" "${runfolder}/tmp_treeshrink"
     fi
   fi
@@ -1083,9 +981,8 @@ if [ "${dotreeshrink}" ]; then
   fi
 fi
 
-# TODO: treeshrink or not
+# pargenes, modeltest, astral
 if [ "${dotreeshrink}" ]; then
-  # pargenes, modeltest, astral
   if [ "${doalign}" ] ; then
     if [ "${dobmge}" ] ; then
       pargenesModeltestAstral "${runfolder}/1_align/1.4_${aligner}_bmge_treeshrink" "${runfolder}/2_trees/2.2_${aligner}_bmge_treeshrink_pargenes"
@@ -1100,7 +997,19 @@ if [ "${dotreeshrink}" ]; then
     fi
   fi
 else
-  echo "TODO: run pargenes on non-treesrink folders"
+  if [ "${doalign}" ] ; then
+    if [ "${dobmge}" ] ; then
+      pargenesModeltestAstral "${runfolder}/1_align/1.3_${aligner}_bmge" "${runfolder}/2_trees/2.1_${aligner}_bmge_pargenes"
+    else
+      pargenesModeltestAstral "${runfolder}/1_align/1.3_${aligner}" "${runfolder}/2_trees/2.1_${aligner}_pargenes"
+    fi
+  else
+    if [ "${dobmge}" ] ; then
+      pargenesModeltestAstral "${runfolder}/1_align/1.2_bmge" "${runfolder}/2_trees/2.1_bmge_pargenes"
+    else
+      pargenesModeltestAstral "${runfolder}/1_align/1.1_input" "${runfolder}/2_trees/2.1_pargenes"
+    fi
+  fi
 fi
 
 # Count
@@ -1110,11 +1019,11 @@ count
 createReadme
 
 # Clean up
-if [ -e  "${runfolder}/tmp_treeshrink/" ] ; then
-  rm -rf "${runfolder}/tmp_treeshrink/"
+if [ "${dotreeshrink}" ]; then
+  if [ -e  "${runfolder}/tmp_treeshrink/" ] ; then
+    rm -rf "${runfolder}/tmp_treeshrink/"
+  fi
 fi
-
-# TODO: compress folders?
 
 # End
 echo -e "\n## ATPW [$(date "+%F %T")]: Reached end of the script\n" 2>&1 | tee -a "${logfile}"
