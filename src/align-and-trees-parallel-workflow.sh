@@ -1034,8 +1034,8 @@ echo -e "\n## ATPW [$(date "+%F %T")]: Compressing some output." 2>&1 | tee -a "
 find "${runfolder}" -type d -name parse_run -execdir tar czf {}.tar.gz {} \;
 find "${runfolder}" -type d -name old_parse_run -execdir tar czf {}.tar.gz {} \;
 
-find "${runfolder}" -type d -name parse_run -ignore_readdir_race -exec rm -r {} \;
-find "${runfolder}" -type d -name old_parse_run -ignore_readdir_race -exec rm -r {} \;
+find -ignore_readdir_race "${runfolder}" -type d -name parse_run -exec rm -r {} \;
+find -ignore_readdir_race  "${runfolder}" -type d -name old_parse_run -exec rm -r {} \;
 
 #-ignore_readdir_race
 
