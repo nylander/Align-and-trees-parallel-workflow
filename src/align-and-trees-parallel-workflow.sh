@@ -767,15 +767,15 @@ createReadme() {
       aligner_bmge_folder_path=$(find "${runfolder}" -type d -name "1.3_${aligner}_bmge")
       if [ "${dotreeshrink}" ] ; then
         aligner_bmge_threeshrink_folder_path=$(find "${runfolder}" -type d -name "1.4_${aligner}_bmge_treeshrink")
-        steps='mafft, bmge, treeshrink, raxml-ng, astral'
+        steps="${aligner}, bmge, treeshrink, raxml-ng, astral"
       else
-        steps='mafft, bmge, raxml-ng, astral'
+        steps="${aligner}, bmge, raxml-ng, astral"
       fi
+    elif [ "${dotreeshrink}" ] ; then
+      aligner_threeshrink_folder_path=$(find "${runfolder}" -type d -name "1.3_${aligner}_treeshrink")
+      steps="${aligner}, treeshrink, raxml-ng, astral"
     else
-      if [ "${dotreeshrink}" ] ; then
-        aligner_threeshrink_folder_path=$(find "${runfolder}" -type d -name "1.3_${aligner}_treeshrink")
-        steps='mafft, treeshrink, raxml-ng, astral'
-      fi
+      steps="${aligner}, raxml-ng, astral"
     fi
   else
     if [ "${dobmge}" ] ; then
