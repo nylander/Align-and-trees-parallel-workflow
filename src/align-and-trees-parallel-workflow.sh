@@ -1033,7 +1033,7 @@ echo -e "\n## ATPW [$(date "+%F %T")]: Compressing some output." 2>&1 | tee -a "
 for f in parse_run old_parse_run ; do
   #find ${runfolder} -type d -name "${f}" -execdir tar --remove-files -czf {}.tar.gz {} \;
   find ${runfolder} -type d -name "${f}" -execdir tar czf {}.tar.gz {} \;
-  find ${runfolder} -type d -name "${f}" -execdir rm -r {} \;
+  find ${runfolder} -type d -name "${f}" -exec rm -r {} \;
 done
 
 # End
