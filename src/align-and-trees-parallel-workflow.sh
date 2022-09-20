@@ -1030,7 +1030,7 @@ fi
 
 # Compress folders inside pargenes folders?
 for f in parse_run old_parse_run ; do
-  find ${runfolder} -type d -name "${f}" -exec tar --remove-files -cpzf {}.tar.gz {} \;
+  find ${runfolder} -type d -name "${f}" -execdir tar --remove-files -czf {}.tar.gz {} \;
 done
 
 
