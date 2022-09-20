@@ -194,7 +194,9 @@ else
   mkdir -p "${runfolder}/2_trees"
   logfile="${runfolder}/ATPW.log"
   export logfile
-  echo -e "\n## ATPW [$(date "+%F %T")]: Start" 2>&1 | tee "${logfile}"
+  start=$(date "+%F %T")
+  export start
+  echo -e "\n## ATPW [$start]: Start" 2>&1 | tee "${logfile}"
   echo -e "\n## ATPW [$(date "+%F %T")]: Created output folder ${runfolder}" 2>&1 | tee -a "${logfile}"
   echo -e "\n## ATPW [$(date "+%F %T")]: Created logfile ${logfile}" 2>&1 | tee -a "${logfile}"
 fi
@@ -854,7 +856,6 @@ createReadme() {
   astral_tree_path=$(find "${runfolder}" -type f -name 'output_species_tree.newick')
   gene_trees_path=$(find "${runfolder}" -type f -name 'gene_trees.newick')
   logfile_path=$(find "${runfolder}" -type f -name 'ATPW.log')
-
   input_folder_path=$(find "${runfolder}" -type d -name '1.1_input')
 
   if [ "${doalign}" ] ; then
@@ -898,6 +899,7 @@ createReadme() {
 - Name: \`$(basename "$0")\`
 - Version: ${version}
 - Main repo: <https://github.com/nylander/Align-and-trees-parallel-workflow>
+- Run started: $start
 - Run completed: $(date "+%F %T")
 - Steps: ${steps}
 
