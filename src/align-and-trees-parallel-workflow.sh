@@ -196,8 +196,6 @@ else
   export logfile
   start=$(date "+%F %T")
   export start
-  startcmd="$(printf %q "$BASH_SOURCE")$((($#)) && printf ' %q' "$@")"
-  export startcmd
   echo -e "\n## ATPW [$start]: Start" 2>&1 | tee "${logfile}"
   echo -e "\n## ATPW [$(date "+%F %T")]: Created output folder ${runfolder}" 2>&1 | tee -a "${logfile}"
   echo -e "\n## ATPW [$(date "+%F %T")]: Created logfile ${logfile}" 2>&1 | tee -a "${logfile}"
@@ -904,7 +902,6 @@ createReadme() {
 - Run started: $start
 - Run completed: $(date "+%F %T")
 - Steps: ${steps}
-- Command: $startcmd
 
 ## Input data
 
