@@ -1,6 +1,6 @@
-# Align-and-trees-parallel-workflow
+# Align-and-trees-parallel-workflow (ATPW)
 
-- Last modified: tor sep 01, 2022  11:12
+- Last modified: tis sep 20, 2022  03:06
 - Sign: Johan.Nylander\@nrm.se
 
 ## Description
@@ -65,9 +65,9 @@ From a default run (mafft, bmge, threeshrink, astral)
 
 - Alignments in `outputfolder/1_align/`
 - Gene trees in
-  `outputfolder/2_trees/2.2_mafft_check_bmge_treeshrink_pargenes/mlsearch_run/results`
+  `outputfolder/2_trees/2.2_mafft_bmge_treeshrink_pargenes/mlsearch_run/results`
 - Species tree in
-  `outputfolder/2_trees/2.2_mafft_check_bmge_treeshrink_pargenes/astral_run/`
+  `outputfolder/2_trees/2.2_mafft_bmge_treeshrink_pargenes/astral_run/`
 - Log file in `outputfolder/ATPW.log`
 - Summary file in `outputfolder/README.md`
 
