@@ -769,9 +769,9 @@ count() {
   # 1.3_mafft_bmge -> _aligner_bmge
   folder="${runfolder}/1_align/1.3_${aligner}_bmge"
   if [ -d "${folder}" ] ; then
-    nf_aligner_bmge=$(find "${runfolder}/1_align/1.3_${aligner}_check_bmge" -name '*.ali' | wc -l)
-    ns_aligner_bmge=$(grep -c -h '>' "${runfolder}/1_align/1.3_${aligner}_check_bmge"/*.ali | awk '{sum=sum+$1}END{print sum}')
-    nt_aligner_bmge=$(grep -h '>' "${runfolder}/1_align/1.3_${aligner}_check_bmge"/*.ali | sort -u | wc -l)
+    nf_aligner_bmge=$(find "${folder}" -name '*.ali' | wc -l)
+    ns_aligner_bmge=$(grep -c -h '>' "${folder}"/*.ali | awk '{sum=sum+$1}END{print sum}')
+    nt_aligner_bmge=$(grep -h '>' "${folder}"/*.ali | sort -u | wc -l)
   fi
 
   # 1.4_mafft_bmge_treeshrink -> _aligner_bmge_treeshrink
