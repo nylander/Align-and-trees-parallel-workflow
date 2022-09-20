@@ -1030,19 +1030,12 @@ fi
 
 # Compress folders inside pargenes folders?
 echo -e "\n## ATPW [$(date "+%F %T")]: Compressing some output." 2>&1 | tee -a "${logfile}"
-
 cd "${runfolder}" || exit
 find -type d -name "parse_run" -exec tar czf {}.tgz {} \;
+find -type d -name "parse_run" -exec rm -r {} \;
+find -type d -name "old_parse_run" -exec tar czf {}.tgz {} \;
+find -type d -name "old_parse_run" -exec rm -r {} \;
 cd .. || exit
-cd "${runfolder}"  || exit
-find  "${runfolder}" -type d -name "old_parse_run" -exec tar czf {}.tgz {} \;
-cd .. || exit
-
-#find "${runfolder}" -ignore_readdir_race -type d -name parse_run -exec rm -r {} \;
-#find "${runfolder}" -ignore_readdir_race -type d -name old_parse_run -exec rm -r {} \;
-
-#-ignore_readdir_race
-
 
 # End
 echo -e "\n## ATPW [$(date "+%F %T")]: Reached end of the script\n" 2>&1 | tee -a "${logfile}"
