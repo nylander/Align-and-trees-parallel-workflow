@@ -390,12 +390,12 @@ checkAlignments() {
   find  "${inputfolder}" -type f -name '*.ali' | \
     parallel ''"${raxmlng}"' --check --msa {} --threads 1 --model '"${modelforraxmltest}"'' >> "${logfile}" 2>&1
   find "${inputfolder}" -type f -name '*.log' | \
-    parallel 'if grep -q "^ERROR" {} ; then echo "## ATPW ['"$(date "+%F %T")"']: Found error, removing {=s/\.raxml\.log//=}"; rm -v {=s/\.raxml\.log//=} ; fi' >> "${logfile}" 2>&1
+    parallel 'if grep -q "^ERROR" {} ; then echo "## ATPW ['"$(date "+%F %T")"']: Removing {=s/\.raxml\.log//=}"; rm -v {=s/\.raxml\.log//=} ; fi' >> "${logfile}" 2>&1
   echo -e "\n## ATPW [$(date "+%F %T")]: Check and remove if any files have more or equal than ${maxinvariant} percent invariable sites" 2>&1 | tee -a "${logfile}"
   find "${inputfolder}" -type f -name '*.log' | \
     parallel 'removeInvariant {} '"${maxinvariant}"''
   if [ ! "$(find ${inputfolder} -type f -name '*.ali')" ]; then
-    echo -e "\n## ATPW [$(date "+%F %T")]:checkAlign WARNING! No alignment files left in ${inputfolder}. Quitting." | tee -a "${logfile}"
+    echo -e "\n## ATPW [$(date "+%F %T")]:checkAlignments WARNING! No alignment files left in ${inputfolder}. Quitting." | tee -a "${logfile}"
     exit 1
   fi
   rm "${inputfolder}"/*.log
