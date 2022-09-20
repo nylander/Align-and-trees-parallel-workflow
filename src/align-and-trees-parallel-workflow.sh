@@ -903,7 +903,7 @@ createReadme() {
 - Run completed: $(date "+%F %T")
 - Steps: ${steps}
 
-## Input data
+## Input data (unfiltered):
 
 \`${input}\`
 
@@ -1024,7 +1024,7 @@ fi
 
 # TODO: treeshrink or not
 if [ "${dotreeshrink}" ]; then
-  mkdir -p "${runfolder}/tmp_treeshrink" # TODO: remove this folder in the end
+  mkdir -p "${runfolder}/tmp_treeshrink"
 
   # pargenes, fixed model
   if [ "${doalign}" ] ; then
