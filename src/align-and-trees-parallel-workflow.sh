@@ -789,6 +789,8 @@ createReadme() {
       if [ "${dotreeshrink}" ] ; then
         threeshrink_folder_path=$(find "${runfolder}" -type d -name '1.2_treeshrink')
         steps='treeshrink, raxml-ng, astral'
+      else
+        steps='raxml-ng, astral'
       fi
     fi
   fi
