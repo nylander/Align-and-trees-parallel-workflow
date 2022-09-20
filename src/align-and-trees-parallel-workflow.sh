@@ -391,10 +391,10 @@ checkAlignments() {
   echo -e "\n## ATPW [$(date "+%F %T")]: Check and remove if any files have more or equal than ${maxinvariant} percent invariable sites" 2>&1 | tee -a "${logfile}"
   find "${inputfolder}" -type f -name '*.log' | \
     parallel 'removeInvariant {} '"${maxinvariant}"''
-  if [ ! "$(find ${inputfolder} -type f -name '*.ali')" ]; then
-    echo -e "\n## ATPW [$(date "+%F %T")]: WARNING! No alignment files left in ${inputfolder}. Quitting." | tee -a "${logfile}"
-    exit 1
-  fi
+  #if [ ! "$(find ${inputfolder} -type f -name '*.ali')" ]; then
+  #  echo -e "\n## ATPW [$(date "+%F %T")]: WARNING! No alignment files left in ${inputfolder}. Quitting." | tee -a "${logfile}"
+  #  exit 1
+  #fi
   rm "${inputfolder}"/*.log
   rm "${inputfolder}"/*.raxml.reduced.phy
 }
