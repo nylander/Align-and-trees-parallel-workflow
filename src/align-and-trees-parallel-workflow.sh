@@ -1110,10 +1110,9 @@ count
 createReadme
 
 # Clean up
-# TODO: remove three shrink folder
-#rm -rf "${runfolder}/tmp_treeshrink/"
-# TODO: compress input folder?
-# tar czf ${runfolder}/1_align/1.1_input.tgz ${runfolder}/1_align/1.1_input
+rm -rf "${runfolder}/tmp_treeshrink/"
+
+# TODO: compress folders?
 
 # End
 echo -e "\n## ATPW [$(date "+%F %T")]: Reached end of the script\n" 2>&1 | tee -a "${logfile}"
