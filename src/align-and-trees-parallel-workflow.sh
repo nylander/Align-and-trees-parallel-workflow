@@ -814,20 +814,6 @@ count() {
     nt_treeshrink=$(grep -h '>' "${folder}"/*.ali | sort -u | wc -l)
   fi
 
-  ## 1.4_input_check_bmge_treeshrink
-  #if [ -d "${runfolder}/1_align/1.4_input_check_bmge_treeshrink" ] ; then
-  #  nf_input_check_bmge_treeshrink=$(find "${runfolder}/1_align/1.4_input_check_bmge_treeshrink" -name '*.ali' | wc -l)
-  #  ns_input_check_bmge_treeshrink=$(grep -c -h '>' "${runfolder}/1_align/1.4_input_check_bmge_treeshrink"/*.ali | awk '{sum=sum+$1}END{print sum}')
-  #  nt_input_check_bmge_treeshrink=$(grep -h '>' "${runfolder}/1_align/1.4_input_check_bmge_treeshrink"/*.ali | sort -u | wc -l)
-  #fi
-
-  ## 1.4_input_check_treeshrink
-  #if [ -d "${runfolder}/1_align/1.4_input_check_treeshrink" ] ; then
-  #  nf_input_check_treeshrink=$(find "${runfolder}/1_align/1.4_input_check_treeshrink" -name '*.ali' | wc -l)
-  #  ns_input_check_treeshrink=$(grep -c -h '>' "${runfolder}/1_align/1.4_input_check_treeshrink"/*.ali | awk '{sum=sum+$1}END{print sum}')
-  #  nt_input_check_treeshrink=$(grep -h '>' "${runfolder}/1_align/1.4_input_check_treeshrink"/*.ali | sort -u | wc -l)
-  #fi
-
   # Count taxa in astral tree
   astraltree=$(find "${runfolder}" -name 'output_species_tree.newick')
   nt_astral=$(sed 's/[(,]/\n/g' "${astraltree}"  | grep -c .)
@@ -869,37 +855,36 @@ createReadme() {
   gene_trees_path=$(find "${runfolder}" -type f -name 'gene_trees.newick')
   logfile_path=$(find "${runfolder}" -type f -name 'ATPW.log')
 
+  input_folder_path=$(find "${runfolder}" -type d -name '1.1_input')
+
   if [ "${doalign}" ] ; then
-    aligner_folder_path=$(find "${runfolder}" -type d -name "1.1_${aligner}")
-    aligner_check_folder_path=$(find "${runfolder}" -type d -name "1.2_${aligner}_check")
+    aligner_folder_path=$(find "${runfolder}" -type d -name "1.2_${aligner}")
     if [ "${dobmge}" ] ; then
-      aligner_check_bmge_folder_path=$(find "${runfolder}" -type d -name "1.3_${aligner}_check_bmge")
+      aligner_bmge_folder_path=$(find "${runfolder}" -type d -name "1.3_${aligner}_bmge")
       if [ "${dotreeshrink}" ] ; then
-        aligner_check_bmge_threeshrink_folder_path=$(find "${runfolder}" -type d -name "1.4_${aligner}_check_bmge_treeshrink")
+        aligner_bmge_threeshrink_folder_path=$(find "${runfolder}" -type d -name "1.4_${aligner}_bmge_treeshrink")
         steps='mafft, bmge, treeshrink, raxml-ng, astral'
       else
         steps='mafft, bmge, raxml-ng, astral'
       fi
     else
       if [ "${dotreeshrink}" ] ; then
-        aligner_check_threeshrink_folder_path=$(find "${runfolder}" -type d -name "1.4_${aligner}_check_treeshrink")
+        aligner_threeshrink_folder_path=$(find "${runfolder}" -type d -name "1.3_${aligner}_treeshrink")
         steps='mafft, treeshrink, raxml-ng, astral'
       fi
     fi
   else
-    input_folder_path=$(find "${runfolder}" -type d -name '1.1_input')
-    input_check_folder_path=$(find "${runfolder}" -type d -name '1.2_input_check')
     if [ "${dobmge}" ] ; then
-      input_check_bmge_folder_path=$(find "${runfolder}" -type d -name '1.3_input_check_bmge')
+      bmge_folder_path=$(find "${runfolder}" -type d -name '1.2_bmge')
       if [ "${dotreeshrink}" ] ; then
-        input_check_bmge_threeshrink_folder_path=$(find "${runfolder}" -type d -name '1.4_input_check_bmge_treeshrink')
+        bmge_threeshrink_folder_path=$(find "${runfolder}" -type d -name '1.3_bmge_treeshrink')
         steps='bmge, treeshrink, raxml-ng, astral'
       else
         steps='bmge, raxml-ng, astral'
       fi
     else
       if [ "${dotreeshrink}" ] ; then
-        input_check_threeshrink_folder_path=$(find "${runfolder}" -type d -name '1.4_input_check_treeshrink')
+        threeshrink_folder_path=$(find "${runfolder}" -type d -name '1.2_treeshrink')
         steps='treeshrink, raxml-ng, astral'
       fi
     fi
@@ -945,29 +930,28 @@ Total of ${ns_raw_input} sequences from ${nt_raw_input} sequence names.
 EOF
 
   if [ "${doalign}" ] ; then
-    echo -e "1. [\`1_align/1.1_"${aligner}"/*.ali\`](${aligner_folder_path#$runfolder/})" >> "${readme}"
-    echo -e "2. [\`1_align/1.2_"${aligner}"_check/*.ali\`](${aligner_check_folder_path#$runfolder/})" >> "${readme}"
+    echo -e "1. [\`1_align/1.1_input/*.ali\`](${input_folder_path#$runfolder/})" >> "${readme}"
+    echo -e "2. [\`1_align/1.2_"${aligner}"/*.ali\`](${aligner_folder_path#$runfolder/})" >> "${readme}"
     if [ "${dobmge}" ] ; then
-      echo -e "3. [\`1_align/1.3_"${aligner}"_check_bmge/*.ali\`](${aligner_check_bmge_folder_path#$runfolder/})" >> "${readme}"
+      echo -e "3. [\`1_align/1.3_"${aligner}"_bmge/*.ali\`](${aligner_bmge_folder_path#$runfolder/})" >> "${readme}"
       if [ "${dotreeshrink}" ] ; then
-        echo -e "4. [\`1_align/1.4_"${aligner}"_check_bmge_treeshrink/*.ali\`]("${aligner_check_bmge_threeshrink_folder_path#$runfolder/}")" >> "${readme}"
+        echo -e "4. [\`1_align/1.4_"${aligner}"_bmge_treeshrink/*.ali\`]("${aligner_bmge_threeshrink_folder_path#$runfolder/}")" >> "${readme}"
       fi
     else
       if [ "${dotreeshrink}" ] ; then
-        echo -e "4. [\`1_align/1.4_"${aligner}"_check_treeshrink/*.ali\`]("${aligner_check_threeshrink_folder_path#$runfolder/}")" >> "${readme}"
+        echo -e "3. [\`1_align/1.3_"${aligner}"_treeshrink/*.ali\`]("${aligner_threeshrink_folder_path#$runfolder/}")" >> "${readme}"
       fi
     fi
   else
     echo -e "1. [\`1_align/1.1_input/*.ali\`]("${input_folder_path#$runfolder/}")" >> "${readme}"
-    echo -e "2. [\`1_align/1.2_input_check/*.ali\`]("${input_check_folder_path#$runfolder/}")" >> "${readme}"
     if [ "${dobmge}" ] ; then
-      echo -e "3. [\`1_align/1.3_input_check_bmge/*.ali\`]("${input_check_bmge_folder_path#$runfolder/}")" >> "${readme}"
+      echo -e "2. [\`1_align/1.2_bmge/*.ali\`]("${bmge_folder_path#$runfolder/}")" >> "${readme}"
       if [ "${dotreeshrink}" ] ; then
-        echo -e "4. [\`1_align/1.4_input_check_bmge_treeshrink/*.ali\`]("${input_check_bmge_threeshrink_folder_path#$runfolder/}")" >> "${readme}"
+        echo -e "3. [\`1_align/1.3_bmge_treeshrink/*.ali\`]("${bmge_threeshrink_folder_path#$runfolder/}")" >> "${readme}"
       fi
     else
       if [ "${dotreeshrink}" ] ; then
-        echo -e "4. [\`1_align/1.4_input_check_treeshrink/*.ali\`]("${input_check_threeshrink_folder_path#$runfolder/}")" >> "${readme}"
+        echo -e "2. [\`1_align/1.2_treeshrink/*.ali\`]("${threeshrink_folder_path#$runfolder/}")" >> "${readme}"
       fi
     fi
   fi
@@ -978,31 +962,29 @@ EOF
   echo -e "| Step | Tool | Nfiles | Nseqs | Ntax |" >> "${readme}"
   echo -e "| ---  | --- | --- | --- | --- |" >> "${readme}"
   echo -e "| 0. | Raw input | ${nf_raw_input} | ${ns_raw_input} | ${nt_raw_input} |" >> "${readme}"
+  echo -e "| 1. | Check input | ${nf_input} | ${ns_input} | ${nt_input} |" >> "${readme}"
 
   if [ "${doalign}" ] ; then
-    echo -e "| 1. | "${aligner}" | ${nf_aligner} | ${ns_aligner} | ${nt_aligner} |" >> "${readme}"
-    echo -e "| 2. | Check w. RAxML | ${nf_aligner_check} | ${ns_aligner_check} | ${nt_aligner_check} |" >> "${readme}"
+    echo -e "| 2. | "${aligner}" | ${nf_aligner} | ${ns_aligner} | ${nt_aligner} |" >> "${readme}"
     if [ "${dobmge}" ] ; then
-      echo -e "| 3. | BMGE | ${nf_aligner_check_bmge} | ${ns_aligner_check_bmge} | ${nt_aligner_check_bmge} |" >> "${readme}"
+      echo -e "| 3. | BMGE | ${nf_aligner_bmge} | ${ns_aligner_bmge} | ${nt_aligner_bmge} |" >> "${readme}"
       if [ "${dotreeshrink}" ] ; then
-        echo -e "| 4. | TreeShrink | ${nf_aligner_check_bmge_treeshrink} | ${ns_aligner_check_bmge_treeshrink} | ${nt_aligner_check_bmge_treeshrink} |" >> "${readme}"
+        echo -e "| 4. | TreeShrink | ${nf_aligner_bmge_treeshrink} | ${ns_aligner_bmge_treeshrink} | ${nt_aligner_bmge_treeshrink} |" >> "${readme}"
       fi
     else
       if [ "${dotreeshrink}" ] ; then
-        echo -e "| 4. | TreeShrink | ${nf_aligner_check_treeshrink} | ${ns_aligner_check_treeshrink} | ${nt_aligner_check_treeshrink} |" >> "${readme}"
+        echo -e "| 3. | TreeShrink | ${nf_aligner_check_treeshrink} | ${ns_aligner_check_treeshrink} | ${nt_aligner_check_treeshrink} |" >> "${readme}"
       fi
     fi
   else
-    echo -e "| 1. | Input | ${nf_input} | ${ns_input} | ${nt_input} |" >> "${readme}"
-    echo -e "| 2. | Check w. RAxML | ${nf_input_check} | ${ns_input_check} | ${nt_input_check} |" >> "${readme}"
     if [ "${dobmge}" ] ; then
-      echo -e "| 3. | BMGE | ${nf_input_check_bmge} | ${ns_input_check_bmge} | ${nt_input_check_bmge} |" >> "${readme}"
+      echo -e "| 2. | BMGE | ${nf_bmge} | ${ns_bmge} | ${nt_bmge} |" >> "${readme}"
       if [ "${dotreeshrink}" ] ; then
-        echo -e "| 4. | TreeShrink | ${nf_input_check_bmge_treeshrink} | ${ns_input_check_bmge_treeshrink} | ${nt_input_check_bmge_treeshrink} |" >> "${readme}"
+        echo -e "| 3. | TreeShrink | ${nf_bmge_treeshrink} | ${ns_bmge_treeshrink} | ${nt_bmge_treeshrink} |" >> "${readme}"
       fi
     else
       if [ "${dotreeshrink}" ] ; then
-        echo -e "| 4. | TreeShrink | ${nf_input_check_treeshrink} | ${ns_input_check_treeshrink} | ${nt_input_check_treeshrink} |" >> "${readme}"
+        echo -e "| 2. | TreeShrink | ${nf_treeshrink} | ${ns_treeshrink} | ${nt_treeshrink} |" >> "${readme}"
       fi
     fi
   fi
@@ -1056,7 +1038,7 @@ if [ "${dotreeshrink}" ]; then
     fi
   fi
 
-  # setup treeshrink TODO: Check input paths!
+  # setup treeshrink
   if [ "${doalign}" ] ; then
     if [ "${dobmge}" ] ; then
       setupTreeshrink "${runfolder}/2_trees/2.1_${aligner}_bmge_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.3_${aligner}_bmge" "${runfolder}/tmp_treeshrink"
@@ -1099,7 +1081,6 @@ if [ "${dotreeshrink}" ]; then
 fi
 
 # TODO: treeshrink or not
-# TODO: check folder paths
 if [ "${dotreeshrink}" ]; then
   # pargenes, modeltest, astral
   if [ "${doalign}" ] ; then
@@ -1123,7 +1104,7 @@ fi
 count
 
 # Create README.md
-#createReadme
+createReadme
 
 # Clean up
 # TODO: remove three shrink folder
