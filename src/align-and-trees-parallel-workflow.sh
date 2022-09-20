@@ -306,7 +306,7 @@ checkNtaxaInFasta() {
   b=$(basename "${f}")
   ntax=$(grep -c '>' "${f}")
   if [[ "${ntax}" -lt $n ]] ; then
-    echo -e "${b} have less than ${n} taxa: (${ntax})."
+    echo -e "\n## ATPW [$(date "+%F %T")]: ${b} have less than ${n} taxa: (${ntax}). Removing!" >> "${logfile}" 2>&1
     rm -v "${f}"
   fi
 }
