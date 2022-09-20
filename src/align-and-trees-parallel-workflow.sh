@@ -395,7 +395,7 @@ checkAlignments() {
   #  parallel 'if grep -q "^ERROR" {} ; then echo "## ATPW: Found error in {}"; rm -v {=s/\.raxml\.log//=} ; fi' >> "${logfile}" 2>&1
 
   find "${inputfolder}" -type f -name '*.log' | \
-    parallel 'if grep -q "^ERROR" {} ; then echo "## ATPW ['"$(date '"+%F %T"')"']: Found error in {}"; rm -v {=s/\.raxml\.log//=} ; fi' >> "${logfile}" 2>&1
+    parallel 'if grep -q "^ERROR" {} ; then echo "## ATPW ['"$(date "+%F %T")"']: Found error in {}"; rm -v {=s/\.raxml\.log//=} ; fi' >> "${logfile}" 2>&1
 
 
 
