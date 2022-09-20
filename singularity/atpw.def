@@ -6,7 +6,7 @@ From: ubuntu:20.04
 # sudo singularity build --sandbox atpw-sandbox docker://ubuntu:20.04
 # sudo singularity shell --writable atpw-sandbox
 # sudo singularity build atpw.sif atpw-sandbox
-# Last modified: tis sep 20, 2022  11:20
+# Last modified: tis sep 20, 2022  11:37
 # Sign: JN
 
 %environment
@@ -31,7 +31,7 @@ From: ubuntu:20.04
     SINGULARITYENV_APPEND_PATH=${ATPBIN}
     SINGULARITYENV_APPEND_PATH=${ATPWHOME}/ParGenes/pargenes/pargenes_binaries
     #SINGULARITYENV_PREPEND_PATH=/root/ParGenes/pargenes_binaries
-    PATH=${ATPWBIN}:${PATH}:${ATPWHOME}/ParGenes/pargenes/pargenes_binaries
+    export PATH=${ATPWBIN}:${PATH}:${ATPWHOME}/ParGenes/pargenes/pargenes_binaries
 
 %files
    # TODO: this step will change (to git clone ...) when the repo is made public
