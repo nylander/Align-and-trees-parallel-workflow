@@ -316,13 +316,13 @@ align() {
   # Input: inputfolder/*.fas
   # Output: 1_align/1.1_mafft/*.ali
   # Call: align "${input}" "${runfolder}/1_align/1.1_${aligner}"
-  # TODO: use threads
+  # TODO: use threads. 
 
   local inputfolder="$1"
   local outputfolder="$2"
   echo -e "\n## ATPW [$(date "+%F %T")]: Align with ${aligner}" 2>&1 | tee -a "${logfile}"
   mkdir -p "${outputfolder}"
-  find "${inputfolder}" -type f -name '*.fas' | \
+  find "${inputfolder}" -type f -name '*.ali' | \
     parallel ''"${alignerbin}"' '"${alignerbinopts}"' {} | '"sed '/>/ ! s/[a-z]/\U&/g'"' > '"${outputfolder}"'/{/.}.ali' >> "${logfile}" 2>&1
 }
 
@@ -391,10 +391,10 @@ checkAlignments() {
   echo -e "\n## ATPW [$(date "+%F %T")]: Check and remove if any files have more or equal than ${maxinvariant} percent invariable sites" 2>&1 | tee -a "${logfile}"
   find "${inputfolder}" -type f -name '*.log' | \
     parallel 'removeInvariant {} '"${maxinvariant}"''
-  #if [ ! "$(find ${inputfolder} -type f -name '*.ali')" ]; then
-  #  echo -e "\n## ATPW [$(date "+%F %T")]: WARNING! No alignment files left in ${inputfolder}. Quitting." | tee -a "${logfile}"
-  #  exit 1
-  #fi
+  if [ ! "$(find ${inputfolder} -type f -name '*.ali')" ]; then
+    echo -e "\n## ATPW [$(date "+%F %T")]: checkAlign WARNING! No alignment files left in ${inputfolder}. Quitting." | tee -a "${logfile}"
+    exit 1
+  fi
   rm "${inputfolder}"/*.log
   rm "${inputfolder}"/*.raxml.reduced.phy
 }
@@ -454,7 +454,7 @@ checkNtaxa() {
   find "${inputfolder}" -type f -name "*${suffix}" | \
     parallel 'checkNtaxaInFasta {} '"${min}"'' >> "${logfile}" 2>&1
   if [ ! "$(find ${inputfolder} -maxdepth 1 -type f -name "*${suffix}")" ] ; then
-    echo -e "\n## ATPW [$(date "+%F %T")]: WARNING! No ${suffix} files left in ${inputfolder}. Quitting." | tee -a "${logfile}"
+    echo -e "\n## ATPW [$(date "+%F %T")]: NTAX WARNING! No ${suffix} files left in ${inputfolder}. Quitting." | tee -a "${logfile}"
     exit 1
   fi
 }
