@@ -906,8 +906,8 @@ createReadme() {
 ## Input data
 
 \`${input}\`
-with ${nf_raw_input} fasta files (${datatype} format).
 
+with ${nf_raw_input} fasta files (${datatype} format).
 Total of ${ns_raw_input} sequences from ${nt_raw_input} sequence names.
 
 ## Output
