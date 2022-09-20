@@ -1000,7 +1000,7 @@ EOF
 # TODO: rewrite to avoid all hard coded paths
 
 # Align or not, and check alignments
-checkNtaxa "${runfolder}/1_align/1.1_input"
+checkNtaxa "${runfolder}/1_align/1.1_input" "${mintaxfilter}" .ali
 
 if [ "${doalign}" ] ; then
   align "${runfolder}/1_align/1.1_input" "${runfolder}/1_align/1.2_${aligner}"
