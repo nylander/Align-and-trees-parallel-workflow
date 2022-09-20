@@ -454,7 +454,7 @@ checkNtaxa() {
   find "${inputfolder}" -type f -name "*${suffix}" | \
     parallel 'checkNtaxaInFasta {} '"${min}"'' >> "${logfile}" 2>&1
   if [ ! "$(find ${inputfolder} -maxdepth 1 -type f -name "*${suffix}")" ] ; then
-    echo -e "\n## ATPW [$(date "+%F %T")]: NTAX WARNING! No ${suffix} files left in ${inputfolder}. Quitting." | tee -a "${logfile}"
+    echo -e "\n## ATPW [$(date "+%F %T")]:checkNtaxa WARNING! No ${suffix} files left in ${inputfolder}. Quitting." | tee -a "${logfile}"
     exit 1
   fi
 }
@@ -474,7 +474,7 @@ checkNtaxaOutputAli() {
   find "${inputfolder}" -type f -name 'output.ali' | \
     parallel 'checkNtaxaInFasta {} '"${min}"''>> "${logfile}" 2>&1
   if [ ! "$(find ${inputfolder} -type f -name 'output.ali')" ]; then
-    echo -e "\n## ATPW [$(date "+%F %T")]: WARNING! No output.ali files left in ${inputfolder}. Quitting." | tee -a "${logfile}"
+    echo -e "\n## ATPW [$(date "+%F %T")]:checkNtaxaOutputAli WARNING! No output.ali files left in ${inputfolder}. Quitting." | tee -a "${logfile}"
     exit 1
   fi
 }
@@ -494,7 +494,7 @@ removeInvariant() {
   if grep -q "^Invariant sites" "${infile}" ; then
     perc=$(grep 'Invariant sites:' "${infile}" | grep -Eo "[0-9]+\.[0-9]+")
     if [ $(echo "${perc} >= ${maxi}" | bc -l) -eq 1 ]; then
-      echo "## ATPW: ${aliname} have ${perc} percent invariant sites: Removing!" 2>&1 | tee -a "${logfile}"
+      echo "## ATPW: ${aliname} have ${perc} percent invariant sites: Removing!" >> "${logfile}"
       rm "${alifile}"
     fi
   fi
