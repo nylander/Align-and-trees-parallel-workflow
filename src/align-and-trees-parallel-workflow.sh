@@ -1110,7 +1110,9 @@ count
 createReadme
 
 # Clean up
-rm -rf "${runfolder}/tmp_treeshrink/"
+if [ -e  "${runfolder}/tmp_treeshrink/" ] ; then
+  rm -rf "${runfolder}/tmp_treeshrink/"
+fi
 
 # TODO: compress folders?
 
