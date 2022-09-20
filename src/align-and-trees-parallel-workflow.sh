@@ -193,6 +193,7 @@ else
   mkdir -p "${runfolder}/1_align"
   mkdir -p "${runfolder}/2_trees"
   logfile="${runfolder}/ATPW.log"
+  export logfile
   echo -e "\n## ATPW [$(date "+%F %T")]: Start" 2>&1 | tee "${logfile}"
   echo -e "\n## ATPW [$(date "+%F %T")]: Created output folder ${runfolder}" 2>&1 | tee -a "${logfile}"
   echo -e "\n## ATPW [$(date "+%F %T")]: Created logfile ${logfile}" 2>&1 | tee -a "${logfile}"
