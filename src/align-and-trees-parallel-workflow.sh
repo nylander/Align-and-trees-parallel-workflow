@@ -104,15 +104,15 @@ prog_exists() {
 }
 export -f prog_exists
 
-for p in \
-  "${alignerbin}" \
-  "${fastagap}" \
-  "${raxmlng}" \
-  "${realigner}" \
-  "${PARGENES}" \
-  "${TREESHRINK}" ; do
-  prog_exists "${p}"
-done
+#for p in \
+#  "${alignerbin}" \
+#  "${fastagap}" \
+#  "${raxmlng}" \
+#  "${realigner}" \
+#  "${PARGENES}" \
+#  "${TREESHRINK}" ; do
+#  prog_exists "${p}"
+#done
 
 
 # Model-selection criterion and default models
