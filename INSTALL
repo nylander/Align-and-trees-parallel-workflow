@@ -1,6 +1,6 @@
 # INSTALL for Align-and-trees-workflow
 
-- Last modified: tor sep 01, 2022  10:42
+- Last modified: tis sep 20, 2022  09:29
 - Sign: JN
 
 The workflow have been tested on Ubuntu Linux 20.04.
@@ -44,10 +44,6 @@ TreeShrink (v1.3.9)
 
 `git clone https://github.com/uym2/TreeShrink.git ; cd TreeShrink ; python setup.py install --user`
 
-catfasta2phyml.pl (v1.1.0)
-
-`git clone https//github/nylander/catfasta2phyml.git` (and copy `catfasta2phyml.pl` to your path).
-
 fastagap.pl (v1.0):
 
 `git clone https://github.com/nylander/fastagap.git` (and copy `fastagap.pl` to your path).
@@ -55,11 +51,6 @@ fastagap.pl (v1.0):
 mafft (v7.453):
 
 `sudo apt install mafft`
-
-phylip2fasta.pl (v0.3):
-
-`git clone https://github.com/nylander/phy2fas.git` (and copy `phylip2fasta.pl` to your path. Note that this script requires BioPerl).
-
 
 
 ## Testing
