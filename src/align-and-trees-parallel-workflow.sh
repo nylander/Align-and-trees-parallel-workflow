@@ -1,7 +1,8 @@
 #!/bin/bash -l
 
-# TODO: put back -e
-set -euo pipefail
+# TODO: put back -e.
+# First Need to have the calls to raxml-ng return 0
+set -uo pipefail
 
 
 # Default settings
