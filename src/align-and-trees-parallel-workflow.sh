@@ -1028,6 +1028,12 @@ if [ "${dotreeshrink}" ]; then
   fi
 fi
 
+# Compress folders inside pargenes folders?
+for f in parse_run old_parse_run ; do
+  find ${runfolder} -type d -name "${f}" -exec tar --remove-files -cpzf {}.tar.gz {} \;
+done
+
+
 # End
 echo -e "\n## ATPW [$(date "+%F %T")]: Reached end of the script\n" 2>&1 | tee -a "${logfile}"
 
