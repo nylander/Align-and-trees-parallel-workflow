@@ -1004,7 +1004,7 @@ else
     if [ "${dobmge}" ] ; then
       pargenesModeltestAstral "${runfolder}/1_align/1.3_${aligner}_bmge" "${runfolder}/2_trees/2.1_${aligner}_bmge_pargenes"
     else
-      pargenesModeltestAstral "${runfolder}/1_align/1.3_${aligner}" "${runfolder}/2_trees/2.1_${aligner}_pargenes"
+      pargenesModeltestAstral "${runfolder}/1_align/1.2_${aligner}" "${runfolder}/2_trees/2.1_${aligner}_pargenes"
     fi
   else
     if [ "${dobmge}" ] ; then
