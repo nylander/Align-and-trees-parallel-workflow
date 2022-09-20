@@ -4,7 +4,6 @@
 # First Need to have the calls to raxml-ng return 0
 set -uo pipefail
 
-
 # Default settings
 version="0.8.0"
 logfile=
@@ -27,17 +26,13 @@ MACSE="${MACSE:-/home/nylander/jb/johaberg-all/src/omm_macse_v10.02.sif}"   # <<
 aligner="mafft" # Name of aligner, not path to binary
 alignerbin="mafft"
 alignerbinopts=" --auto --thread ${threadsforaligner} --quiet"
-realigner="mafft" # Name of realigner, not path to binary
-realignerbinopts="${alignerbinopts}"
-
 #aligner="macse"
 #alignerbin="/home/nylander/jb/johaberg-all/src/omm_macse_v10.02.sif"
 #alignerbinopts=" -java_mem 2000m"
-
+realigner="mafft" # Name of realigner, not path to binary
+realignerbinopts="${alignerbinopts}"
 raxmlng="raxml-ng"
 fastagap="fastagap.pl"
-catfasta2phyml="catfasta2phyml.pl"
-phylip2fasta="phylip2fasta.pl"
 
 
 # Usage
@@ -47,52 +42,53 @@ cat << End_Of_Usage
 $(basename "$0") version ${version}
 
 What:
-          Phylogenetics in parallel
+    Phylogenetics in parallel
 
-          Performs the following steps:
+    Performs the following steps:
 
-          1. Do multiple sequence alignment (optional)
-          2. Filter using BMGE (optional)
-          3. Filter using TreeShrink (optional)
-          4. Estimate gene trees with raxml-ng using
-             automatic model selection
-          5. Estimate species tree using ASTRAL
+    1. Do multiple sequence alignment (optional)
+    2. Filter using BMGE (optional)
+    3. Filter using TreeShrink (optional)
+    4. Estimate gene trees with raxml-ng using
+       automatic model selection
+    5. Estimate species tree using ASTRAL
 
 By:
-          Johan Nylander
+    Johan Nylander
 
 Usage:
-          $(basename "$0") -d nt|aa [options] infolder outfolder
+    $(basename "$0") -d nt|aa [options] infolder outfolder
 
 Options:
-          -d type   -- Specify data type: nt or aa. (Mandatory)
-          -n number -- Specify the number of threads. Default: ${ncores}
-          -m crit   -- Model test criterion: BIC, AIC or AICC. Default: ${modeltestcriterion}
-          -f number -- Minimum number of taxa when filtering alignments. Default: ${mintaxfilter}
-          -A        -- Do not run mafft (assume aligned input)
-          -B        -- Do not run BMGE
-          -T        -- Do not run TreeShrink
-          -v        -- Print version
-          -h        -- Print help message
+    -d type   -- Specify data type: nt or aa. (Mandatory)
+    -n number -- Specify the number of threads. Default: ${ncores}
+    -m crit   -- Model test criterion: BIC, AIC or AICC. Default: ${modeltestcriterion}
+    -f number -- Minimum number of taxa when filtering alignments. Default: ${mintaxfilter}
+    -A        -- Do not run mafft (assume aligned input)
+    -B        -- Do not run BMGE
+    -T        -- Do not run TreeShrink
+    -v        -- Print version
+    -h        -- Print help message
 
 Examples:
-          $(basename "$0") -d nt -t 8 data out
+    $(basename "$0") -d nt -t 8 data out
 
 Input:
-          Folder with fasta formatted sequence files.
-          Files need to have suffix ".fas"!
+    Folder with fasta formatted sequence files.
+    Files need to have suffix ".fas"!
 
 Output:
-          Folders with filtered alignments and species-
-          and gene-trees.
-          Summary README.md file.
-          Log file ATPW.log.
+    Folders with filtered alignments and species-
+    and gene-trees.
+    Summary README.md file.
+    Log file ATPW.log.
 
 Notes:
-          See INSTALL file for software needed.
+    See INSTALL file for software needed.
 
-License:  Copyright (C) 2022 nylander <johan.nylander@nrm.se>
-          Distributed under terms of the MIT license.
+License:
+    Copyright (C) 2022 nylander <johan.nylander@nrm.se>
+    Distributed under terms of the MIT license.
 
 End_Of_Usage
 
@@ -110,9 +106,7 @@ export -f prog_exists
 
 for p in \
   "${alignerbin}" \
-  "${catfasta2phyml}" \
   "${fastagap}" \
-  "${phylip2fasta}" \
   "${raxmlng}" \
   "${realigner}" \
   "${PARGENES}" \
@@ -272,31 +266,12 @@ fi
 
 
 # Needed for some bash functions
-# TODO: Double check which are needed
 export runfolder
-export phylip2fasta
 export aligner
 export realigner
 
 
 # Functions
-checkNtaxaInPhylip() {
-
-  # Function for checking and removing phylip files with less than N taxa
-  # If other max N, use, e.g., "parallel checkNtaxaInPhylip {} 10"
-
-  f=$1
-  n=${2:-4} # default 4
-  b=$(basename "${f}")
-  ntax=$(grep -m1 -oP '\K\d+(?=\s)' "${f}")
-  if [[ "${ntax}" -lt $n ]] ; then
-    echo -e "${b} have less than ${n} taxa: ${ntax}."
-      rm -v "${f}"
-  fi
-}
-export -f checkNtaxaInPhylip
-
-
 checkNtaxaInFasta() {
 
   # Function for checking and removing fasta files with less than N taxa
@@ -1028,7 +1003,7 @@ if [ "${dotreeshrink}" ]; then
   fi
 fi
 
-# Compress folders inside pargenes folders?
+# Compress folders inside pargenes folders
 echo -e "\n## ATPW [$(date "+%F %T")]: Compressing some output." 2>&1 | tee -a "${logfile}"
 cd "${runfolder}" || exit
 find . -type d -name "parse_run" -execdir tar czf {}.tgz {} ';'
