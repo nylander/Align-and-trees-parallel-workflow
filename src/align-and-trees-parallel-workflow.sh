@@ -892,7 +892,7 @@ createReadme() {
   fi
 
   cat <<- EOF > "${readme}"
-# Align and Trees in Parallel - Summary
+# ATPW - Align and Trees in Parallel
 
 ## Workflow
 
