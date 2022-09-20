@@ -553,7 +553,7 @@ setupTreeshrink() {
  # Output:
  # Call: setupTreeshrink "${runfolder}/2_trees/2.1_mafft_bmge_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.3_mafft_bmge" "${runfolder}/tmp_treeshrink"
  # TODO:
- inputfolderone="$1"     # where to look for trees
+ inputfolderone="$1"     # where to look for trees 2_trees/2.1_mafft_bmge_pargenes/mlsearch_run/results
  inputfoldertwo="$2"     # where to look for alignments
  outputfolderthree="$3"  # output
  export inputfolderone
@@ -563,12 +563,13 @@ setupTreeshrink() {
 
  copyAndConvert () {
    local f=
-   f=$(basename "$1" .raxml.bestTree) # f=p3896_EOG7SFVKF_mafft_bmge_ali
+   f=$(basename "$1" .raxml.bestTree)
    mkdir -p "${outputfolderthree}/${f}"
    ln -s "$1" "${outputfolderthree}/${f}/raxml.bestTree"
-   sear="_${aligner}_ali"
-   repl=".${aligner}.ali"
-   local a=${f/$sear/$repl} # a=p3896_EOG7SFVKF.mafft.ali # TODO: check file names!
+   #sear="_${aligner}_ali"
+   #repl=".${aligner}.ali"
+   #local a=${f/$sear/$repl} # a=p3896_EOG7SFVKF.mafft.ali
+   local a=${f/_ali/\.ali}
    ln -s "${inputfoldertwo}/${a}" "${outputfolderthree}/${f}/alignment.ali"
  }
  export -f copyAndConvert
