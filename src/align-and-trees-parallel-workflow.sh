@@ -976,7 +976,7 @@ EOF
       fi
     else
       if [ "${dotreeshrink}" ] ; then
-        echo -e "| 3. | TreeShrink | ${nf_aligner_check_treeshrink} | ${ns_aligner_check_treeshrink} | ${nt_aligner_check_treeshrink} |" >> "${readme}"
+        echo -e "| 3. | TreeShrink | ${nf_aligner_treeshrink} | ${ns_aligner_treeshrink} | ${nt_aligner_treeshrink} |" >> "${readme}"
       fi
     fi
   else
