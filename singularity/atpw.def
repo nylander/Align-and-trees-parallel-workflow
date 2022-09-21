@@ -1,7 +1,7 @@
 Bootstrap: docker
 From: ubuntu:20.04
 
-# Last modified: ons sep 21, 2022  10:12
+# Last modified: ons sep 21, 2022  10:52
 # Sign: JN
 
 # sudo singularity build atpw.sif atpw.def
@@ -10,6 +10,8 @@ From: ubuntu:20.04
 # sudo singularity shell --writable atpw-sandbox
 # sudo singularity build atpw.sif atpw-sandbox
 
+# TODO: add macse library://vranwez/default/omm_macse:v10.02
+
 %environment
     # TODO: figure out the redundancy of variables
     export LC_ALL=C
@@ -17,6 +19,9 @@ From: ubuntu:20.04
     export BMGEJAR=${ATPWHOME}/BMGE-${BMGE_VERSION}/BMGE.jar
     export PARGENES=${ATPWHOME}/ParGenes/pargenes/pargenes.py
     export TREESHRINK=${ATPWHOME}/TreeShrink/run_treeshrink.py
+    #export MACSE=
+    export ATPWHOME=/opt/ATPW
+    export ATPWBIN=${ATPWHOME}/bin
     export PATH=${ATPWBIN}:${PATH}:${ATPWHOME}/ParGenes/pargenes/pargenes_binaries
 
 %files
@@ -37,7 +42,6 @@ From: ubuntu:20.04
     export BMGEJAR=${ATPWHOME}/BMGE-${BMGE_VERSION}/BMGE.jar
     export PARGENES=${ATPWHOME}/ParGenes/pargenes/pargenes.py
     export TREESHRINK=${ATPWHOME}/TreeShrink/run_treeshrink.py
-
 
     apt-get update && apt-get -y upgrade
 
