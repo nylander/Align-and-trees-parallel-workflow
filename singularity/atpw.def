@@ -1,7 +1,7 @@
 Bootstrap: docker
 From: ubuntu:20.04
 
-# Last modified: ons sep 21, 2022  09:29
+# Last modified: ons sep 21, 2022  09:45
 # Sign: JN
 
 # sudo singularity build atpw.sif atpw.def
@@ -11,6 +11,7 @@ From: ubuntu:20.04
 # sudo singularity build atpw.sif atpw-sandbox
 
 %environment
+    # TODO: figure out the redundancy of variables
     export LC_ALL=C
     export ATPWHOME=/opt/ATPW
     export ATPWBIN=/opt/ATPW/bin
@@ -27,10 +28,20 @@ From: ubuntu:20.04
    ../src/align-and-trees-parallel-workflow.sh /
 
 %post
+    # TODO: figure out the redundancy of variables
     export LC_ALL=C
     export DEBIAN_FRONTEND=noninteractive
     export OMPI_ALLOW_RUN_AS_ROOT=1
     export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+    export ATPWHOME=/opt/ATPW
+    export ATPWBIN=/opt/ATPW/bin
+    export PYTHON_VERSION=3.8
+    export RAXML_VERSION=1.1.0
+    export BMGE_VERSION=1.12
+    export BMGEJAR=${ATPWHOME}/BMGE-${BMGE_VERSION}/BMGE.jar
+    export PARGENES=${ATPWHOME}/ParGenes/pargenes/pargenes.py
+    export TREESHRINK=${ATPWHOME}/TreeShrink/run_treeshrink.py
+
 
     apt-get update && apt-get -y upgrade
 
