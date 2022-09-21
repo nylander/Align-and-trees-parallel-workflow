@@ -1,7 +1,7 @@
 Bootstrap: docker
 From: ubuntu:20.04
 
-# Last modified: ons sep 21, 2022  11:14
+# Last modified: ons sep 21, 2022  11:42
 # Sign: JN
 
 # sudo singularity build atpw.sif atpw.def
@@ -49,11 +49,11 @@ From: ubuntu:20.04
         default-jre \
         flex \
         git \
-        hmmer=3.1b2-2 \
+        hmmer \
         liblist-moreutils-perl \
         libopenmpi-dev \
         mafft \
-        muscle=1:3.8.31+dfsg-1 \
+        muscle \
         parallel \
         perl \
         pigz \
