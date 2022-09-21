@@ -3,3 +3,4 @@ tmp/
 fasta_files/
 NOTES.md
 *.swp
+singularity/atpw.sif
