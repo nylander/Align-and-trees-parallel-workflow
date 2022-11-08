@@ -71,7 +71,7 @@ Options:
     -h        -- Print help message
 
 Examples:
-    $(basename "$0") -d nt -t 8 data out
+    $(basename "$0") -d nt -n 8 data out
 
 Input:
     Folder with fasta formatted sequence files.
