@@ -1,6 +1,6 @@
 # INSTALL for Align-and-trees-workflow
 
-- Last modified: tis sep 20, 2022  09:29
+- Last modified: fre jan 27, 2023  08:49
 - Sign: JN
 
 The workflow have been tested on Ubuntu Linux 20.04.
@@ -36,7 +36,7 @@ ParGenes (v1.3.9)
 
 `git clone --recursive https://github.com/BenoitMorel/ParGenes.git ; cd ParGenes ; ./install.sh`
 
-RAxML-NG (v0.9.0)
+RAxML-NG (v1.1.0)
 
 `wget https://github.com/amkozlov/raxml-ng/releases/download/1.1.0/raxml-ng_v1.1.0_linux_x86_64.zip` (and unzip, rename to raxml-ng and put in your `~/bin`  folder
 
