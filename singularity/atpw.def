@@ -1,7 +1,7 @@
 Bootstrap: docker
 From: ubuntu:20.04
 
-# Last modified: ons sep 21, 2022  11:38
+# Last modified: mån dec 18, 2023  05:03
 # Sign: JN
 
 # sudo singularity build atpw.sif atpw.def
@@ -91,7 +91,7 @@ From: ubuntu:20.04
 
     # BMGE (v1.12)
     cd ${ATPWHOME}
-    wget http://ftp.pasteur.fr/pub/gensoft/projects/BMGE/BMGE-${BMGE_VERSION}.tar.gz
+    wget --passive http://ftp.pasteur.fr/pub/gensoft/projects/BMGE/BMGE-${BMGE_VERSION}.tar.gz
     tar xzf BMGE-${BMGE_VERSION}.tar.gz
     rm BMGE-${BMGE_VERSION}.tar.gz
 
