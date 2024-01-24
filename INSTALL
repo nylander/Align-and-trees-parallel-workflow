@@ -1,6 +1,6 @@
 # INSTALL for Align-and-trees-workflow
 
-- Last modified: ons jan 24, 2024  04:24
+- Last modified: ons jan 24, 2024  05:40
 - Sign: JN
 
 The workflow have been tested on Ubuntu Linux 20.04.
@@ -16,7 +16,6 @@ As an alternative to local installation, one may run the workflow using a
 [singularity/apptainer](https://apptainer.org/) container. A definition file
 for building the container is provided [atpw.def](singularity/atpw.def). See
 [README.md](singularity/README.md)
-
 
 ## Softare used (and version):
 
@@ -40,7 +39,8 @@ RAxML-NG (v1.1.0)
 
 `wget https://github.com/amkozlov/raxml-ng/releases/download/1.1.0/raxml-ng_v1.1.0_linux_x86_64.zip` (and unzip, rename to raxml-ng and put in your `~/bin`  folder
 
-TreeShrink (v1.3.9) (**Note**: a python version < 3.9 is needed for simple installation of current TreeShrink!)
+TreeShrink (v1.3.9) **Note**: a python version < 3.9 is needed for simple installation of current TreeShrink!
+See <https://github.com/nylander/Align-and-trees-parallel-workflow/issues/2> for details and alternatives.
 
 `git clone https://github.com/uym2/TreeShrink.git ; cd TreeShrink ; python setup.py install --user`
 
@@ -58,4 +58,7 @@ mafft (v7.453):
 For testing the installation, try:
 
     $ ./src/align-and-trees-parallel-workflow.sh -d nt data test
+
+A successful run is summarized in `test/README.md`.  A run log file is written
+to `test/ATPW.log` and may contain information usefult for trouble-shooting.
 

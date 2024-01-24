@@ -1,6 +1,6 @@
 # ATPW - Align-and-trees-parallel-workflow
 
-- Last modified: ons sep 21, 2022  01:13
+- Last modified: ons jan 24, 2024  05:34
 - Sign: Johan.Nylander\@nrm.se
 
 ## Description
@@ -76,9 +76,8 @@ From a default run (mafft, bmge, threeshrink, astral)
 For a local installation, see the [`INSTALL`](INSTALL) file.
 
 As an alternative, and if you have
-[Singularity](https://docs.sylabs.io/guides/3.10/user-guide/quick_start.html#quick-installation-steps)
-installed, you may use a singularity file. See the
-[README](singularity/README.md) for details.
+[Singularity/Apptainer](https://apptainer.org) installed, you may use a
+singularity file. See the [README](singularity/README.md) for details.
 
 
 ### Important caveats
@@ -92,5 +91,7 @@ installed, you may use a singularity file. See the
   processes for GNU parallel, and in combination with number of cores used for
   child processes are not yet optimized, nor checked for inconsistencies.
 * The current version of [ThreeShrink does not run with python versions
-  >3.9](https://github.com/uym2/TreeShrink/issues/33).  Using the singularity
-  >file is then one alternative.
+  >3.9](https://github.com/uym2/TreeShrink/issues/33). Using the singularity
+  file, or editing the TreeShrink code (see
+  <https://github.com/nylander/Align-and-trees-parallel-workflow/issues/2>),
+  are two alternatives.
