@@ -1,6 +1,6 @@
 # INSTALL for Align-and-trees-workflow
 
-- Last modified: fre jan 27, 2023  08:49
+- Last modified: ons jan 24, 2024  04:24
 - Sign: JN
 
 The workflow have been tested on Ubuntu Linux 20.04.
@@ -13,8 +13,8 @@ and data type specific settings needs to be manually set in the main script
 before running.
 
 As an alternative to local installation, one may run the workflow using a
-[singularity]() container. A definition file for building the container is
-provided [atpw.def](singularity/atpw.def). See
+[singularity/apptainer](https://apptainer.org/) container. A definition file
+for building the container is provided [atpw.def](singularity/atpw.def). See
 [README.md](singularity/README.md)
 
 
@@ -40,7 +40,7 @@ RAxML-NG (v1.1.0)
 
 `wget https://github.com/amkozlov/raxml-ng/releases/download/1.1.0/raxml-ng_v1.1.0_linux_x86_64.zip` (and unzip, rename to raxml-ng and put in your `~/bin`  folder
 
-TreeShrink (v1.3.9)
+TreeShrink (v1.3.9) (**Note**: a python version < 3.9 is needed for simple installation of current TreeShrink!)
 
 `git clone https://github.com/uym2/TreeShrink.git ; cd TreeShrink ; python setup.py install --user`
 
