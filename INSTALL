@@ -1,6 +1,6 @@
 # INSTALL for Align-and-trees-workflow
 
-- Last modified: ons jan 24, 2024  05:40
+- Last modified: tis feb 13, 2024  09:37
 - Sign: JN
 
 The workflow have been tested on Ubuntu Linux 20.04.
@@ -31,15 +31,22 @@ GNU parallel (v20161222)
 
 `sudo apt install parallel`
 
-ParGenes (v1.3.9)
+ParGenes (v1.2.0, aster branch)
 
-`git clone --recursive https://github.com/BenoitMorel/ParGenes.git ; cd ParGenes ; ./install.sh`
+```
+git clone --recursive https://github.com/nylander/ParGenes.git
+cd ParGenes
+git checkout aster
+git submodule update --init --recursive
+./install.sh
+```
 
 RAxML-NG (v1.1.0)
 
 `wget https://github.com/amkozlov/raxml-ng/releases/download/1.1.0/raxml-ng_v1.1.0_linux_x86_64.zip` (and unzip, rename to raxml-ng and put in your `~/bin`  folder
 
-TreeShrink (v1.3.9) **Note**: a python version < 3.9 is needed for simple installation of current TreeShrink!
+TreeShrink (v1.3.9)
+**Note**: a python version < 3.9 is needed for simple installation of current TreeShrink!
 See <https://github.com/nylander/Align-and-trees-parallel-workflow/issues/2> for details and alternatives.
 
 `git clone https://github.com/uym2/TreeShrink.git ; cd TreeShrink ; python setup.py install --user`
