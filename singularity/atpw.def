@@ -1,7 +1,7 @@
 Bootstrap: docker
 From: ubuntu:20.04
 
-# Last modified: mån dec 18, 2023  05:03
+# Last modified: tis feb 13, 2024  09:39
 # Sign: JN
 
 # sudo singularity build atpw.sif atpw.def
@@ -98,8 +98,10 @@ From: ubuntu:20.04
     # ParGenes
     cd ${ATPWHOME}
     git config --global --add safe.directory /opt/ATPW/ParGenes
-    git clone --recursive https://github.com/BenoitMorel/ParGenes.git
+    git clone --recursive https://github.com/nylander/ParGenes.git
     cd ParGenes
+    git checkout aster
+    git submodule update --init --recursive
     ./install.sh
     chmod -R o+rX ${ATPWHOME}/ParGenes/pargenes/pargenes_binaries/*
     cd -
