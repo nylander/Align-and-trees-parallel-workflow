@@ -1,7 +1,7 @@
 Bootstrap: docker
 From: ubuntu:20.04
 
-# Last modified: tis feb 13, 2024  09:39
+# Last modified: tis feb 13, 2024  09:41
 # Sign: JN
 
 # sudo singularity build atpw.sif atpw.def
@@ -95,7 +95,7 @@ From: ubuntu:20.04
     tar xzf BMGE-${BMGE_VERSION}.tar.gz
     rm BMGE-${BMGE_VERSION}.tar.gz
 
-    # ParGenes
+    # ParGenes (v.1.2.0, aster branch)
     cd ${ATPWHOME}
     git config --global --add safe.directory /opt/ATPW/ParGenes
     git clone --recursive https://github.com/nylander/ParGenes.git
