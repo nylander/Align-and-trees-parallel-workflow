@@ -1,21 +1,13 @@
 Bootstrap: docker
 From: ubuntu:20.04
 
-# Last modified: tis feb 13, 2024  09:41
+# Last modified: tis feb 13, 2024  01:53
 # Sign: JN
 
-# sudo singularity build atpw.sif atpw.def
-# singularity exec --cleanenv atpw.sif env
-# sudo singularity build --sandbox atpw-sandbox docker://ubuntu:20.04
-# sudo singularity shell --writable atpw-sandbox
-# sudo singularity build atpw.sif atpw-sandbox
-
 %files
-   # TODO: this step will change (to git clone ...) when the repo is made public
-   ../src/align-and-trees-parallel-workflow.sh /
+   src/align-and-trees-parallel-workflow.sh /
 
 %post
-    # TODO: figure out the redundancy of variables
     export LC_ALL=C
     export DEBIAN_FRONTEND=noninteractive
     export OMPI_ALLOW_RUN_AS_ROOT=1
@@ -23,9 +15,9 @@ From: ubuntu:20.04
     export ATPWHOME=/opt/ATPW
     export ATPWBIN=/opt/ATPW/bin
     export PYTHON_VERSION=3.8
-    export RAXML_VERSION=1.1.0
+    export RAXML_VERSION=1.2.1
     export BMGE_VERSION=1.12
-    export BMGEJAR=${ATPWHOME}/BMGE-${BMGE_VERSION}/BMGE.jar
+    export BMGEJAR=${ATPWBIN}/BMGE.jar
     export PARGENES=${ATPWHOME}/ParGenes/pargenes/pargenes.py
     export TREESHRINK=${ATPWHOME}/TreeShrink/run_treeshrink.py
 
@@ -37,7 +29,7 @@ From: ubuntu:20.04
         build-essential \
         cmake \
         curl \
-        default-jre \
+        default-jre-headless \
         flex \
         git \
         liblist-moreutils-perl \
@@ -51,7 +43,6 @@ From: ubuntu:20.04
         python3-setuptools \
         r-base-dev=3.6.3-2 \
         unzip \
-        vim \
         wget
 
     ln -s /usr/bin/python${PYTHON_VERSION} /usr/bin/python
@@ -63,7 +54,6 @@ From: ubuntu:20.04
 
     mkdir -p ${ATPWHOME}/bin
 
-    # When we have a public repo, we can clone
     mv /align-and-trees-parallel-workflow.sh ${ATPWBIN}/
     chmod +x ${ATPWBIN}/align-and-trees-parallel-workflow.sh
 
@@ -76,14 +66,14 @@ From: ubuntu:20.04
 
     # TreeShrink (v1.3.9). Needs R > 4!
     cd ${ATPWHOME}
-    git clone https://github.com/uym2/TreeShrink.git
+    git clone --depth=1 https://github.com/uym2/TreeShrink.git
     cd TreeShrink
     bash ./install_BMS.sh
     python setup.py install
     chmod +x run_treeshrink.py
     cd -
 
-    # fastagap.pl
+    # fastagap.pl (v1.0.1)
     cd ${ATPWHOME}
     git clone https://github.com/nylander/fastagap.git
     cp fastagap/fastagap.pl ${ATPWBIN}/
@@ -92,7 +82,8 @@ From: ubuntu:20.04
     # BMGE (v1.12)
     cd ${ATPWHOME}
     wget --passive http://ftp.pasteur.fr/pub/gensoft/projects/BMGE/BMGE-${BMGE_VERSION}.tar.gz
-    tar xzf BMGE-${BMGE_VERSION}.tar.gz
+    tar -x -z --strip-components 1 -f BMGE-${BMGE_VERSION}.tar.gz BMGE-${BMGE_VERSION}/BMGE.jar
+    mv BMGE.jar ${ATPWBIN}/BMGE.jar
     rm BMGE-${BMGE_VERSION}.tar.gz
 
     # ParGenes (v.1.2.0, aster branch)
