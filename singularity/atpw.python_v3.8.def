@@ -1,7 +1,7 @@
 Bootstrap: docker
-From: ubuntu:22.04
+From: ubuntu:20.04
 
-# Last modified: ons feb 14, 2024  10:49
+# Last modified: ons feb 14, 2024  04:53
 # Sign: JN
 
 %files
@@ -14,7 +14,7 @@ From: ubuntu:22.04
     export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
     export ATPWHOME=/opt/ATPW
     export ATPWBIN=/opt/ATPW/bin
-    export PYTHON_VERSION=3.10
+    export PYTHON_VERSION=3.8
     export RAXML_VERSION=1.2.1
     export BMGE_VERSION=1.12
     export BMGEJAR=${ATPWBIN}/BMGE.jar
@@ -41,7 +41,7 @@ From: ubuntu:22.04
         python${PYTHON_VERSION} \
         python${PYTHON_VERSION}-dev \
         python3-setuptools \
-        r-base-dev \
+        r-base-dev=3.6.3-2 \
         unzip \
         wget
 
@@ -59,12 +59,10 @@ From: ubuntu:22.04
     chmod +x ${ATPWBIN}/raxml-ng
     rm raxml-ng_v${RAXML_VERSION}_linux_x86_64.zip
 
-    # TreeShrink (v1.3.9). Would need python v.3.8, but we apply a patch
+    # TreeShrink (v1.3.9). Needs python v3.8!
     cd ${ATPWHOME}
     git clone --depth=1 https://github.com/uym2/TreeShrink.git
     cd TreeShrink
-    sed -i '/import collections/a from collections.abc import MutableMapping' dendropy/utility/container.py
-    sed -i 's/class CaseInsensitiveDict(collections.MutableMapping):/class CaseInsensitiveDict(collections.abc.MutableMapping):/' dendropy/utility/container.py
     bash ./install_BMS.sh
     python setup.py install
     chmod +x run_treeshrink.py

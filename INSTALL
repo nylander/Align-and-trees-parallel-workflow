@@ -1,6 +1,6 @@
 # INSTALL Align-and-trees-workflow
 
-- Last modified: ons feb 14, 2024  07:12
+- Last modified: ons feb 14, 2024  10:51
 - Sign: JN
 
 The workflow have been tested on Ubuntu Linux 20.04 and 22.04.
@@ -17,55 +17,61 @@ As an alternative to local installation, one may run the workflow using a
 for building the container is provided [atpw.def](singularity/atpw.def). See
 [README.md](singularity/README.md)
 
-## Softare used (and version):
+## Software used (and version):
 
-Python (Python 3.8.10. See note on requirments for TreeShrink below)
+Python (python v3.10). See also note on requirments for TreeShrink below:
 
-`sudo apt install python3.8`
+    $ sudo apt install python3.10
 
-BMGE (v1.12)
+BMGE (v1.12):
 
 Get from <http://ftp.pasteur.fr/pub/gensoft/projects/BMGE/>
 
-GNU parallel (v20161222)
+GNU parallel (v20161222):
 
-`sudo apt install parallel`
+    $ sudo apt install parallel
 
-ParGenes (v1.2.0, aster branch)
+ParGenes (v1.2.0, aster branch):
 
-```
-git clone --recursive https://github.com/nylander/ParGenes.git
-cd ParGenes
-git checkout aster
-git submodule update --init --recursive
-./install.sh
-```
+    $ git clone --recursive https://github.com/nylander/ParGenes.git
+    $ cd ParGenes
+    $ git checkout aster
+    $ git submodule update --init --recursive
+    $ ./install.sh
 
-RAxML-NG (v1.1.0)
+RAxML-NG (v1.1.0):
 
-`wget https://github.com/amkozlov/raxml-ng/releases/download/1.1.0/raxml-ng_v1.1.0_linux_x86_64.zip` (and unzip, rename to raxml-ng and put in your `~/bin`  folder
+    $ wget https://github.com/amkozlov/raxml-ng/releases/download/1.1.0/raxml-ng_v1.1.0_linux_x86_64.zip
+    (and unzip, rename to raxml-ng and put in your `~/bin` folder)
 
-TreeShrink (v1.3.9)
-**Note**: a python version < 3.9 is needed for simple installation of current TreeShrink!
-See <https://github.com/nylander/Align-and-trees-parallel-workflow/issues/2> for details and alternatives.
+TreeShrink (v1.3.9):
 
-`git clone https://github.com/uym2/TreeShrink.git ; cd TreeShrink ; python setup.py install --user`
+**Note**: a python version < 3.9 is needed for simple installation of current
+TreeShrink!  If using python3.10, a patch is needed. See example below and
+<https://github.com/nylander/Align-and-trees-parallel-workflow/issues/2> for
+details and alternatives.
+
+    $ git clone https://github.com/uym2/TreeShrink.git
+    $ cd TreeShrink
+    $ sed -i '/import collections/a from collections.abc import MutableMapping' dendropy/utility/container.py
+    $ sed -i 's/class CaseInsensitiveDict(collections.MutableMapping):/class CaseInsensitiveDict(collections.abc.MutableMapping):/' dendropy/utility/container.py
+    $ python setup.py install --user
 
 fastagap.pl (v1.0):
 
-`git clone https://github.com/nylander/fastagap.git` (and copy `fastagap.pl` to your path).
+    $ git clone https://github.com/nylander/fastagap.git
+    (and copy `fastagap.pl` to your path)
 
 mafft (v7.453):
 
-`sudo apt install mafft`
-
+    $ sudo apt install mafft
 
 ## Testing
 
 For testing the installation, try:
 
-    $ ./src/align-and-trees-parallel-workflow.sh -d nt data test
+    $ src/align-and-trees-parallel-workflow.sh -d nt data test
 
 A successful run is summarized in `test/README.md`.  A run log file is written
-to `test/ATPW.log` and may contain information usefult for trouble-shooting.
+to `test/ATPW.log` and may contain information useful for trouble-shooting.
 
