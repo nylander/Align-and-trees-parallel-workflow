@@ -1,6 +1,6 @@
 # ATPW - Align-and-trees-parallel-workflow
 
-- Last modified: ons feb 14, 2024  11:39
+- Last modified: tor feb 15, 2024  12:23
 - Sign: Johan.Nylander\@nrm.se
 
 ## Description
@@ -41,12 +41,18 @@ Using MAFFT, BMGE, TreeShrink, and ASTER/ASTRAL are optional (see [Options](#opt
     -m crit   -- Model test criterion: BIC, AIC or AICC. Default: BIC
     -f number -- Minimum number of taxa when filtering alignments. Default: 4
     -s prog   -- Specify ASTRAL/ASTER program: astral.jar, astral, astral-pro, or astral-hybrid. Default: astral
-    -A        -- Do not run mafft (assume aligned input)
+    -b opts   -- Specify options for BMGE. Multiple options needs to be quoted.
+    -A        -- Do not run MAFFT (assume aligned input)
     -B        -- Do not run BMGE
     -T        -- Do not run TreeShrink
     -S        -- Do not run ASTER/ASTRAL
     -v        -- Print version
     -h        -- Print help message
+
+Default settings for most software are used in the workflow. Some default values can be changed by
+manually editing the [script](src/align-and-trees-parallel-workflow.sh). Arguments can be passed to
+BMGE by using the `-b` options. A list of options can be found here: [BMGE.md](doc/BMGE.md).
+
 
 ## Input data
 

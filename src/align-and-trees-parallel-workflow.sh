@@ -1,15 +1,15 @@
 #!/bin/bash -l
 
-# Last modified: ons feb 14, 2024  11:56
+# Last modified: tor feb 15, 2024  12:25
 # Sign: JN
 
 set -uo pipefail
 
 # Default settings
-BMGEJAR="${BMGEJAR:-/home/nylander/src/BMGE-1.12/BMGE.jar}"                 # <<<<<<<<<< CHANGE HERE
+BMGEJAR="${BMGEJAR:-/home/nylander/src/BMGE-1.12/BMGE.jar}" # <<<<<<<<<< CHANGE HERE
 PARGENES="${PARGENES:-/home/nylander/Documents/GIT/ParGenes/Tmp/myinstall/ParGenes/pargenes/pargenes.py}" # <<<<<<<<<< CHANGE HERE
 TREESHRINK="${TREESHRINK:-/home/nylander/src/TreeShrink/run_treeshrink.py}" # <<<<<<<<<< CHANGE HERE
-#MACSE="${MACSE:-/home/nylander/jb/johaberg-all/src/omm_macse_v10.02.sif}"   # <<<<<<<<<< CHANGE HERE
+#MACSE="${MACSE:-/home/nylander/jb/johaberg-all/src/omm_macse_v10.02.sif}" # <<<<<<<<<< CHANGE HERE
 version="0.9.1"
 logfile=
 modeltestcriterion="BIC"
