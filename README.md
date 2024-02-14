@@ -1,6 +1,6 @@
 # ATPW - Align-and-trees-parallel-workflow
 
-- Last modified: ons feb 14, 2024  05:11
+- Last modified: ons feb 14, 2024  11:39
 - Sign: Johan.Nylander\@nrm.se
 
 ## Description
@@ -93,7 +93,7 @@ singularity file. See the [README](singularity/README.md) for details.
   processes for GNU parallel, and in combination with number of cores used for
   child processes are not yet optimized, nor checked for inconsistencies.
 * The current version of [ThreeShrink does not run with python versions
-  >3.9](https://github.com/uym2/TreeShrink/issues/33). Using the singularity
+  \>3.8](https://github.com/uym2/TreeShrink/issues/33). Using the singularity
   file, or editing the TreeShrink code (see
   <https://github.com/nylander/Align-and-trees-parallel-workflow/issues/2>),
   are two alternatives.
