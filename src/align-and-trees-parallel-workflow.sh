@@ -1,6 +1,6 @@
 #!/bin/bash -l
 
-# Last modified: ons feb 14, 2024  07:01
+# Last modified: ons feb 14, 2024  11:56
 # Sign: JN
 
 set -uo pipefail
@@ -10,11 +10,12 @@ BMGEJAR="${BMGEJAR:-/home/nylander/src/BMGE-1.12/BMGE.jar}"                 # <<
 PARGENES="${PARGENES:-/home/nylander/Documents/GIT/ParGenes/Tmp/myinstall/ParGenes/pargenes/pargenes.py}" # <<<<<<<<<< CHANGE HERE
 TREESHRINK="${TREESHRINK:-/home/nylander/src/TreeShrink/run_treeshrink.py}" # <<<<<<<<<< CHANGE HERE
 #MACSE="${MACSE:-/home/nylander/jb/johaberg-all/src/omm_macse_v10.02.sif}"   # <<<<<<<<<< CHANGE HERE
-version="0.9.0"
+version="0.9.1"
 logfile=
 modeltestcriterion="BIC"
 datatype='nt'
 mintaxfilter=4
+bmgeoptions=             # '-h 0.7' cf. Rokas' ClipKIT program
 maxinvariantsites=100.00 # percent
 nprocs=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null)
 ncores="${nprocs}"         # TODO: Do we need to adjust?
@@ -69,6 +70,7 @@ Options:
     -m crit   -- Model test criterion: BIC, AIC or AICC. Default: ${modeltestcriterion}
     -f number -- Minimum number of taxa when filtering alignments. Default: ${mintaxfilter}
     -s prog   -- Specify ASTRAL/ASTER program: astral.jar, astral, astral-pro, or astral-hybrid. Default: ${asterbin}
+    -b opts   -- Specify options for BMGE. Multiple options needs to be quoted. Default: ${bmgeoptions}
     -A        -- Do not run mafft (assume aligned input)
     -B        -- Do not run BMGE
     -T        -- Do not run TreeShrink
@@ -128,12 +130,13 @@ Aflag=
 Bflag=
 Sflag=
 Tflag=
+bflag=
 dflag=
 fflag=
 mflag=
 nflag=
 sflag=
-while getopts 'ABSTd:f:n:m:s:vh' OPTION
+while getopts 'ABSTb:d:f:n:m:s:vh' OPTION
 do
   case $OPTION in
   A) Aflag=1
@@ -147,6 +150,9 @@ do
      ;;
   T) Tflag=1
      dotreeshrink=
+     ;;
+  b) bflag=1
+     bval="$OPTARG"
      ;;
   d) dflag=1
      dval="$OPTARG"
@@ -239,6 +245,9 @@ if [ "${Bflag}" ] ; then
 fi
 if [ "${Tflag}" ] ; then
   echo -e "\n## ATPW [$(date "+%F %T")]: Skipping the TreeShrink step." 2>&1 | tee -a "${logfile}"
+fi
+if [ "${bflag}" ] ; then
+  bmgeoptions="${bval}"
 fi
 if [ "${mflag}" ] ; then
   ucmval=${mval^^} # to uppercase
@@ -372,11 +381,11 @@ runBmge() {
   # TODO:
   local inputfolder="$1"
   local outputfolder="$2"
-  echo -e "\n## ATPW [$(date "+%F %T")]: Run BMGE" | tee -a "${logfile}"
+  echo -e "\n## ATPW [$(date "+%F %T")]: Run BMGE with options ${bmgeoptions}" | tee -a "${logfile}"
   mkdir -p "${outputfolder}"
   cd "${outputfolder}" || exit
   find -L "${inputfolder}/" -type f -name '*.ali' | \
-    parallel 'java -jar '"${BMGEJAR}"' -i {} -t '"${datatypeforbmge}"' -of {/.}.ali' >> "${logfile}" 2>&1
+    parallel 'java -jar '"${BMGEJAR}"' -i {} '"${bmgeoptions}"' -t '"${datatypeforbmge}"' -of {/.}.ali' >> "${logfile}" 2>&1
   cd .. || exit
 }
 
