@@ -1,7 +1,7 @@
 Bootstrap: docker
 From: ubuntu:20.04
 
-# Last modified: tis feb 13, 2024  01:53
+# Last modified: ons feb 14, 2024  04:53
 # Sign: JN
 
 %files
@@ -47,11 +47,6 @@ From: ubuntu:20.04
 
     ln -s /usr/bin/python${PYTHON_VERSION} /usr/bin/python
 
-    #R --slave -e 'install.packages(c("ape", "PBD", "BMS"), repos="https://cloud.r-project.org/")'
-    #curl -O https://bootstrap.pypa.io/get-pip.py && \
-    #python get-pip.py && \
-    #rm get-pip.py
-
     mkdir -p ${ATPWHOME}/bin
 
     mv /align-and-trees-parallel-workflow.sh ${ATPWBIN}/
@@ -64,7 +59,7 @@ From: ubuntu:20.04
     chmod +x ${ATPWBIN}/raxml-ng
     rm raxml-ng_v${RAXML_VERSION}_linux_x86_64.zip
 
-    # TreeShrink (v1.3.9). Needs R > 4!
+    # TreeShrink (v1.3.9). Needs python v3.8!
     cd ${ATPWHOME}
     git clone --depth=1 https://github.com/uym2/TreeShrink.git
     cd TreeShrink
@@ -86,7 +81,7 @@ From: ubuntu:20.04
     mv BMGE.jar ${ATPWBIN}/BMGE.jar
     rm BMGE-${BMGE_VERSION}.tar.gz
 
-    # ParGenes (v.1.2.0, aster branch)
+    # ParGenes (v.1.2.0, aster branch!)
     cd ${ATPWHOME}
     git config --global --add safe.directory /opt/ATPW/ParGenes
     git clone --recursive https://github.com/nylander/ParGenes.git
@@ -97,8 +92,6 @@ From: ubuntu:20.04
     chmod -R o+rX ${ATPWHOME}/ParGenes/pargenes/pargenes_binaries/*
     cd -
 
-    #chmod -R o+rX ${ATPWHOME}
-
     rm -rf /var/lib/apt/lists/*
     apt-get clean
     unset DEBIAN_FRONTEND
@@ -108,14 +101,13 @@ From: ubuntu:20.04
 
 %labels
     Author johan.nylander@nrm.se
-    Version v0.8.0
+    Version v0.9.0
 
 %environment
     export LC_ALL=C
     export ATPWHOME=/opt/ATPW
     export ATPWBIN=${ATPWHOME}/bin
-    export BMGE_VERSION=1.12
-    export BMGEJAR=${ATPWHOME}/BMGE-${BMGE_VERSION}/BMGE.jar
+    export BMGEJAR=${ATPWBIN}/BMGE.jar
     export PARGENES=${ATPWHOME}/ParGenes/pargenes/pargenes.py
     export TREESHRINK=${ATPWHOME}/TreeShrink/run_treeshrink.py
     export PATH=${ATPWBIN}:${PATH}:${ATPWHOME}/ParGenes/pargenes/pargenes_binaries

@@ -1,6 +1,6 @@
 # Singularity container for ATPW
 
-- Last modified: fre jan 27, 2023  08:57
+- Last modified: ons feb 14, 2024  04:27
 - Sign: JN
 
 ## Requirements
@@ -15,5 +15,5 @@ Singularity. See official install instructions:
 ## Run
 
     $ ./atpw.sif -h
-    $ ./atpw.sif -d nt data out
+    $ ./atpw.sif -d nt ../data out
 

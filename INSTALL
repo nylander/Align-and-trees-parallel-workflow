@@ -1,9 +1,9 @@
-# INSTALL for Align-and-trees-workflow
+# INSTALL Align-and-trees-workflow
 
-- Last modified: tis feb 13, 2024  09:37
+- Last modified: ons feb 14, 2024  07:12
 - Sign: JN
 
-The workflow have been tested on Ubuntu Linux 20.04.
+The workflow have been tested on Ubuntu Linux 20.04 and 22.04.
 
 Apart from standard bash commands (tested using bash v. 5.1.16), a number of
 additional software, including their dependencies, needs to be installed.
@@ -19,7 +19,7 @@ for building the container is provided [atpw.def](singularity/atpw.def). See
 
 ## Softare used (and version):
 
-Python (Python 3.8.10)
+Python (Python 3.8.10. See note on requirments for TreeShrink below)
 
 `sudo apt install python3.8`
 
