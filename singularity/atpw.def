@@ -1,7 +1,7 @@
 Bootstrap: docker
 From: ubuntu:22.04
 
-# Last modified: ons feb 14, 2024  10:49
+# Last modified: tor feb 15, 2024  01:22
 # Sign: JN
 
 %files
@@ -103,7 +103,7 @@ From: ubuntu:22.04
 
 %labels
     Author johan.nylander@nrm.se
-    Version v0.9.0
+    Version v0.9.1
 
 %environment
     export LC_ALL=C
