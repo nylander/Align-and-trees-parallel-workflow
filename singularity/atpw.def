@@ -1,7 +1,7 @@
 Bootstrap: docker
 From: ubuntu:22.04
 
-# Last modified: tor feb 15, 2024  01:22
+# Last modified: mån feb 19, 2024  10:19
 # Sign: JN
 
 %files
@@ -83,13 +83,11 @@ From: ubuntu:22.04
     mv BMGE.jar ${ATPWBIN}/BMGE.jar
     rm BMGE-${BMGE_VERSION}.tar.gz
 
-    # ParGenes (v.1.2.0, aster branch!)
+    # ParGenes (v.1.2.0)
     cd ${ATPWHOME}
     git config --global --add safe.directory /opt/ATPW/ParGenes
     git clone --recursive https://github.com/nylander/ParGenes.git
     cd ParGenes
-    git checkout aster
-    git submodule update --init --recursive
     ./install.sh
     chmod -R o+rX ${ATPWHOME}/ParGenes/pargenes/pargenes_binaries/*
     cd -

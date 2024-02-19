@@ -1,6 +1,6 @@
 # INSTALL Align-and-trees-workflow
 
-- Last modified: ons feb 14, 2024  10:51
+- Last modified: mån feb 19, 2024  10:16
 - Sign: JN
 
 The workflow have been tested on Ubuntu Linux 20.04 and 22.04.
@@ -31,12 +31,10 @@ GNU parallel (v20161222):
 
     $ sudo apt install parallel
 
-ParGenes (v1.2.0, aster branch):
+ParGenes (v1.2.0):
 
-    $ git clone --recursive https://github.com/nylander/ParGenes.git
+    $ git clone --recursive https://github.com/BenoitMorel/ParGenes.git
     $ cd ParGenes
-    $ git checkout aster
-    $ git submodule update --init --recursive
     $ ./install.sh
 
 RAxML-NG (v1.1.0):

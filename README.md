@@ -1,6 +1,6 @@
-# ATPW - Align-and-trees-parallel-workflow
+# ATPW - Align-and-Trees-Parallel-Workflow
 
-- Last modified: tor feb 15, 2024  12:23
+- Last modified: mån feb 19, 2024  10:24
 - Sign: Johan.Nylander\@nrm.se
 
 ## Description
@@ -13,17 +13,17 @@ data](#input-data)) are:
 
 1. Create multiple sequence alignments with
    [MAFFT](https://mafft.cbrc.jp/alignment/software/),
-2. Filter alignments using
+2. filter alignments using
    [BMGE](https://bmcecolevol.biomedcentral.com/articles/10.1186/1471-2148-10-210),
-3. Infer phylogenetic trees for each BMGE-filtered locus with fixed model using
+3. infer phylogenetic trees for each BMGE-filtered locus with fixed model using
    [ParGenes](https://github.com/BenoitMorel/ParGenes) and
    [RAxML-NG](https://github.com/amkozlov/raxml-ng),
-4. Filter trees using [TreeShrink](https://github.com/uym2/TreeShrink),
-5. Do multiple sequence alignments on TreeShrink-filtered data using MAFFT,
-6. Infer phylogenetic trees for each locus with [model
-   selection](https://github.com/ddarriba/modeltest) using ParGenes and
-   RAxML-NG,
-7. Estimate species tree from individual trees using
+4. filter trees using [TreeShrink](https://github.com/uym2/TreeShrink),
+5. do multiple sequence alignments on TreeShrink-filtered data using MAFFT,
+6. infer phylogenetic trees for each locus with model
+   selection using [ModelTest-NG](https://github.com/ddarriba/modeltest),
+   RAxML-NG, and ParGenes,
+7. estimate species tree from individual trees using
    [ASTER](https://github.com/chaoszhang/ASTER) (or
    [ASTRAL](https://github.com/smirarab/ASTRAL)).
 
