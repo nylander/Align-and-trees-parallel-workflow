@@ -1,6 +1,6 @@
 #!/bin/bash -l
 
-# Last modified: tis feb 27, 2024  11:32
+# Last modified: ons feb 28, 2024  12:16
 # Sign: JN
 
 set -uo pipefail
@@ -485,7 +485,7 @@ pargenesFixedModel() {
   # TODO: Create the "${runfolder}/2_trees" outside the function!
   local inputfolder="$1"
   local outputfolder="$2"
-  echo -e "\n## ATPW [$(date "+%F %T")]: Run pargenes with fixed model" 2>&1 | tee -a "${logfile}"
+  echo -e "\n## ATPW [$(date "+%F %T")]: Run pargenes with fixed model (${modelforpargenesfixed})" 2>&1 | tee -a "${logfile}"
   "${PARGENES}" \
     --alignments-dir "${inputfolder}" \
     --output-dir "${outputfolder}" \
