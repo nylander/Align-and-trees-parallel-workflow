@@ -6,3 +6,6 @@ NOTES.md
 *.swp
 singularity/atpw.sif
 BMGE-1.12
+TreeShrink/
+ParGenes/
+MACSE/
