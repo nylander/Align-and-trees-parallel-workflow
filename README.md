@@ -1,6 +1,6 @@
 # ATPW - Align-and-Trees-Parallel-Workflow
 
-- Last modified: mån feb 19, 2024  10:24
+- Last modified: ons feb 28, 2024  12:09
 - Sign: Johan.Nylander\@nrm.se
 
 ## Description
@@ -37,22 +37,24 @@ Using MAFFT, BMGE, TreeShrink, and ASTER/ASTRAL are optional (see [Options](#opt
 ## Options
 
     -d type   -- Specify data type: nt or aa. (Mandatory)
-    -n number -- Specify the number of threads. Default: Number of computer cores
+    -n number -- Specify the number of threads. Default: N cores
     -m crit   -- Model test criterion: BIC, AIC or AICC. Default: BIC
     -f number -- Minimum number of taxa when filtering alignments. Default: 4
     -s prog   -- Specify ASTRAL/ASTER program: astral.jar, astral, astral-pro, or astral-hybrid. Default: astral
-    -b opts   -- Specify options for BMGE. Multiple options needs to be quoted.
-    -A        -- Do not run MAFFT (assume aligned input)
+    -b opts   -- Specify options for BMGE. Multiple options needs to be quoted. Default: "program defaults"
+    -t opts   -- Specify options for TreeShrink. Multiple options needs to be quoted. Default: "program defaults"
+    -a opts   -- Specify options for aligner (default is the mafft program). Multiple options needs to be quoted. Default: "--auto --quiet"
+    -A        -- Do not run aligner (assume aligned input)
     -B        -- Do not run BMGE
     -T        -- Do not run TreeShrink
     -S        -- Do not run ASTER/ASTRAL
     -v        -- Print version
     -h        -- Print help message
 
-Default settings for most software are used in the workflow. Some default values can be changed by
-manually editing the [script](src/align-and-trees-parallel-workflow.sh). Arguments can be passed to
-BMGE by using the `-b` options. A list of options can be found here: [BMGE.md](doc/BMGE.md).
-
+Default settings for most software are used in the workflow. Some default
+values can be changed by usin options or by manually editing the
+[script](src/align-and-trees-parallel-workflow.sh). A list of options can be
+found here: [BMGE.md](doc/BMGE.md).
 
 ## Input data
 
