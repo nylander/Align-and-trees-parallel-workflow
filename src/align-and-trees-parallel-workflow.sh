@@ -1,21 +1,22 @@
 #!/bin/bash -l
 
-# Last modified: tor feb 15, 2024  12:25
+# Last modified: tis feb 27, 2024  11:32
 # Sign: JN
 
 set -uo pipefail
 
 # Default settings
-BMGEJAR="${BMGEJAR:-/home/nylander/src/BMGE-1.12/BMGE.jar}" # <<<<<<<<<< CHANGE HERE
-PARGENES="${PARGENES:-/home/nylander/Documents/GIT/ParGenes/Tmp/myinstall/ParGenes/pargenes/pargenes.py}" # <<<<<<<<<< CHANGE HERE
-TREESHRINK="${TREESHRINK:-/home/nylander/src/TreeShrink/run_treeshrink.py}" # <<<<<<<<<< CHANGE HERE
-#MACSE="${MACSE:-/home/nylander/jb/johaberg-all/src/omm_macse_v10.02.sif}" # <<<<<<<<<< CHANGE HERE
-version="0.9.1"
+BMGEJAR="${BMGEJAR:-${HOME}/Documents/GIT/Align-and-trees-parallel-workflow/BMGE-1.12/BMGE.jar}" # <<<<<<<<<< CHANGE HERE
+PARGENES="${PARGENES:-${HOME}/Documents/GIT/Align-and-trees-parallel-workflow/ParGenes/pargenes/pargenes.py}" # <<<<<<<<<< CHANGE HERE
+TREESHRINK="${TREESHRINK:-${HOME}/Documents/GIT/Align-and-trees-parallel-workflow/TreeShrink/run_treeshrink.py}" # <<<<<<<<<< CHANGE HERE
+#MACSE="${MACSE:-${HOME}/Documents/GIT/Align-and-trees-parallel-workflow//MACSE/omm_macse_v10.02.sif}" # <<<<<<<<<< CHANGE HERE
+version="0.9.2"
 logfile=
 modeltestcriterion="BIC"
 datatype='nt'
 mintaxfilter=4
 bmgeoptions=             # '-h 0.7' cf. Rokas' ClipKIT program
+treeshrinkoptions=
 maxinvariantsites=100.00 # percent
 nprocs=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null)
 ncores="${nprocs}"         # TODO: Do we need to adjust?
@@ -70,8 +71,10 @@ Options:
     -m crit   -- Model test criterion: BIC, AIC or AICC. Default: ${modeltestcriterion}
     -f number -- Minimum number of taxa when filtering alignments. Default: ${mintaxfilter}
     -s prog   -- Specify ASTRAL/ASTER program: astral.jar, astral, astral-pro, or astral-hybrid. Default: ${asterbin}
-    -b opts   -- Specify options for BMGE. Multiple options needs to be quoted. Default: ${bmgeoptions}
-    -A        -- Do not run mafft (assume aligned input)
+    -b opts   -- Specify options for BMGE. Multiple options needs to be quoted. Default: ${bmgeoptions:-"program defaults"}
+    -t opts   -- Specify options for TreeShrink. Multiple options needs to be quoted. Default: ${treeshrinkoptions:-"program defaults"}
+    -a opts   -- Specify options for ${aligner}. Multiple options needs to be quoted. Default:${alignerbinopts}
+    -A        -- Do not run ${aligner} (assume aligned input)
     -B        -- Do not run BMGE
     -T        -- Do not run TreeShrink
     -S        -- Do not run ASTER/ASTRAL
@@ -130,13 +133,15 @@ Aflag=
 Bflag=
 Sflag=
 Tflag=
+aflag=
 bflag=
 dflag=
 fflag=
 mflag=
 nflag=
 sflag=
-while getopts 'ABSTb:d:f:n:m:s:vh' OPTION
+tflag=
+while getopts 'ABSTa:b:d:f:n:m:s:t:vh' OPTION
 do
   case $OPTION in
   A) Aflag=1
@@ -150,6 +155,9 @@ do
      ;;
   T) Tflag=1
      dotreeshrink=
+     ;;
+  a) aflag=1
+     aval="$OPTARG"
      ;;
   b) bflag=1
      bval="$OPTARG"
@@ -169,6 +177,9 @@ do
   s) sflag=1
      sval="$OPTARG"
      ;;
+  t) tflag=1
+     tval="$OPTARG"
+     ;;
   v) echo "${version}"
      exit
      ;;
@@ -181,6 +192,7 @@ do
   esac
 done
 shift $((OPTIND - 1))
+
 # Check if positional args are folders and create log file
 if [ $# -ne 2 ]; then
   echo 1>&2 "Usage: $0 [options] /path/to/folder/with/fas/files /path/to/output/folder"
@@ -200,10 +212,11 @@ else
   export logfile
   start=$(date "+%F %T")
   export start
-  echo -e "\n## ATPW [$start]: Start" 2>&1 | tee "${logfile}"
+  echo -e "\n## ATPW [$start]: Start ATPW" 2>&1 | tee "${logfile}"
   echo -e "\n## ATPW [$(date "+%F %T")]: Created output folder ${runfolder}" 2>&1 | tee -a "${logfile}"
   echo -e "\n## ATPW [$(date "+%F %T")]: Created logfile ${logfile}" 2>&1 | tee -a "${logfile}"
 fi
+
 if [ -d "${input}" ] ; then
   nfas=$(find "${input}" -name '*.fas' | wc -l) # TODO: allow any suffix.
   if [ "${nfas}" -gt 1 ] ; then
@@ -211,6 +224,13 @@ if [ -d "${input}" ] ; then
     mkdir -p "${runfolder}/1_align/1.1_input"
     find "${input}" -name '*.fas' | \
       parallel cp {} "${runfolder}/1_align/1.1_input/{/.}.ali"
+    for f in "${runfolder}"/1_align/1.1_input/*.ali ; do
+      g=$(basename "${f}" .ali)
+      if [[ $g == *.* ]] ; then # replace periods in file names
+        h=${g//./_}
+        mv "${f}" "${runfolder}"/1_align/1.1_input/"${h}".ali
+      fi
+    done
   else
     echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! Could not find .fas files in folder ${input}" 2>&1 | tee -a "${logfile}"
       exit 1
@@ -219,6 +239,7 @@ else
   echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! Folder ${input} can not be found" 2>&1 | tee -a "${logfile}"
   exit 1
 fi
+
 ## Check options
 if [ ! "${dflag}" ] ; then
   echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! Need to supply data type ('nt' or 'aa') with '-d'" 2>&1 | tee -a "${logfile}"
@@ -238,7 +259,7 @@ if [ "${datatype}" = 'aa' ] ; then
   modelforpargenesfixed="${modelforpargenesfixedAA}"
 fi
 if [ "${Aflag}" ] ; then
-  echo -e "\n## ATPW [$(date "+%F %T")]: Data is assumed to be aligned. Skipping first alignment step." 2>&1 | tee -a "${logfile}"
+  echo -e "\n## ATPW [$(date "+%F %T")]: Data is assumed to be aligned: skipping first alignment step" 2>&1 | tee -a "${logfile}"
 fi
 if [ "${Bflag}" ] ; then
   echo -e "\n## ATPW [$(date "+%F %T")]: Skipping the BMGE step." 2>&1 | tee -a "${logfile}"
@@ -246,8 +267,14 @@ fi
 if [ "${Tflag}" ] ; then
   echo -e "\n## ATPW [$(date "+%F %T")]: Skipping the TreeShrink step." 2>&1 | tee -a "${logfile}"
 fi
+if [ "${aflag}" ] ; then
+  alignerbinopts="${aval}"
+fi
 if [ "${bflag}" ] ; then
   bmgeoptions="${bval}"
+fi
+if [ "${tflag}" ] ; then
+  treeshrinkoptions="${tval}"
 fi
 if [ "${mflag}" ] ; then
   ucmval=${mval^^} # to uppercase
@@ -302,10 +329,10 @@ align() {
   # Input: inputfolder/*.fas
   # Output: 1_align/1.1_mafft/*.ali
   # Call: align "${input}" "${runfolder}/1_align/1.1_${aligner}"
-  # TODO: use threads. 
+  # TODO: use threads.
   local inputfolder="$1"
   local outputfolder="$2"
-  echo -e "\n## ATPW [$(date "+%F %T")]: Align with ${aligner}" 2>&1 | tee -a "${logfile}"
+  echo -e "\n## ATPW [$(date "+%F %T")]: Align with ${aligner} ${alignerbinopts}" 2>&1 | tee -a "${logfile}"
   mkdir -p "${outputfolder}"
   find "${inputfolder}" -type f -name '*.ali' | \
     parallel ''"${alignerbin}"' '"${alignerbinopts}"' {} | '"sed '/>/ ! s/[a-z]/\U&/g'"' > '"${outputfolder}"'/{/.}.ali' >> "${logfile}" 2>&1
@@ -381,11 +408,17 @@ runBmge() {
   # TODO:
   local inputfolder="$1"
   local outputfolder="$2"
-  echo -e "\n## ATPW [$(date "+%F %T")]: Run BMGE with options ${bmgeoptions}" | tee -a "${logfile}"
   mkdir -p "${outputfolder}"
   cd "${outputfolder}" || exit
-  find -L "${inputfolder}/" -type f -name '*.ali' | \
-    parallel 'java -jar '"${BMGEJAR}"' -i {} '"${bmgeoptions}"' -t '"${datatypeforbmge}"' -of {/.}.ali' >> "${logfile}" 2>&1
+  if [ "${bmgeoptions}" ] ; then
+    echo -e "\n## ATPW [$(date "+%F %T")]: Run BMGE with options ${bmgeoptions}" | tee -a "${logfile}"
+    find -L "${inputfolder}/" -type f -name '*.ali' | \
+      parallel 'java -jar '"${BMGEJAR}"' -i {} '"${bmgeoptions}"' -t '"${datatypeforbmge}"' -of {/.}.ali' >> "${logfile}" 2>&1
+  else
+    echo -e "\n## ATPW [$(date "+%F %T")]: Run BMGE with default options" | tee -a "${logfile}"
+    find -L "${inputfolder}/" -type f -name '*.ali' | \
+      parallel 'java -jar '"${BMGEJAR}"' -i {} -t '"${datatypeforbmge}"' -of {/.}.ali' >> "${logfile}" 2>&1
+  fi
   cd .. || exit
 }
 
@@ -467,14 +500,14 @@ setupTreeshrink() {
  # Output:
  # Call: setupTreeshrink "${runfolder}/2_trees/2.1_mafft_bmge_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.3_mafft_bmge" "${runfolder}/tmp_treeshrink"
  # TODO: Make sure this function works with all arg combos
- inputfolderone="$1"     # where to look for trees 2_trees/2.1_mafft_bmge_pargenes/mlsearch_run/results
+ inputfolderone="$1"     # where to look for trees
  inputfoldertwo="$2"     # where to look for alignments
  outputfolderthree="$3"  # output
  export inputfolderone
  export inputfoldertwo
  export outputfolderthree
  mkdir -p "${outputfolderthree}"
- copyAndConvert () {
+ copyAndConvert() {
    local f=
    f=$(basename "$1" .raxml.bestTree)
    mkdir -p "${outputfolderthree}/${f}"
@@ -493,25 +526,34 @@ runTreeshrink() {
   # Output:
   # Call: runTreeshrink  "${runfolder}/tmp_treeshrink"
   local inputfolder="$1"
-  echo -e "\n## ATPW [$(date "+%F %T")]: Run treeshrink" 2>&1 | tee -a "${logfile}"
-  "${TREESHRINK}" \
-    --indir "${inputfolder}" \
-    --tree 'raxml.bestTree' \
-    --alignment "alignment.ali" >> "${logfile}" 2>&1
+  if [ "${treeshrinkoptions}" ] ; then
+    echo -e "\n## ATPW [$(date "+%F %T")]: Run treeshrink" 2>&1 | tee -a "${logfile}"
+    "${TREESHRINK}" \
+      --indir "${inputfolder}" \
+      --tree 'raxml.bestTree' \
+      --alignment "alignment.ali" \
+      "${treeshrinkoptions}" >> "${logfile}" 2>&1
+  else
+    echo -e "\n## ATPW [$(date "+%F %T")]: Run treeshrink" 2>&1 | tee -a "${logfile}"
+    "${TREESHRINK}" \
+      --indir "${inputfolder}" \
+      --tree 'raxml.bestTree' \
+      --alignment "alignment.ali" >> "${logfile}" 2>&1
+  fi
 }
 
 realignerOutputAli() {
   # Realign using realigner (search for "output.ali" files). Convert mafft output to upper case.
   # Input: tmp_treeshrink/
-  # Output: 1_align/1.4_mafft_check_bmge_treeshrink
-  # Call: realignerOutputAli  "${runfolder}/tmp_treeshrink/" "${runfolder}/1_align/1.4_mafft_check_bmge_treeshrink"
+  # Output: 1_align/1.4_mafft_bmge_treeshrink
+  # Call: realignerOutputAli  "${runfolder}/tmp_treeshrink/" "${runfolder}/1_align/1.4_mafft_bmge_treeshrink"
   # TODO: Check if I can avoid the specific search for "output.ali" (there are other .ali files in in the input folder, but they are symlinks!)
   local inputfolder="$1"
   local outputfolder="$2"
   echo -e "\n## ATPW [$(date "+%F %T")]: Realign using ${realigner}" 2>&1 | tee -a "${logfile}"
   mkdir -p "${outputfolder}"
   find "${inputfolder}" -type f -name 'output.ali' | \
-    parallel 'b=$(basename {//} .ali); '"${realigner}"' '"${realignerbinopts}"' <('"${fastagap}"' {}) | '"sed '/>/ ! s/[a-z]/\U&/g'"' > '"${outputfolder}"'/"${b//_/\.}"' >> "${logfile}" 2>&1
+    parallel 'b=$(basename {//} .ali); '"${realigner}"' '"${realignerbinopts}"' <('"${fastagap}"' {}) | '"sed '/>/ ! s/[a-z]/\U&/g'"' > '"${outputfolder}"'/"${b/_ali/.ali}"' >> "${logfile}" 2>&1
 }
 
 realignerAli() {
@@ -986,10 +1028,13 @@ else
     fi
   fi
 fi
+
 # Count
 count
+
 # Create README.md
 createReadme
+
 # Clean up
 if [ "${dotreeshrink}" ]; then
   if [ -e  "${runfolder}/tmp_treeshrink/" ] ; then
@@ -997,14 +1042,17 @@ if [ "${dotreeshrink}" ]; then
   fi
 fi
 # Compress folders inside pargenes folders
-echo -e "\n## ATPW [$(date "+%F %T")]: Compressing some output." 2>&1 | tee -a "${logfile}"
+echo -e "\n## ATPW [$(date "+%F %T")]: Compressing some output" 2>&1 | tee -a "${logfile}"
 cd "${runfolder}" || exit
 find . -type d -name "parse_run" -execdir tar czf {}.tgz {} ';'
 find . -type d -name "parse_run" -exec rm -r {} '+'
 find . -type d -name "old_parse_run" -execdir tar czf {}.tgz {} ';'
 find . -type d -name "old_parse_run" -exec rm -r {} '+'
 cd .. || exit
+
 # End
 echo -e "\n## ATPW [$(date "+%F %T")]: Reached end of the script\n" 2>&1 | tee -a "${logfile}"
 exit 0
+
+# vim:fenc=utf-8 tabstop=8 expandtab shiftwidth=4 softtabstop=4
 
