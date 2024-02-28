@@ -1,6 +1,6 @@
 #!/bin/bash -l
 
-# Last modified: ons feb 28, 2024  12:16
+# Last modified: ons feb 28, 2024  05:57
 # Sign: JN
 
 set -uo pipefail
@@ -10,7 +10,7 @@ BMGEJAR="${BMGEJAR:-${HOME}/Documents/GIT/Align-and-trees-parallel-workflow/BMGE
 PARGENES="${PARGENES:-${HOME}/Documents/GIT/Align-and-trees-parallel-workflow/ParGenes/pargenes/pargenes.py}" # <<<<<<<<<< CHANGE HERE
 TREESHRINK="${TREESHRINK:-${HOME}/Documents/GIT/Align-and-trees-parallel-workflow/TreeShrink/run_treeshrink.py}" # <<<<<<<<<< CHANGE HERE
 #MACSE="${MACSE:-${HOME}/Documents/GIT/Align-and-trees-parallel-workflow//MACSE/omm_macse_v10.02.sif}" # <<<<<<<<<< CHANGE HERE
-version="0.9.2"
+version="0.9.3"
 logfile=
 modeltestcriterion="BIC"
 datatype='nt'
@@ -18,6 +18,7 @@ mintaxfilter=4
 bmgeoptions=             # '-h 0.7' cf. Rokas' ClipKIT program
 treeshrinkoptions=
 maxinvariantsites=100.00 # percent
+bootstrapreps=0
 nprocs=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null)
 ncores="${nprocs}"         # TODO: Do we need to adjust?
 modeltestperjobcores='4'   # TODO: Adjust? This value needs to be at least 4!
@@ -69,6 +70,7 @@ Options:
     -d type   -- Specify data type: nt or aa. (Mandatory)
     -n number -- Specify the number of threads. Default: ${ncores}
     -m crit   -- Model test criterion: BIC, AIC or AICC. Default: ${modeltestcriterion}
+    -i number -- Number of bootstrap iterations. Default: ${bootstrapreps}
     -f number -- Minimum number of taxa when filtering alignments. Default: ${mintaxfilter}
     -s prog   -- Specify ASTRAL/ASTER program: astral.jar, astral, astral-pro, or astral-hybrid. Default: ${asterbin}
     -b opts   -- Specify options for BMGE. Multiple options needs to be quoted. Default: ${bmgeoptions:-"program defaults"}
@@ -105,30 +107,12 @@ End_Of_Usage
 
 }
 
-## Check programs
-#prog_exists() {
-#  if [ ! -x "$(command -v "$1")" ] ; then
-#  echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! No executable file $1"
-#  exit 1
-#  fi
-#}
-#export -f prog_exists
-#
-#for p in \
-#  "${alignerbin}" \
-#  "${fastagap}" \
-#  "${raxmlng}" \
-#  "${realigner}" \
-#  "${PARGENES}" \
-#  "${TREESHRINK}" ; do
-#  prog_exists "${p}"
-#done
-
 # Arguments and defaults
 doalign=1
 dobmge=1
 dotreeshrink=1
 doaster=1
+doboot=
 Aflag=
 Bflag=
 Sflag=
@@ -137,11 +121,12 @@ aflag=
 bflag=
 dflag=
 fflag=
+iflag=
 mflag=
 nflag=
 sflag=
 tflag=
-while getopts 'ABSTa:b:d:f:n:m:s:t:vh' OPTION
+while getopts 'ABSTa:b:d:f:i:m:n:s:t:vh' OPTION
 do
   case $OPTION in
   A) Aflag=1
@@ -167,6 +152,9 @@ do
      ;;
   f) fflag=1
      fval="$OPTARG"
+     ;;
+  i) iflag=1
+     ival="$OPTARG"
      ;;
   m) mflag=1
      mval="$OPTARG"
@@ -262,10 +250,10 @@ if [ "${Aflag}" ] ; then
   echo -e "\n## ATPW [$(date "+%F %T")]: Data is assumed to be aligned: skipping first alignment step" 2>&1 | tee -a "${logfile}"
 fi
 if [ "${Bflag}" ] ; then
-  echo -e "\n## ATPW [$(date "+%F %T")]: Skipping the BMGE step." 2>&1 | tee -a "${logfile}"
+  echo -e "\n## ATPW [$(date "+%F %T")]: Skipping the BMGE step" 2>&1 | tee -a "${logfile}"
 fi
 if [ "${Tflag}" ] ; then
-  echo -e "\n## ATPW [$(date "+%F %T")]: Skipping the TreeShrink step." 2>&1 | tee -a "${logfile}"
+  echo -e "\n## ATPW [$(date "+%F %T")]: Skipping the TreeShrink step" 2>&1 | tee -a "${logfile}"
 fi
 if [ "${aflag}" ] ; then
   alignerbinopts="${aval}"
@@ -284,6 +272,14 @@ if [ "${mflag}" ] ; then
     modeltestcriterion="${ucmval}"
   fi
 fi
+if [ "${iflag}" ] ; then
+  bootstrapreps="${ival}"
+  if [[ "${bootstrapreps}" -gt 0 ]] ; then
+    doboot=1
+  else
+    doboot=
+  fi
+fi
 if [ "${sflag}" ] ; then
   lcsval=${sval,,} # to lowercase
   if [[ "${lcsval}" != @(astral.jar|astral|astral-hybrid|astral-pro) ]] ; then
@@ -292,8 +288,12 @@ if [ "${sflag}" ] ; then
     asterbin="${lcsval}"
   fi
 fi
+if [ "${doboot}" ] && [ ! "${sflag}" ] ; then
+  asterbin="astral-hybrid"
+  echo -e "\n## ATPW [$(date "+%F %T")]: Will use ${asterbin} on bootstrap trees (use -s to change)" 2>&1 | tee -a "${logfile}"
+fi
 if [ "${Sflag}" ] ; then
-  echo -e "\n## ATPW [$(date "+%F %T")]: Skipping the ASTER/ASTRAL step." 2>&1 | tee -a "${logfile}"
+  echo -e "\n## ATPW [$(date "+%F %T")]: Skipping the ASTER/ASTRAL step" 2>&1 | tee -a "${logfile}"
   asterbin='NOASTER'
 fi
 if [ "${nflag}" ] ; then
@@ -339,7 +339,7 @@ align() {
 }
 
 # runMacse() {
-#   # Run MACSE alignments 
+#   # Run MACSE alignments
 #   # Input: ${input}/*.fas
 #   # Output: 1_align/1.2_macse
 #   # Call: runMacse "${input}" "${runfolder}/1_align/1.2_macse"
@@ -580,38 +580,49 @@ pargenesModeltestAstral() {
   local outputfolder="$2"
   local astbin="$3"
   if [ "${astbin}" = 'NOASTER' ] ; then
-    echo -e "\n## ATPW [$(date "+%F %T")]: Run pargenes with model selection" 2>&1 | tee -a "${logfile}"
-    "${PARGENES}" \
-      --alignments-dir "${inputfolder}" \
-      --output-dir "${outputfolder}" \
-      --cores "${ncores}" \
-      --datatype "${datatype}" \
-      --use-modeltest \
-      --modeltest-criteria "${modeltestcriterion}" \
-      --modeltest-perjob-cores "${modeltestperjobcores}" >> "${logfile}" 2>&1
+    if [ "${doboot}" ] ; then
+      echo -e "\n## ATPW [$(date "+%F %T")]: Run pargenes with model selection and bootstrap (i=${bootstrapreps})" 2>&1 | tee -a "${logfile}"
+      "${PARGENES}" --alignments-dir "${inputfolder}" --output-dir "${outputfolder}" \
+        --cores "${ncores}" --datatype "${datatype}" \
+        --use-modeltest --modeltest-criteria "${modeltestcriterion}" --modeltest-perjob-cores "${modeltestperjobcores}" \
+        --autoMRE -b "${bootstrapreps}" >> "${logfile}" 2>&1
+    else
+      echo -e "\n## ATPW [$(date "+%F %T")]: Run pargenes with model selection" 2>&1 | tee -a "${logfile}"
+      "${PARGENES}" --alignments-dir "${inputfolder}" --output-dir "${outputfolder}" \
+        --cores "${ncores}" --datatype "${datatype}" \
+        --use-modeltest --modeltest-criteria "${modeltestcriterion}" --modeltest-perjob-cores "${modeltestperjobcores}" >> "${logfile}" 2>&1
+    fi
   elif [ "${astbin}" = 'astral.jar' ] ; then
-    echo -e "\n## ATPW [$(date "+%F %T")]: Run pargenes with model selection, finish with ASTRAL (${astbin})" 2>&1 | tee -a "${logfile}"
-    "${PARGENES}" \
-      --alignments-dir "${inputfolder}" \
-      --output-dir "${outputfolder}" \
-      --cores "${ncores}" \
-      --datatype "${datatype}" \
-      --use-modeltest \
-      --modeltest-criteria "${modeltestcriterion}" \
-      --modeltest-perjob-cores "${modeltestperjobcores}" \
-      --use-astral >> "${logfile}" 2>&1
+    if [ "${doboot}" ] ; then
+      echo -e "\n## ATPW [$(date "+%F %T")]: Run pargenes with model selection, bootstrap (i=${bootstrapreps}), finish with ASTRAL (${astbin})" 2>&1 | tee -a "${logfile}"
+      echo -e "\n## ATPW [$(date "+%F %T")]: Run pargenes with model selection and bootstrap (i=${bootstrapreps})" 2>&1 | tee -a "${logfile}"
+      "${PARGENES}" --alignments-dir "${inputfolder}" --output-dir "${outputfolder}" \
+        --cores "${ncores}" --datatype "${datatype}" \
+        --use-modeltest --modeltest-criteria "${modeltestcriterion}" --modeltest-perjob-cores "${modeltestperjobcores}" \
+        --autoMRE -b "${bootstrapreps}" \
+        --use-astral >> "${logfile}" 2>&1
+    else
+      echo -e "\n## ATPW [$(date "+%F %T")]: Run pargenes with model selection, finish with ASTRAL (${astbin})" 2>&1 | tee -a "${logfile}"
+      "${PARGENES}" --alignments-dir "${inputfolder}" --output-dir "${outputfolder}" \
+        --cores "${ncores}" --datatype "${datatype}" \
+        --use-modeltest --modeltest-criteria "${modeltestcriterion}" --modeltest-perjob-cores "${modeltestperjobcores}" \
+        --use-astral >> "${logfile}" 2>&1
+    fi
   else
-    echo -e "\n## ATPW [$(date "+%F %T")]: Run pargenes with model selection, finish with ASTER (${astbin})" 2>&1 | tee -a "${logfile}"
-    "${PARGENES}" \
-      --alignments-dir "${inputfolder}" \
-      --output-dir "${outputfolder}" \
-      --cores "${ncores}" \
-      --datatype "${datatype}" \
-      --use-modeltest \
-      --modeltest-criteria "${modeltestcriterion}" \
-      --modeltest-perjob-cores "${modeltestperjobcores}" \
-      --use-aster \
-      --aster-bin "${astbin}" >> "${logfile}" 2>&1
+    if [ "${doboot}" ] ; then
+      echo -e "\n## ATPW [$(date "+%F %T")]: Run pargenes with model selection, bootstrap (i=${bootstrapreps}), finish with ASTER (${astbin})" 2>&1 | tee -a "${logfile}"
+      "${PARGENES}" --alignments-dir "${inputfolder}" --output-dir "${outputfolder}" \
+        --cores "${ncores}" --datatype "${datatype}" \
+        --use-modeltest --modeltest-criteria "${modeltestcriterion}" --modeltest-perjob-cores "${modeltestperjobcores}" \
+        --autoMRE -b "${bootstrapreps}" \
+        --use-aster --aster-bin "${astbin}" >> "${logfile}" 2>&1
+    else
+      echo -e "\n## ATPW [$(date "+%F %T")]: Run pargenes with model selection, finish with ASTER (${astbin})" 2>&1 | tee -a "${logfile}"
+      "${PARGENES}" --alignments-dir "${inputfolder}" --output-dir "${outputfolder}" \
+        --cores "${ncores}" --datatype "${datatype}" \
+        --use-modeltest --modeltest-criteria "${modeltestcriterion}" --modeltest-perjob-cores "${modeltestperjobcores}" \
+        --use-aster --aster-bin "${astbin}" >> "${logfile}" 2>&1
+    fi
   fi
 }
 
@@ -733,6 +744,42 @@ count() {
       fi
     done < "${astraltrees}"
   fi
+}
+
+cleanUp() {
+  ## Compress and remove files in run folder
+ local runfolder="$1"
+ if [ "${dotreeshrink}" ]; then
+   if [ -e  "${runfolder}/tmp_treeshrink/" ] ; then
+     rm -rf "${runfolder}/tmp_treeshrink/"
+   fi
+ fi
+ # Compress folders inside pargenes folders
+ echo -e "\n## ATPW [$(date "+%F %T")]: Compressing some output" 2>&1 | tee -a "${logfile}"
+ cd "${runfolder}" || exit
+ mapfile -t arr < <(find 1_align/ -mindepth 1 -maxdepth 1 -type d | sort)
+ for d in "${arr[@]::${#arr[@]}-1}" ; do
+   e=$(basename "$d")
+   f=$(dirname "$d")
+   find "${f}" -type d -name "${e}" -execdir tar czf {}.tgz {} ';'
+   find "${f}" -type d -name "${e}" -exec rm -r {} '+'
+ done
+ mapfile -t arr < <(find 2_trees/ -mindepth 1 -maxdepth 1 -type d | sort)
+ for d in "${arr[@]::${#arr[@]}-1}" ; do
+   e=$(basename "$d")
+   f=$(dirname "$d")
+   find "${f}" -type d -name "${e}" -execdir tar czf {}.tgz {} ';'
+   find "${f}" -type d -name "${e}" -exec rm -r {} '+'
+ done
+ for d in old_parse_run parse_run supports_run ; do
+   find . -type d -name "${d}" -execdir tar czf {}.tgz {} ';'
+   find . -type d -name "${d}" -exec rm -r {} '+'
+ done
+ for d in per_job_logs running_jobs bootstraps concatenated_bootstraps ; do
+   find . -type d -name "${d}" -execdir tar czf {}.tgz {} ';'
+   find . -type d -name "${d}" -exec rm -r {} '+'
+ done
+ cd .. || exit
 }
 
 createReadme() {
@@ -862,172 +909,179 @@ EOF
 EOF
 
   fi
-  echo -e "### Alignments:\n" >> "${readme}"
-  echo -e "1. [\`1_align/1.1_input/*.ali\`](${input_folder_path#"$runfolder"/})" >> "${readme}"
+###
+  {
+  echo -e "### Alignments:\n"
+  echo -e "1. [\`1_align/1.1_input/*.ali\`](${input_folder_path#"$runfolder"/})"
   if [ "${doalign}" ] ; then
-    echo -e "2. [\`1_align/1.2_${aligner}/*.ali\`](${aligner_folder_path#"$runfolder"/})" >> "${readme}"
+    echo -e "2. [\`1_align/1.2_${aligner}/*.ali\`](${aligner_folder_path#"$runfolder"/})"
     if [ "${dobmge}" ] ; then
-      echo -e "3. [\`1_align/1.3_${aligner}_bmge/*.ali\`](${aligner_bmge_folder_path#"$runfolder"/})" >> "${readme}"
+      echo -e "3. [\`1_align/1.3_${aligner}_bmge/*.ali\`](${aligner_bmge_folder_path#"$runfolder"/})"
       if [ "${dotreeshrink}" ] ; then
-        echo -e "4. [\`1_align/1.4_${aligner}_bmge_treeshrink/*.ali\`](""${aligner_bmge_threeshrink_folder_path#"$runfolder"/}"")" >> "${readme}"
+        echo -e "4. [\`1_align/1.4_${aligner}_bmge_treeshrink/*.ali\`](""${aligner_bmge_threeshrink_folder_path#"$runfolder"/}"")"
       fi
     else
       if [ "${dotreeshrink}" ] ; then
-        echo -e "3. [\`1_align/1.3_${aligner}_treeshrink/*.ali\`](""${aligner_threeshrink_folder_path#"$runfolder"/}"")" >> "${readme}"
+        echo -e "3. [\`1_align/1.3_${aligner}_treeshrink/*.ali\`](""${aligner_threeshrink_folder_path#"$runfolder"/}"")"
       fi
     fi
   else
     if [ "${dobmge}" ] ; then
-      echo -e "2. [\`1_align/1.2_bmge/*.ali\`](""${bmge_folder_path#"$runfolder"/}"")" >> "${readme}"
+      echo -e "2. [\`1_align/1.2_bmge/*.ali\`](""${bmge_folder_path#"$runfolder"/}"")"
       if [ "${dotreeshrink}" ] ; then
-        echo -e "3. [\`1_align/1.3_bmge_treeshrink/*.ali\`](""${bmge_threeshrink_folder_path#"$runfolder"/}"")" >> "${readme}"
+        echo -e "3. [\`1_align/1.3_bmge_treeshrink/*.ali\`](""${bmge_threeshrink_folder_path#"$runfolder"/}"")"
       fi
     else
       if [ "${dotreeshrink}" ] ; then
-        echo -e "2. [\`1_align/1.2_treeshrink/*.ali\`](""${threeshrink_folder_path#"$runfolder"/}"")" >> "${readme}"
+        echo -e "2. [\`1_align/1.2_treeshrink/*.ali\`](""${threeshrink_folder_path#"$runfolder"/}"")"
       fi
     fi
   fi
+  echo ""
+  echo -e "## Filtering summary"
   echo "" >> "${readme}"
-  echo -e "## Filtering summary" >> "${readme}"
-  echo "" >> "${readme}"
-  echo -e "| Step | Tool | Nfiles | Nseqs | Ntax |" >> "${readme}"
-  echo -e "| ---  | --- | --- | --- | --- |" >> "${readme}"
-  echo -e "| 0. | Raw input | ${nf_raw_input} | ${ns_raw_input} | ${nt_raw_input} |" >> "${readme}"
-  echo -e "| 1. | Check input | ${nf_input} | ${ns_input} | ${nt_input} |" >> "${readme}"
+  echo -e "| Step | Tool | Nfiles | Nseqs | Ntax |"
+  echo -e "| ---  | --- | --- | --- | --- |"
+  echo -e "| 0. | Raw input | ${nf_raw_input} | ${ns_raw_input} | ${nt_raw_input} |"
+  echo -e "| 1. | Check input | ${nf_input} | ${ns_input} | ${nt_input} |"
   if [ "${doalign}" ] ; then
-    echo -e "| 2. | ${aligner} | ${nf_aligner} | ${ns_aligner} | ${nt_aligner} |" >> "${readme}"
+    echo -e "| 2. | ${aligner} | ${nf_aligner} | ${ns_aligner} | ${nt_aligner} |"
     if [ "${dobmge}" ] ; then
-      echo -e "| 3. | BMGE | ${nf_aligner_bmge} | ${ns_aligner_bmge} | ${nt_aligner_bmge} |" >> "${readme}"
+      echo -e "| 3. | BMGE | ${nf_aligner_bmge} | ${ns_aligner_bmge} | ${nt_aligner_bmge} |"
       if [ "${dotreeshrink}" ] ; then
-        echo -e "| 4. | TreeShrink | ${nf_aligner_bmge_treeshrink} | ${ns_aligner_bmge_treeshrink} | ${nt_aligner_bmge_treeshrink} |" >> "${readme}"
+        echo -e "| 4. | TreeShrink | ${nf_aligner_bmge_treeshrink} | ${ns_aligner_bmge_treeshrink} | ${nt_aligner_bmge_treeshrink} |"
       fi
     else
       if [ "${dotreeshrink}" ] ; then
-        echo -e "| 3. | TreeShrink | ${nf_aligner_treeshrink} | ${ns_aligner_treeshrink} | ${nt_aligner_treeshrink} |" >> "${readme}"
+        echo -e "| 3. | TreeShrink | ${nf_aligner_treeshrink} | ${ns_aligner_treeshrink} | ${nt_aligner_treeshrink} |"
       fi
     fi
   else
     if [ "${dobmge}" ] ; then
-      echo -e "| 2. | BMGE | ${nf_bmge} | ${ns_bmge} | ${nt_bmge} |" >> "${readme}"
+      echo -e "| 2. | BMGE | ${nf_bmge} | ${ns_bmge} | ${nt_bmge} |"
       if [ "${dotreeshrink}" ] ; then
-        echo -e "| 3. | TreeShrink | ${nf_bmge_treeshrink} | ${ns_bmge_treeshrink} | ${nt_bmge_treeshrink} |" >> "${readme}"
+        echo -e "| 3. | TreeShrink | ${nf_bmge_treeshrink} | ${ns_bmge_treeshrink} | ${nt_bmge_treeshrink} |"
       fi
     else
       if [ "${dotreeshrink}" ] ; then
-        echo -e "| 2. | TreeShrink | ${nf_treeshrink} | ${ns_treeshrink} | ${nt_treeshrink} |" >> "${readme}"
+        echo -e "| 2. | TreeShrink | ${nf_treeshrink} | ${ns_treeshrink} | ${nt_treeshrink} |"
+      fi
+    fi
+  fi
+  } >> "${readme}"
+####
+}
+
+main() {
+  # MAIN
+  # TODO: rewrite to avoid all hard coded paths
+  # Align or not, and check alignments
+  checkNtaxa "${runfolder}/1_align/1.1_input" "${mintaxfilter}" .ali
+  if [ "${doalign}" ] ; then
+    align "${runfolder}/1_align/1.1_input" "${runfolder}/1_align/1.2_${aligner}"
+    checkAlignments "${runfolder}/1_align/1.2_${aligner}" "${maxinvariantsites}"
+  else
+    checkAlignments "${runfolder}/1_align/1.1_input" "${maxinvariantsites}"
+  fi
+  # bmge or not
+  if [ "${dobmge}" ] ; then
+    if [ "${doalign}" ] ; then
+      runBmge "${runfolder}/1_align/1.2_${aligner}" "${runfolder}/1_align/1.3_${aligner}_bmge"
+      checkNtaxa "${runfolder}/1_align/1.3_${aligner}_bmge" "${mintaxfilter}" .ali
+      checkAlignments "${runfolder}/1_align/1.3_${aligner}_bmge" "${maxinvariantsites}"
+    else
+      runBmge "${runfolder}/1_align/1.1_input" "${runfolder}/1_align/1.2_bmge"
+      checkNtaxa "${runfolder}/1_align/1.2_bmge" "${mintaxfilter}" .ali
+      checkAlignments "${runfolder}/1_align/1.2_bmge" "${maxinvariantsites}"
+    fi
+  fi
+  # treeshrink or not
+  if [ "${dotreeshrink}" ]; then
+    mkdir -p "${runfolder}/tmp_treeshrink"
+    # pargenes, fixed model
+    if [ "${doalign}" ] ; then
+      if [ "${dobmge}" ] ; then
+        pargenesFixedModel "${runfolder}/1_align/1.3_${aligner}_bmge" "${runfolder}/2_trees/2.1_${aligner}_bmge_pargenes"
+      else
+        pargenesFixedModel "${runfolder}/1_align/1.2_${aligner}" "${runfolder}/2_trees/2.1_${aligner}_pargenes"
+      fi
+    else
+      if [ "${dobmge}" ] ; then
+        pargenesFixedModel "${runfolder}/1_align/1.2_bmge" "${runfolder}/2_trees/2.1_bmge_pargenes"
+      else
+        pargenesFixedModel "${runfolder}/1_align/1.1_input" "${runfolder}/2_trees/2.1_pargenes"
+      fi
+    fi
+    # setup treeshrink
+    if [ "${doalign}" ] ; then
+      if [ "${dobmge}" ] ; then
+        setupTreeshrink "${runfolder}/2_trees/2.1_${aligner}_bmge_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.3_${aligner}_bmge" "${runfolder}/tmp_treeshrink"
+      else
+        setupTreeshrink "${runfolder}/2_trees/2.1_${aligner}_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.2_${aligner}" "${runfolder}/tmp_treeshrink"
+      fi
+    else
+      if [ "${dobmge}" ] ; then
+        setupTreeshrink "${runfolder}/2_trees/2.1_bmge_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.2_bmge" "${runfolder}/tmp_treeshrink"
+      else
+        setupTreeshrink "${runfolder}/2_trees/2.1_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.1_input" "${runfolder}/tmp_treeshrink"
+      fi
+    fi
+    # treeshrink
+    runTreeshrink "${runfolder}/tmp_treeshrink"
+    checkNtaxaOutputAli "${runfolder}/tmp_treeshrink" "${mintaxfilter}"
+    # realign
+    if [ "${doalign}" ] ; then
+      if [ "${dobmge}" ] ; then
+        realignerOutputAli "${runfolder}/tmp_treeshrink/" "${runfolder}/1_align/1.4_${aligner}_bmge_treeshrink"
+        checkAlignments "${runfolder}/1_align/1.4_${aligner}_bmge_treeshrink" "${maxinvariantsites}"
+      else
+        realignerOutputAli "${runfolder}/tmp_treeshrink/" "${runfolder}/1_align/1.3_${aligner}_treeshrink"
+        checkAlignments "${runfolder}/1_align/1.3_${aligner}_treeshrink" "${maxinvariantsites}"
+      fi
+    else
+      if [ "${dobmge}" ] ; then
+        realignerOutputAli "${runfolder}/tmp_treeshrink/" "${runfolder}/1_align/1.3_bmge_treeshrink"
+        checkAlignments "${runfolder}/1_align/1.3_bmge_treeshrink" "${maxinvariantsites}"
+      else
+        realignerOutputAli "${runfolder}/tmp_treeshrink/" "${runfolder}/1_align/1.2_treeshrink"
+        checkAlignments "${runfolder}/1_align/1.2_treeshrink" "${maxinvariantsites}"
+      fi
+    fi
+  fi
+  # pargenes, modeltest, (astral)
+  if [ "${dotreeshrink}" ]; then
+    if [ "${doalign}" ] ; then
+      if [ "${dobmge}" ] ; then
+        pargenesModeltestAstral "${runfolder}/1_align/1.4_${aligner}_bmge_treeshrink" "${runfolder}/2_trees/2.2_${aligner}_bmge_treeshrink_pargenes" "${asterbin}"
+      else
+        pargenesModeltestAstral "${runfolder}/1_align/1.3_${aligner}_treeshrink" "${runfolder}/2_trees/2.2_${aligner}_treeshrink_pargenes" "${asterbin}"
+      fi
+    else
+      if [ "${dobmge}" ] ; then
+        pargenesModeltestAstral "${runfolder}/1_align/1.3_bmge_treeshrink" "${runfolder}/2_trees/2.2_bmge_treeshrink_pargenes" "${asterbin}"
+      else
+        pargenesModeltestAstral "${runfolder}/1_align/1.2_treeshrink" "${runfolder}/2_trees/2.2_treeshrink_pargenes" "${asterbin}"
+      fi
+    fi
+  else
+    if [ "${doalign}" ] ; then
+      if [ "${dobmge}" ] ; then
+        pargenesModeltestAstral "${runfolder}/1_align/1.3_${aligner}_bmge" "${runfolder}/2_trees/2.1_${aligner}_bmge_pargenes" "${asterbin}"
+      else
+        pargenesModeltestAstral "${runfolder}/1_align/1.2_${aligner}" "${runfolder}/2_trees/2.1_${aligner}_pargenes" "${asterbin}"
+      fi
+    else
+      if [ "${dobmge}" ] ; then
+        pargenesModeltestAstral "${runfolder}/1_align/1.2_bmge" "${runfolder}/2_trees/2.1_bmge_pargenes" "${asterbin}"
+      else
+        pargenesModeltestAstral "${runfolder}/1_align/1.1_input" "${runfolder}/2_trees/2.1_pargenes" "${asterbin}"
       fi
     fi
   fi
 }
 
-##################################################
-# MAIN
-##################################################
-# TODO: rewrite to avoid all hard coded paths
-# Align or not, and check alignments
-checkNtaxa "${runfolder}/1_align/1.1_input" "${mintaxfilter}" .ali
-if [ "${doalign}" ] ; then
-  align "${runfolder}/1_align/1.1_input" "${runfolder}/1_align/1.2_${aligner}"
-  checkAlignments "${runfolder}/1_align/1.2_${aligner}" "${maxinvariantsites}"
-else
-  checkAlignments "${runfolder}/1_align/1.1_input" "${maxinvariantsites}"
-fi
-# bmge or not
-if [ "${dobmge}" ] ; then
-  if [ "${doalign}" ] ; then
-    runBmge "${runfolder}/1_align/1.2_${aligner}" "${runfolder}/1_align/1.3_${aligner}_bmge"
-    checkNtaxa "${runfolder}/1_align/1.3_${aligner}_bmge" "${mintaxfilter}" .ali
-    checkAlignments "${runfolder}/1_align/1.3_${aligner}_bmge" "${maxinvariantsites}"
-  else
-    runBmge "${runfolder}/1_align/1.1_input" "${runfolder}/1_align/1.2_bmge"
-    checkNtaxa "${runfolder}/1_align/1.2_bmge" "${mintaxfilter}" .ali
-    checkAlignments "${runfolder}/1_align/1.2_bmge" "${maxinvariantsites}"
-  fi
-fi
-# treeshrink or not
-if [ "${dotreeshrink}" ]; then
-  mkdir -p "${runfolder}/tmp_treeshrink"
-  # pargenes, fixed model
-  if [ "${doalign}" ] ; then
-    if [ "${dobmge}" ] ; then
-      pargenesFixedModel "${runfolder}/1_align/1.3_${aligner}_bmge" "${runfolder}/2_trees/2.1_${aligner}_bmge_pargenes"
-    else
-      pargenesFixedModel "${runfolder}/1_align/1.2_${aligner}" "${runfolder}/2_trees/2.1_${aligner}_pargenes"
-    fi
-  else
-    if [ "${dobmge}" ] ; then
-      pargenesFixedModel "${runfolder}/1_align/1.2_bmge" "${runfolder}/2_trees/2.1_bmge_pargenes"
-    else
-      pargenesFixedModel "${runfolder}/1_align/1.1_input" "${runfolder}/2_trees/2.1_pargenes"
-    fi
-  fi
-  # setup treeshrink
-  if [ "${doalign}" ] ; then
-    if [ "${dobmge}" ] ; then
-      setupTreeshrink "${runfolder}/2_trees/2.1_${aligner}_bmge_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.3_${aligner}_bmge" "${runfolder}/tmp_treeshrink"
-    else
-      setupTreeshrink "${runfolder}/2_trees/2.1_${aligner}_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.2_${aligner}" "${runfolder}/tmp_treeshrink"
-    fi
-  else
-    if [ "${dobmge}" ] ; then
-      setupTreeshrink "${runfolder}/2_trees/2.1_bmge_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.2_bmge" "${runfolder}/tmp_treeshrink"
-    else
-      setupTreeshrink "${runfolder}/2_trees/2.1_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.1_input" "${runfolder}/tmp_treeshrink"
-    fi
-  fi
-  # treeshrink
-  runTreeshrink "${runfolder}/tmp_treeshrink"
-  checkNtaxaOutputAli "${runfolder}/tmp_treeshrink" "${mintaxfilter}"
-  # realign
-  if [ "${doalign}" ] ; then
-    if [ "${dobmge}" ] ; then
-      realignerOutputAli "${runfolder}/tmp_treeshrink/" "${runfolder}/1_align/1.4_${aligner}_bmge_treeshrink"
-      checkAlignments "${runfolder}/1_align/1.4_${aligner}_bmge_treeshrink" "${maxinvariantsites}"
-    else
-      realignerOutputAli "${runfolder}/tmp_treeshrink/" "${runfolder}/1_align/1.3_${aligner}_treeshrink"
-      checkAlignments "${runfolder}/1_align/1.3_${aligner}_treeshrink" "${maxinvariantsites}"
-    fi
-  else
-    if [ "${dobmge}" ] ; then
-      realignerOutputAli "${runfolder}/tmp_treeshrink/" "${runfolder}/1_align/1.3_bmge_treeshrink"
-      checkAlignments "${runfolder}/1_align/1.3_bmge_treeshrink" "${maxinvariantsites}"
-    else
-      realignerOutputAli "${runfolder}/tmp_treeshrink/" "${runfolder}/1_align/1.2_treeshrink"
-      checkAlignments "${runfolder}/1_align/1.2_treeshrink" "${maxinvariantsites}"
-    fi
-  fi
-fi
-# pargenes, modeltest, (astral)
-if [ "${dotreeshrink}" ]; then
-  if [ "${doalign}" ] ; then
-    if [ "${dobmge}" ] ; then
-      pargenesModeltestAstral "${runfolder}/1_align/1.4_${aligner}_bmge_treeshrink" "${runfolder}/2_trees/2.2_${aligner}_bmge_treeshrink_pargenes" "${asterbin}"
-    else
-      pargenesModeltestAstral "${runfolder}/1_align/1.3_${aligner}_treeshrink" "${runfolder}/2_trees/2.2_${aligner}_treeshrink_pargenes" "${asterbin}"
-    fi
-  else
-    if [ "${dobmge}" ] ; then
-      pargenesModeltestAstral "${runfolder}/1_align/1.3_bmge_treeshrink" "${runfolder}/2_trees/2.2_bmge_treeshrink_pargenes" "${asterbin}"
-    else
-      pargenesModeltestAstral "${runfolder}/1_align/1.2_treeshrink" "${runfolder}/2_trees/2.2_treeshrink_pargenes" "${asterbin}"
-    fi
-  fi
-else
-  if [ "${doalign}" ] ; then
-    if [ "${dobmge}" ] ; then
-      pargenesModeltestAstral "${runfolder}/1_align/1.3_${aligner}_bmge" "${runfolder}/2_trees/2.1_${aligner}_bmge_pargenes" "${asterbin}"
-    else
-      pargenesModeltestAstral "${runfolder}/1_align/1.2_${aligner}" "${runfolder}/2_trees/2.1_${aligner}_pargenes" "${asterbin}"
-    fi
-  else
-    if [ "${dobmge}" ] ; then
-      pargenesModeltestAstral "${runfolder}/1_align/1.2_bmge" "${runfolder}/2_trees/2.1_bmge_pargenes" "${asterbin}"
-    else
-      pargenesModeltestAstral "${runfolder}/1_align/1.1_input" "${runfolder}/2_trees/2.1_pargenes" "${asterbin}"
-    fi
-  fi
-fi
+# Run
+main
 
 # Count
 count
@@ -1036,23 +1090,9 @@ count
 createReadme
 
 # Clean up
-if [ "${dotreeshrink}" ]; then
-  if [ -e  "${runfolder}/tmp_treeshrink/" ] ; then
-    rm -rf "${runfolder}/tmp_treeshrink/"
-  fi
-fi
-# Compress folders inside pargenes folders
-echo -e "\n## ATPW [$(date "+%F %T")]: Compressing some output" 2>&1 | tee -a "${logfile}"
-cd "${runfolder}" || exit
-find . -type d -name "parse_run" -execdir tar czf {}.tgz {} ';'
-find . -type d -name "parse_run" -exec rm -r {} '+'
-find . -type d -name "old_parse_run" -execdir tar czf {}.tgz {} ';'
-find . -type d -name "old_parse_run" -exec rm -r {} '+'
-cd .. || exit
+cleanUp "${runfolder}"
 
 # End
 echo -e "\n## ATPW [$(date "+%F %T")]: Reached end of the script\n" 2>&1 | tee -a "${logfile}"
 exit 0
-
-# vim:fenc=utf-8 tabstop=8 expandtab shiftwidth=4 softtabstop=4
 
