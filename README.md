@@ -1,6 +1,6 @@
 # ATPW - Align-and-Trees-Parallel-Workflow
 
-- Last modified: ons feb 28, 2024  12:09
+- Last modified: ons feb 28, 2024  06:44
 - Sign: Johan.Nylander\@nrm.se
 
 ## Description
@@ -27,7 +27,8 @@ data](#input-data)) are:
    [ASTER](https://github.com/chaoszhang/ASTER) (or
    [ASTRAL](https://github.com/smirarab/ASTRAL)).
 
-Using MAFFT, BMGE, TreeShrink, and ASTER/ASTRAL are optional (see [Options](#options)).
+Using MAFFT, BMGE, TreeShrink, and ASTER/ASTRAL are optional (see
+[Options](#options)).
 
 ## Usage
 
@@ -37,13 +38,14 @@ Using MAFFT, BMGE, TreeShrink, and ASTER/ASTRAL are optional (see [Options](#opt
 ## Options
 
     -d type   -- Specify data type: nt or aa. (Mandatory)
-    -n number -- Specify the number of threads. Default: N cores
+    -n number -- Specify the number of threads. Default: 8
     -m crit   -- Model test criterion: BIC, AIC or AICC. Default: BIC
+    -i number -- Number of bootstrap iterations. Default: 0
     -f number -- Minimum number of taxa when filtering alignments. Default: 4
     -s prog   -- Specify ASTRAL/ASTER program: astral.jar, astral, astral-pro, or astral-hybrid. Default: astral
-    -b opts   -- Specify options for BMGE. Multiple options needs to be quoted. Default: "program defaults"
-    -t opts   -- Specify options for TreeShrink. Multiple options needs to be quoted. Default: "program defaults"
-    -a opts   -- Specify options for aligner (default is the mafft program). Multiple options needs to be quoted. Default: "--auto --quiet"
+    -b opts   -- Specify options for BMGE. Multiple options needs to be quoted. Default: program defaults
+    -t opts   -- Specify options for TreeShrink. Multiple options needs to be quoted. Default: program defaults
+    -a opts   -- Specify options for aligner (Default: mafft). Multiple options needs to be quoted. Default: --auto --thread 2 --quiet
     -A        -- Do not run aligner (assume aligned input)
     -B        -- Do not run BMGE
     -T        -- Do not run TreeShrink
@@ -52,7 +54,7 @@ Using MAFFT, BMGE, TreeShrink, and ASTER/ASTRAL are optional (see [Options](#opt
     -h        -- Print help message
 
 Default settings for most software are used in the workflow. Some default
-values can be changed by usin options or by manually editing the
+values can be changed by using options or by manually editing the
 [script](src/align-and-trees-parallel-workflow.sh). A list of options can be
 found here: [BMGE.md](doc/BMGE.md).
 
