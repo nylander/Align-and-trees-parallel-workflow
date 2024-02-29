@@ -1,9 +1,9 @@
 #!/bin/bash -l
-#SBATCH -t 0:15:00
-#SBATCH -A snic2022-5-27
+#SBATCH -t 0:30:00
+#SBATCH -A naiss2023-22-913
 #SBATCH -p core
 #SBATCH -n 10
 
-cd /home/nylander/src/Align-and-trees-parallel-workflow/
-singularity run singularity/atpw.sif -d nt data out
+cd /proj/stylops_storage/nobackup/tmp
+singularity run /proj/stylops/nobackup/share/bin/atpw.sif -d nt -i 100 data out
 
