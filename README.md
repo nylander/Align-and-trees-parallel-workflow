@@ -1,6 +1,6 @@
 # ATPW - Align-and-Trees-Parallel-Workflow
 
-- Last modified: tor feb 29, 2024  11:24
+- Last modified: fre mar 01, 2024  12:14
 - Sign: Johan.Nylander\@nrm.se
 
 ## Description
@@ -25,8 +25,8 @@ data](#input-data)) are:
    [ModelTest-NG](https://github.com/ddarriba/modeltest), RAxML-NG, and
    ParGenes,
 7. estimate species tree from individual trees using
-   [ASTER](https://github.com/chaoszhang/ASTER) (or
-   [ASTRAL](https://github.com/smirarab/ASTRAL)).
+   [ASTER](https://github.com/chaoszhang/ASTER) or
+   [ASTRAL](https://github.com/smirarab/ASTRAL).
 
 Using MAFFT, BMGE, TrimAl, TreeShrink, and ASTER/ASTRAL are optional (see
 [Options](#options)).
