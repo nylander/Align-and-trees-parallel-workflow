@@ -1,6 +1,6 @@
 # Singularity container for ATPW
 
-- Last modified: ons feb 14, 2024  04:27
+- Last modified: tor feb 29, 2024  11:55
 - Sign: JN
 
 ## Requirements
@@ -10,10 +10,12 @@ Singularity. See official install instructions:
 
 ## Build a singularity container from the [definition file](atpw.def)
 
-    $ sudo singularity build atpw.sif atpw.def
+Run from git repo root directory (will copy scripts correctly)
+
+    $ sudo singularity build singularity/atpw.sif singularity/atpw.def
 
 ## Run
 
-    $ ./atpw.sif -h
-    $ ./atpw.sif -d nt ../data out
+    $ singularity/atpw.sif -h
+    $ singularity/atpw.sif -d nt data out
 

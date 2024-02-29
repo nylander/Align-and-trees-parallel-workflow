@@ -1,6 +1,6 @@
 # ATPW - Align-and-Trees-Parallel-Workflow
 
-- Last modified: ons feb 28, 2024  06:44
+- Last modified: tor feb 29, 2024  11:24
 - Sign: Johan.Nylander\@nrm.se
 
 ## Description
@@ -14,20 +14,21 @@ data](#input-data)) are:
 1. Create multiple sequence alignments with
    [MAFFT](https://mafft.cbrc.jp/alignment/software/),
 2. filter alignments using
-   [BMGE](https://bmcecolevol.biomedcentral.com/articles/10.1186/1471-2148-10-210),
-3. infer phylogenetic trees for each BMGE-filtered locus with fixed model using
+   [BMGE](https://bmcecolevol.biomedcentral.com/articles/10.1186/1471-2148-10-210)
+   or [TrimAl](https://github.com/inab/trimal)
+3. infer phylogenetic trees for each filtered locus with fixed model using
    [ParGenes](https://github.com/BenoitMorel/ParGenes) and
    [RAxML-NG](https://github.com/amkozlov/raxml-ng),
 4. filter trees using [TreeShrink](https://github.com/uym2/TreeShrink),
 5. do multiple sequence alignments on TreeShrink-filtered data using MAFFT,
-6. infer phylogenetic trees for each locus with model
-   selection using [ModelTest-NG](https://github.com/ddarriba/modeltest),
-   RAxML-NG, and ParGenes,
+6. infer phylogenetic trees for each locus with model selection using
+   [ModelTest-NG](https://github.com/ddarriba/modeltest), RAxML-NG, and
+   ParGenes,
 7. estimate species tree from individual trees using
    [ASTER](https://github.com/chaoszhang/ASTER) (or
    [ASTRAL](https://github.com/smirarab/ASTRAL)).
 
-Using MAFFT, BMGE, TreeShrink, and ASTER/ASTRAL are optional (see
+Using MAFFT, BMGE, TrimAl, TreeShrink, and ASTER/ASTRAL are optional (see
 [Options](#options)).
 
 ## Usage
@@ -43,11 +44,12 @@ Using MAFFT, BMGE, TreeShrink, and ASTER/ASTRAL are optional (see
     -i number -- Number of bootstrap iterations. Default: 0
     -f number -- Minimum number of taxa when filtering alignments. Default: 4
     -s prog   -- Specify ASTRAL/ASTER program: astral.jar, astral, astral-pro, or astral-hybrid. Default: astral
-    -b opts   -- Specify options for BMGE. Multiple options needs to be quoted. Default: program defaults
+    -l prog   -- Specify alignment filter software: bmge or trimal. Default: bmge
+    -b opts   -- Specify options for alignment-filter program. Multiple options needs to be quoted. Default: "program defaults"
     -t opts   -- Specify options for TreeShrink. Multiple options needs to be quoted. Default: program defaults
-    -a opts   -- Specify options for aligner (Default: mafft). Multiple options needs to be quoted. Default: --auto --thread 2 --quiet
-    -A        -- Do not run aligner (assume aligned input)
-    -B        -- Do not run BMGE
+    -a opts   -- Specify options for mafft. Multiple options needs to be quoted. Default: --auto --thread 2 --quiet
+    -A        -- Do not run mafft (assume aligned input)
+    -B        -- Do not run alignment-filter program
     -T        -- Do not run TreeShrink
     -S        -- Do not run ASTER/ASTRAL
     -v        -- Print version
@@ -55,8 +57,9 @@ Using MAFFT, BMGE, TreeShrink, and ASTER/ASTRAL are optional (see
 
 Default settings for most software are used in the workflow. Some default
 values can be changed by using options or by manually editing the
-[script](src/align-and-trees-parallel-workflow.sh). A list of options can be
-found here: [BMGE.md](doc/BMGE.md).
+[script](src/align-and-trees-parallel-workflow.sh). A list of options for BMGE
+can be found here: [BMGE.md](doc/BMGE.md), otherwise consult the program web
+pages.
 
 ## Input data
 

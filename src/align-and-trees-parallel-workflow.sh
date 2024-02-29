@@ -1,6 +1,6 @@
 #!/bin/bash -l
 
-# Last modified: ons feb 28, 2024  05:57
+# Last modified: tor feb 29, 2024  11:40
 # Sign: JN
 
 set -uo pipefail
@@ -9,32 +9,36 @@ set -uo pipefail
 BMGEJAR="${BMGEJAR:-${HOME}/Documents/GIT/Align-and-trees-parallel-workflow/BMGE-1.12/BMGE.jar}" # <<<<<<<<<< CHANGE HERE
 PARGENES="${PARGENES:-${HOME}/Documents/GIT/Align-and-trees-parallel-workflow/ParGenes/pargenes/pargenes.py}" # <<<<<<<<<< CHANGE HERE
 TREESHRINK="${TREESHRINK:-${HOME}/Documents/GIT/Align-and-trees-parallel-workflow/TreeShrink/run_treeshrink.py}" # <<<<<<<<<< CHANGE HERE
+TRIMAL="${TRIMAL:-${HOME}/Documents/GIT/Align-and-trees-parallel-workflow/trimal/source/trimal}" # <<<<<<<<<< CHANGE HERE
 #MACSE="${MACSE:-${HOME}/Documents/GIT/Align-and-trees-parallel-workflow//MACSE/omm_macse_v10.02.sif}" # <<<<<<<<<< CHANGE HERE
-version="0.9.3"
+version="0.9.4"
 logfile=
 modeltestcriterion="BIC"
 datatype='nt'
 mintaxfilter=4
-bmgeoptions=             # '-h 0.7' cf. Rokas' ClipKIT program
+alifilter='bmge' # or "trimal"
+alifilteroptions=
+trimaloptions='-automated1'
+bmgeoptions=    # Consider changing default to '-h 0.7' (cf. Rokas' ClipKIT program)
 treeshrinkoptions=
 maxinvariantsites=100.00 # percent
 bootstrapreps=0
 nprocs=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null)
-ncores="${nprocs}"         # TODO: Do we need to adjust?
-modeltestperjobcores='4'   # TODO: Adjust? This value needs to be at least 4!
-threadsforaligner='2'      # TODO: Adjust?
-#threadsforrealigner='2'   # TODO: Adjust?
-aligner="mafft" # Name of aligner, not path to binary
-alignerbin="mafft"
-alignerbinopts=" --auto --thread ${threadsforaligner} --quiet"
+ncores="${nprocs}"       # TODO: Do we need to adjust?
+modeltestperjobcores='4' # TODO: Adjust? This value needs to be at least 4!
+threadsforaligner='2'    # TODO: Adjust?
+#threadsforrealigner='2' # TODO: Adjust?
+aligner='mafft' # Name of aligner, not path to binary
+alignerbin='mafft'
+alignerbinopts="--auto --thread ${threadsforaligner} --quiet"
 #aligner="macse"
 #alignerbin="/home/nylander/jb/johaberg-all/src/omm_macse_v10.02.sif"
-#alignerbinopts=" -java_mem 2000m"
-realigner="mafft" # Name of realigner, not path to binary
+#alignerbinopts="-java_mem 2000m"
+realigner='mafft' # Name of realigner, not path to binary
 realignerbinopts="${alignerbinopts}"
-raxmlng="raxml-ng"
-fastagap="fastagap.pl"
-asterbin="astral" # Name of prog, not path to binary
+raxmlng='raxml-ng'
+fastagap='fastagap.pl'
+asterbin='astral' # Name of prog, not path to binary
 modelforraxmltest='GTR'
 modelforraxmltestAA='LG'
 datatypeforbmge='DNA'
@@ -54,7 +58,7 @@ What:
     Performs the following steps:
 
     1. Do multiple sequence alignment (optional)
-    2. Filter using BMGE (optional)
+    2. Filter using BMGE or TrimAl (optional)
     3. Filter using TreeShrink (optional)
     4. Estimate gene trees with raxml-ng using
        automatic model selection
@@ -73,11 +77,12 @@ Options:
     -i number -- Number of bootstrap iterations. Default: ${bootstrapreps}
     -f number -- Minimum number of taxa when filtering alignments. Default: ${mintaxfilter}
     -s prog   -- Specify ASTRAL/ASTER program: astral.jar, astral, astral-pro, or astral-hybrid. Default: ${asterbin}
-    -b opts   -- Specify options for BMGE. Multiple options needs to be quoted. Default: ${bmgeoptions:-"program defaults"}
+    -l prog   -- Specify alignment filter software: bmge or trimal. Default: ${alifilter}
+    -b opts   -- Specify options for alignment-filter program. Multiple options needs to be quoted. Default: "program defaults"
     -t opts   -- Specify options for TreeShrink. Multiple options needs to be quoted. Default: ${treeshrinkoptions:-"program defaults"}
     -a opts   -- Specify options for ${aligner}. Multiple options needs to be quoted. Default:${alignerbinopts}
     -A        -- Do not run ${aligner} (assume aligned input)
-    -B        -- Do not run BMGE
+    -B        -- Do not run alignment-filter program
     -T        -- Do not run TreeShrink
     -S        -- Do not run ASTER/ASTRAL
     -v        -- Print version
@@ -109,10 +114,12 @@ End_Of_Usage
 
 # Arguments and defaults
 doalign=1
-dobmge=1
+doalifilter=1
 dotreeshrink=1
 doaster=1
 doboot=
+dobmge=1
+dotrimal=
 Aflag=
 Bflag=
 Sflag=
@@ -122,18 +129,19 @@ bflag=
 dflag=
 fflag=
 iflag=
+lflag=
 mflag=
 nflag=
 sflag=
 tflag=
-while getopts 'ABSTa:b:d:f:i:m:n:s:t:vh' OPTION
+while getopts 'ABSTa:b:d:f:i:l:m:n:s:t:vh' OPTION
 do
   case $OPTION in
   A) Aflag=1
      doalign=
      ;;
   B) Bflag=1
-     dobmge=
+     doalifilter=
      ;;
   S) Sflag=1
      doaster=
@@ -155,6 +163,9 @@ do
      ;;
   i) iflag=1
      ival="$OPTARG"
+     ;;
+  l) lflag=1
+     lval="$OPTARG"
      ;;
   m) mflag=1
      mval="$OPTARG"
@@ -221,7 +232,7 @@ if [ -d "${input}" ] ; then
     done
   else
     echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! Could not find .fas files in folder ${input}" 2>&1 | tee -a "${logfile}"
-      exit 1
+    exit 1
   fi
 else
   echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! Folder ${input} can not be found" 2>&1 | tee -a "${logfile}"
@@ -250,7 +261,7 @@ if [ "${Aflag}" ] ; then
   echo -e "\n## ATPW [$(date "+%F %T")]: Data is assumed to be aligned: skipping first alignment step" 2>&1 | tee -a "${logfile}"
 fi
 if [ "${Bflag}" ] ; then
-  echo -e "\n## ATPW [$(date "+%F %T")]: Skipping the BMGE step" 2>&1 | tee -a "${logfile}"
+  echo -e "\n## ATPW [$(date "+%F %T")]: Skipping the ${alifilter} filtering step" 2>&1 | tee -a "${logfile}"
 fi
 if [ "${Tflag}" ] ; then
   echo -e "\n## ATPW [$(date "+%F %T")]: Skipping the TreeShrink step" 2>&1 | tee -a "${logfile}"
@@ -259,13 +270,35 @@ if [ "${aflag}" ] ; then
   alignerbinopts="${aval}"
 fi
 if [ "${bflag}" ] ; then
-  bmgeoptions="${bval}"
+  alifilteroptions="${bval}"
+fi
+if [ "${lflag}" ] ; then
+  lclval=${lval,,} # to lowercase
+  if [[ "${lclval}" != @(bmge|trimal) ]] ; then
+    echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! -l should be 'bmge' or 'trimal'" 2>&1 | tee -a "${logfile}"
+    exit 1
+  else
+    alifilter="${lclval}"
+  fi
+fi
+if [[ "${alifilter}" == 'bmge' ]] ; then
+  dobmge=1
+  dotrimal=
+  if [ "${alifilteroptions}" ] ; then
+    bmgeoptions="${alifilteroptions}"
+  fi
+elif [[ "${alifilter}" == 'trimal' ]] ; then
+  dotrimal=1
+  dobmge=
+  if [ "${alifilteroptions}" ] ; then
+    trimaloptions="${alifilteroptions}"
+  fi
 fi
 if [ "${tflag}" ] ; then
   treeshrinkoptions="${tval}"
 fi
 if [ "${mflag}" ] ; then
-  ucmval=${mval^^} # to uppercase
+  ucmval=${mval^^} # to upper case
   if [[ "${ucmval}" != @(BIC|AIC|AICC) ]] ; then
     echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! -m should be 'BIC', 'AIC', or 'AICC'" 2>&1 | tee -a "${logfile}"
   else
@@ -281,7 +314,7 @@ if [ "${iflag}" ] ; then
   fi
 fi
 if [ "${sflag}" ] ; then
-  lcsval=${sval,,} # to lowercase
+  lcsval=${sval,,} # to lower case
   if [[ "${lcsval}" != @(astral.jar|astral|astral-hybrid|astral-pro) ]] ; then
     echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! -m should be 'astral.jar', 'astral', 'astral-hybrid', or 'astral-pro'" 2>&1 | tee -a "${logfile}"
   else
@@ -404,7 +437,7 @@ runBmge() {
   # Run BMGE
   # Input: 1_align/1.2_mafft/*.mafft.ali (symlinks)
   # Output: 1_align/1.3_mafft_bmge/*.ali
-  # Call: runBmge "${runfolder}/1_align/1.2_${aligner}_check/" "${runfolder}/1_align/1.3_mafft_bmge"
+  # Call: runBmge "${runfolder}/1_align/1.2_${aligner}_check/" "${runfolder}/1_align/1.3_${aligner}_${alifilter}"
   # TODO:
   local inputfolder="$1"
   local outputfolder="$2"
@@ -418,6 +451,28 @@ runBmge() {
     echo -e "\n## ATPW [$(date "+%F %T")]: Run BMGE with default options" | tee -a "${logfile}"
     find -L "${inputfolder}/" -type f -name '*.ali' | \
       parallel 'java -jar '"${BMGEJAR}"' -i {} -t '"${datatypeforbmge}"' -of {/.}.ali' >> "${logfile}" 2>&1
+  fi
+  cd .. || exit
+}
+
+runTrimal() {
+  # Run TrimAl
+  # Input: 1_align/1.2_${aligner}/*.mafft.ali (symlinks)
+  # Output: 1_align/1.3_${aligner}_trimal/*.ali
+  # Call: runTrimal "${runfolder}/1_align/1.2_${aligner}_check/" "${runfolder}/1_align/1.3_${aligner}_${alifilter}"
+  # TODO:
+  local inputfolder="$1"
+  local outputfolder="$2"
+  mkdir -p "${outputfolder}"
+  cd "${outputfolder}" || exit
+  if [ "${trimaloptions}" ] ; then
+    echo -e "\n## ATPW [$(date "+%F %T")]: Run TriMal with options ${trimaloptions}" | tee -a "${logfile}"
+    find -L "${inputfolder}/" -type f -name '*.ali' | \
+      parallel ''"${TRIMAL}"' -in {} '"${trimaloptions}"' -out {/.}.ali' >> "${logfile}" 2>&1
+  else
+    echo -e "\n## ATPW [$(date "+%F %T")]: Run TrimAL with default options" | tee -a "${logfile}"
+    find -L "${inputfolder}/" -type f -name '*.ali' | \
+      parallel ''"${TRIMAL}"' -in {} -out {/.}.ali' >> "${logfile}" 2>&1
   fi
   cd .. || exit
 }
@@ -498,7 +553,7 @@ setupTreeshrink() {
  # Setup data for TreeShrink
  # Input: tmp_treeshrink
  # Output:
- # Call: setupTreeshrink "${runfolder}/2_trees/2.1_mafft_bmge_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.3_mafft_bmge" "${runfolder}/tmp_treeshrink"
+ # Call: setupTreeshrink "${runfolder}/2_trees/2.1_mafft_alifilter_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.3_mafft_alifilter" "${runfolder}/tmp_treeshrink"
  # TODO: Make sure this function works with all arg combos
  inputfolderone="$1"     # where to look for trees
  inputfoldertwo="$2"     # where to look for alignments
@@ -545,12 +600,12 @@ runTreeshrink() {
 realignerOutputAli() {
   # Realign using realigner (search for "output.ali" files). Convert mafft output to upper case.
   # Input: tmp_treeshrink/
-  # Output: 1_align/1.4_mafft_bmge_treeshrink
-  # Call: realignerOutputAli  "${runfolder}/tmp_treeshrink/" "${runfolder}/1_align/1.4_mafft_bmge_treeshrink"
+  # Output: 1_align/1.4_aligner_alifilter_treeshrink
+  # Call: realignerOutputAli  "${runfolder}/tmp_treeshrink/" "${runfolder}/1_align/1.4_aligner_alifilter_treeshrink"
   # TODO: Check if I can avoid the specific search for "output.ali" (there are other .ali files in in the input folder, but they are symlinks!)
   local inputfolder="$1"
   local outputfolder="$2"
-  echo -e "\n## ATPW [$(date "+%F %T")]: Realign using ${realigner}" 2>&1 | tee -a "${logfile}"
+  echo -e "\n## ATPW [$(date "+%F %T")]: Realign using ${realigner} ${realignerbinopts}" 2>&1 | tee -a "${logfile}"
   mkdir -p "${outputfolder}"
   find "${inputfolder}" -type f -name 'output.ali' | \
     parallel 'b=$(basename {//} .ali); '"${realigner}"' '"${realignerbinopts}"' <('"${fastagap}"' {}) | '"sed '/>/ ! s/[a-z]/\U&/g'"' > '"${outputfolder}"'/"${b/_ali/.ali}"' >> "${logfile}" 2>&1
@@ -643,21 +698,21 @@ count() {
   nf_aligner='NA' # 1.2_mafft
   ns_aligner='NA' # 1.2_mafft
   nt_aligner='NA' # 1.2_mafft
-  nf_aligner_bmge='NA' # 1.3_mafft_bmge
-  ns_aligner_bmge='NA' # 1.3_mafft_bmge
-  nt_aligner_bmge='NA' # 1.3_mafft_bmge
-  nf_aligner_bmge_treeshrink='NA' # 1.4_mafft_bmge_treeshrink
-  ns_aligner_bmge_treeshrink='NA' # 1.4_mafft_bmge_treeshrink
-  nt_aligner_bmge_treeshrink='NA' # 1.4_mafft_bmge_treeshrink
+  nf_aligner_alifilter='NA' # 1.3_mafft_bmge
+  ns_aligner_alifilter='NA' # 1.3_mafft_bmge
+  nt_aligner_alifilter='NA' # 1.3_mafft_bmge
+  nf_aligner_alifilter_treeshrink='NA' # 1.4_mafft_bmge_treeshrink
+  ns_aligner_alifilter_treeshrink='NA' # 1.4_mafft_bmge_treeshrink
+  nt_aligner_alifilter_treeshrink='NA' # 1.4_mafft_bmge_treeshrink
   nf_aligner_treeshrink='NA' # 1.3_mafft_treeshrink
   ns_aligner_treeshrink='NA' # 1.3_mafft_treeshrink
   nt_aligner_treeshrink='NA' # 1.3_mafft_treeshrink
-  nf_bmge='NA' # 1.2_bmge
-  ns_bmge='NA' # 1.2_bmge
-  nt_bmge='NA' # 1.2_bmge
-  nf_bmge_treeshrink='NA' # 1.3_bmge_treeshrink
-  ns_bmge_treeshrink='NA' # 1.3_bmge_treeshrink
-  nt_bmge_treeshrink='NA' # 1.3_bmge_treeshrink
+  nf_alifilter='NA' # 1.2_bmge
+  ns_alifilter='NA' # 1.2_bmge
+  nt_alifilter='NA' # 1.2_bmge
+  nf_alifilter_treeshrink='NA' # 1.3_bmge_treeshrink
+  ns_alifilter_treeshrink='NA' # 1.3_bmge_treeshrink
+  nt_alifilter_treeshrink='NA' # 1.3_bmge_treeshrink
   nf_treeshrink='NA' # 1.2_treeshrink
   ns_treeshrink='NA' # 1.2_treeshrink
   nt_treeshrink='NA' # 1.2_treeshrink
@@ -682,18 +737,18 @@ count() {
     nt_aligner=$(grep -h '>' "${folder}"/*.ali | sort -u | wc -l)
   fi
   # 1.3_mafft_bmge -> _aligner_bmge
-  folder="${runfolder}/1_align/1.3_${aligner}_bmge"
+  folder="${runfolder}/1_align/1.3_${aligner}_${alifilter}"
   if [ -d "${folder}" ] ; then
-    nf_aligner_bmge=$(find "${folder}" -name '*.ali' | wc -l)
-    ns_aligner_bmge=$(grep -c -h '>' "${folder}"/*.ali | awk '{sum=sum+$1}END{print sum}')
-    nt_aligner_bmge=$(grep -h '>' "${folder}"/*.ali | sort -u | wc -l)
+    nf_aligner_alifilter=$(find "${folder}" -name '*.ali' | wc -l)
+    ns_aligner_alifilter=$(grep -c -h '>' "${folder}"/*.ali | awk '{sum=sum+$1}END{print sum}')
+    nt_aligner_alifilter=$(grep -h '>' "${folder}"/*.ali | sort -u | wc -l)
   fi
   # 1.4_mafft_bmge_treeshrink -> _aligner_bmge_treeshrink
-  folder="${runfolder}/1_align/1.4_${aligner}_bmge_treeshrink"
+  folder="${runfolder}/1_align/1.4_${aligner}_${alifilter}_treeshrink"
   if [ -d "${folder}" ] ; then
-    nf_aligner_bmge_treeshrink=$(find "${folder}" -name '*.ali' | wc -l)
-    ns_aligner_bmge_treeshrink=$(grep -c -h '>' "${folder}"/*.ali | awk '{sum=sum+$1}END{print sum}')
-    nt_aligner_bmge_treeshrink=$(grep -h '>' "${folder}"/*.ali | sort -u | wc -l)
+    nf_aligner_alifilter_treeshrink=$(find "${folder}" -name '*.ali' | wc -l)
+    ns_aligner_alifilter_treeshrink=$(grep -c -h '>' "${folder}"/*.ali | awk '{sum=sum+$1}END{print sum}')
+    nt_aligner_alifilter_treeshrink=$(grep -h '>' "${folder}"/*.ali | sort -u | wc -l)
   fi
   # 1.3_mafft_treeshrink -> _aligner_treeshrink
   folder="${runfolder}/1_align/1.4_${aligner}_treeshrink"
@@ -703,18 +758,18 @@ count() {
     nt_aligner_treeshrink=$(grep -h '>' "${folder}"/*.ali | sort -u | wc -l)
   fi
   # 1.2_bmge -> _bmge
-  folder="${runfolder}/1_align/1.2_bmge"
+  folder="${runfolder}/1_align/1.2_${alifilter}"
   if [ -d "${folder}" ] ; then
-    nf_bmge=$(find "${folder}" -name '*.ali' | wc -l)
-    ns_bmge=$(grep -c -h '>' "${folder}"/*.ali | awk '{sum=sum+$1}END{print sum}')
-    nt_bmge=$(grep -h '>' "${folder}"/*.ali | sort -u | wc -l)
+    nf_alifilter=$(find "${folder}" -name '*.ali' | wc -l)
+    ns_alifilter=$(grep -c -h '>' "${folder}"/*.ali | awk '{sum=sum+$1}END{print sum}')
+    nt_alifilter=$(grep -h '>' "${folder}"/*.ali | sort -u | wc -l)
   fi
   # 1.3_bmge_treeshrink -> _bmge_treeshrink
-  folder="${runfolder}/1_align/1.3_bmge_treeshrink"
+  folder="${runfolder}/1_align/1.3_${alifilter}_treeshrink"
   if [ -d "${folder}" ] ; then
-    nf_bmge_treeshrink=$(find -L "${folder}" -name '*.ali' | wc -l)
-    ns_bmge_treeshrink=$(grep -c -h '>' "${folder}"/*.ali | awk '{sum=sum+$1}END{print sum}')
-    nt_bmge_treeshrink=$(grep -h '>' "${folder}"/*.ali | sort -u | wc -l)
+    nf_alifilter_treeshrink=$(find -L "${folder}" -name '*.ali' | wc -l)
+    ns_alifilter_treeshrink=$(grep -c -h '>' "${folder}"/*.ali | awk '{sum=sum+$1}END{print sum}')
+    nt_alifilter_treeshrink=$(grep -h '>' "${folder}"/*.ali | sort -u | wc -l)
   fi
   # 1.2_treeshrink -> _treeshrink
   folder="${runfolder}/1_align/1.2_treeshrink"
@@ -800,17 +855,17 @@ createReadme() {
   input_folder_path=$(find "${runfolder}" -type d -name '1.1_input')
   if [ "${doalign}" ] ; then
     aligner_folder_path=$(find "${runfolder}" -type d -name "1.2_${aligner}")
-    if [ "${dobmge}" ] ; then
-      aligner_bmge_folder_path=$(find "${runfolder}" -type d -name "1.3_${aligner}_bmge")
+    if [ "${doalifilter}" ] ; then
+      aligner_alifilter_folder_path=$(find "${runfolder}" -type d -name "1.3_${aligner}_${alifilter}")
       if [ "${dotreeshrink}" ] ; then
-        aligner_bmge_threeshrink_folder_path=$(find "${runfolder}" -type d -name "1.4_${aligner}_bmge_treeshrink")
+        aligner_alifilter_threeshrink_folder_path=$(find "${runfolder}" -type d -name "1.4_${aligner}_${alifilter}_treeshrink")
         if [ "${doaster}" ] ; then
-          steps="${aligner}, bmge, treeshrink, raxml-ng, ${asterbin}"
+          steps="${aligner}, ${alifilter}, treeshrink, raxml-ng, ${asterbin}"
         else
-          steps="${aligner}, bmge, treeshrink, raxml-ng"
+          steps="${aligner}, ${alifilter}, treeshrink, raxml-ng"
         fi
       else
-        steps="${aligner}, bmge, raxml-ng, astral"
+        steps="${aligner}, ${alifilter}, raxml-ng, astral"
       fi
     elif [ "${dotreeshrink}" ] ; then
       aligner_threeshrink_folder_path=$(find "${runfolder}" -type d -name "1.3_${aligner}_treeshrink")
@@ -827,20 +882,20 @@ createReadme() {
       fi
     fi
   else
-    if [ "${dobmge}" ] ; then
-      bmge_folder_path=$(find "${runfolder}" -type d -name '1.2_bmge')
+    if [ "${doalifilter}" ] ; then
+      alifilter_folder_path=$(find "${runfolder}" -type d -name "1.2_${alifilter}")
       if [ "${dotreeshrink}" ] ; then
-        bmge_threeshrink_folder_path=$(find "${runfolder}" -type d -name '1.3_bmge_treeshrink')
+        alifilter_threeshrink_folder_path=$(find "${runfolder}" -type d -name "1.3_${alifilter}_treeshrink")
         if [ "${doaster}" ] ; then
-          steps="bmge, treeshrink, raxml-ng, ${asterbin}"
+          steps="${alifilter}, treeshrink, raxml-ng, ${asterbin}"
         else
-          steps='bmge, treeshrink, raxml-ng'
+          steps="${alifilter}, treeshrink, raxml-ng"
         fi
       else
         if [ "${doaster}" ] ; then
-          steps="bmge, raxml-ng, ${asterbin}"
+          steps="${alifilter}, raxml-ng, ${asterbin}"
         else
-          steps='bmge, raxml-ng'
+          steps="${alifilter}, raxml-ng"
         fi
       fi
     else
@@ -909,16 +964,15 @@ EOF
 EOF
 
   fi
-###
   {
   echo -e "### Alignments:\n"
   echo -e "1. [\`1_align/1.1_input/*.ali\`](${input_folder_path#"$runfolder"/})"
   if [ "${doalign}" ] ; then
     echo -e "2. [\`1_align/1.2_${aligner}/*.ali\`](${aligner_folder_path#"$runfolder"/})"
-    if [ "${dobmge}" ] ; then
-      echo -e "3. [\`1_align/1.3_${aligner}_bmge/*.ali\`](${aligner_bmge_folder_path#"$runfolder"/})"
+    if [ "${doalifilter}" ] ; then
+      echo -e "3. [\`1_align/1.3_${aligner}_${alifilter}/*.ali\`](${aligner_alifilter_folder_path#"$runfolder"/})"
       if [ "${dotreeshrink}" ] ; then
-        echo -e "4. [\`1_align/1.4_${aligner}_bmge_treeshrink/*.ali\`](""${aligner_bmge_threeshrink_folder_path#"$runfolder"/}"")"
+        echo -e "4. [\`1_align/1.4_${aligner}_${alifilter}_treeshrink/*.ali\`](""${aligner_alifilter_threeshrink_folder_path#"$runfolder"/}"")"
       fi
     else
       if [ "${dotreeshrink}" ] ; then
@@ -926,10 +980,10 @@ EOF
       fi
     fi
   else
-    if [ "${dobmge}" ] ; then
-      echo -e "2. [\`1_align/1.2_bmge/*.ali\`](""${bmge_folder_path#"$runfolder"/}"")"
+    if [ "${doalifilter}" ] ; then
+      echo -e "2. [\`1_align/1.2_${alifilter}/*.ali\`](""${alifilter_folder_path#"$runfolder"/}"")"
       if [ "${dotreeshrink}" ] ; then
-        echo -e "3. [\`1_align/1.3_bmge_treeshrink/*.ali\`](""${bmge_threeshrink_folder_path#"$runfolder"/}"")"
+        echo -e "3. [\`1_align/1.3_${alifilter}_treeshrink/*.ali\`](""${alifilter_threeshrink_folder_path#"$runfolder"/}"")"
       fi
     else
       if [ "${dotreeshrink}" ] ; then
@@ -946,10 +1000,10 @@ EOF
   echo -e "| 1. | Check input | ${nf_input} | ${ns_input} | ${nt_input} |"
   if [ "${doalign}" ] ; then
     echo -e "| 2. | ${aligner} | ${nf_aligner} | ${ns_aligner} | ${nt_aligner} |"
-    if [ "${dobmge}" ] ; then
-      echo -e "| 3. | BMGE | ${nf_aligner_bmge} | ${ns_aligner_bmge} | ${nt_aligner_bmge} |"
+    if [ "${doalifilter}" ] ; then
+      echo -e "| 3. | ${alifilter} | ${nf_aligner_alifilter} | ${ns_aligner_alifilter} | ${nt_aligner_alifilter} |"
       if [ "${dotreeshrink}" ] ; then
-        echo -e "| 4. | TreeShrink | ${nf_aligner_bmge_treeshrink} | ${ns_aligner_bmge_treeshrink} | ${nt_aligner_bmge_treeshrink} |"
+        echo -e "| 4. | TreeShrink | ${nf_aligner_alifilter_treeshrink} | ${ns_aligner_alifilter_treeshrink} | ${nt_aligner_alifilter_treeshrink} |"
       fi
     else
       if [ "${dotreeshrink}" ] ; then
@@ -957,10 +1011,10 @@ EOF
       fi
     fi
   else
-    if [ "${dobmge}" ] ; then
-      echo -e "| 2. | BMGE | ${nf_bmge} | ${ns_bmge} | ${nt_bmge} |"
+    if [ "${doalifilter}" ] ; then
+      echo -e "| 2. | ${alifilter} | ${nf_alifilter} | ${ns_alifilter} | ${nt_alifilter} |"
       if [ "${dotreeshrink}" ] ; then
-        echo -e "| 3. | TreeShrink | ${nf_bmge_treeshrink} | ${ns_bmge_treeshrink} | ${nt_bmge_treeshrink} |"
+        echo -e "| 3. | TreeShrink | ${nf_alifilter_treeshrink} | ${ns_alifilter_treeshrink} | ${nt_alifilter_treeshrink} |"
       fi
     else
       if [ "${dotreeshrink}" ] ; then
@@ -969,12 +1023,10 @@ EOF
     fi
   fi
   } >> "${readme}"
-####
 }
 
 main() {
   # MAIN
-  # TODO: rewrite to avoid all hard coded paths
   # Align or not, and check alignments
   checkNtaxa "${runfolder}/1_align/1.1_input" "${mintaxfilter}" .ali
   if [ "${doalign}" ] ; then
@@ -983,16 +1035,24 @@ main() {
   else
     checkAlignments "${runfolder}/1_align/1.1_input" "${maxinvariantsites}"
   fi
-  # bmge or not
-  if [ "${dobmge}" ] ; then
+  # alifilter or not
+  if [ "${doalifilter}" ] ; then
     if [ "${doalign}" ] ; then
-      runBmge "${runfolder}/1_align/1.2_${aligner}" "${runfolder}/1_align/1.3_${aligner}_bmge"
-      checkNtaxa "${runfolder}/1_align/1.3_${aligner}_bmge" "${mintaxfilter}" .ali
-      checkAlignments "${runfolder}/1_align/1.3_${aligner}_bmge" "${maxinvariantsites}"
+      if [ "${dobmge}" ] ; then
+        runBmge "${runfolder}/1_align/1.2_${aligner}" "${runfolder}/1_align/1.3_${aligner}_${alifilter}"
+      elif [ "${dotrimal}" ] ; then
+        runTrimal "${runfolder}/1_align/1.2_${aligner}" "${runfolder}/1_align/1.3_${aligner}_${alifilter}"
+      fi
+      checkNtaxa "${runfolder}/1_align/1.3_${aligner}_${alifilter}" "${mintaxfilter}" .ali
+      checkAlignments "${runfolder}/1_align/1.3_${aligner}_${alifilter}" "${maxinvariantsites}"
     else
-      runBmge "${runfolder}/1_align/1.1_input" "${runfolder}/1_align/1.2_bmge"
-      checkNtaxa "${runfolder}/1_align/1.2_bmge" "${mintaxfilter}" .ali
-      checkAlignments "${runfolder}/1_align/1.2_bmge" "${maxinvariantsites}"
+      if [ "${dobmge}" ] ; then
+        runBmge "${runfolder}/1_align/1.1_input" "${runfolder}/1_align/1.2_${alifilter}"
+      elif [ "${dotrimal}" ] ; then
+        runTrimal "${runfolder}/1_align/1.1_input" "${runfolder}/1_align/1.2_${alifilter}"
+      fi
+      checkNtaxa "${runfolder}/1_align/1.2_${alifilter}" "${mintaxfilter}" .ali
+      checkAlignments "${runfolder}/1_align/1.2_${alifilter}" "${maxinvariantsites}"
     fi
   fi
   # treeshrink or not
@@ -1000,28 +1060,28 @@ main() {
     mkdir -p "${runfolder}/tmp_treeshrink"
     # pargenes, fixed model
     if [ "${doalign}" ] ; then
-      if [ "${dobmge}" ] ; then
-        pargenesFixedModel "${runfolder}/1_align/1.3_${aligner}_bmge" "${runfolder}/2_trees/2.1_${aligner}_bmge_pargenes"
+      if [ "${doalifilter}" ] ; then
+        pargenesFixedModel "${runfolder}/1_align/1.3_${aligner}_${alifilter}" "${runfolder}/2_trees/2.1_${aligner}_${alifilter}_pargenes"
       else
         pargenesFixedModel "${runfolder}/1_align/1.2_${aligner}" "${runfolder}/2_trees/2.1_${aligner}_pargenes"
       fi
     else
-      if [ "${dobmge}" ] ; then
-        pargenesFixedModel "${runfolder}/1_align/1.2_bmge" "${runfolder}/2_trees/2.1_bmge_pargenes"
+      if [ "${doalifilter}" ] ; then
+        pargenesFixedModel "${runfolder}/1_align/1.2_${alifilter}" "${runfolder}/2_trees/2.1_${alifilter}_pargenes"
       else
         pargenesFixedModel "${runfolder}/1_align/1.1_input" "${runfolder}/2_trees/2.1_pargenes"
       fi
     fi
     # setup treeshrink
     if [ "${doalign}" ] ; then
-      if [ "${dobmge}" ] ; then
-        setupTreeshrink "${runfolder}/2_trees/2.1_${aligner}_bmge_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.3_${aligner}_bmge" "${runfolder}/tmp_treeshrink"
+      if [ "${doalifilter}" ] ; then
+        setupTreeshrink "${runfolder}/2_trees/2.1_${aligner}_${alifilter}_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.3_${aligner}_${alifilter}" "${runfolder}/tmp_treeshrink"
       else
         setupTreeshrink "${runfolder}/2_trees/2.1_${aligner}_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.2_${aligner}" "${runfolder}/tmp_treeshrink"
       fi
     else
-      if [ "${dobmge}" ] ; then
-        setupTreeshrink "${runfolder}/2_trees/2.1_bmge_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.2_bmge" "${runfolder}/tmp_treeshrink"
+      if [ "${doalifilter}" ] ; then
+        setupTreeshrink "${runfolder}/2_trees/2.1_${alifilter}_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.2_${alifilter}" "${runfolder}/tmp_treeshrink"
       else
         setupTreeshrink "${runfolder}/2_trees/2.1_pargenes/mlsearch_run/results" "${runfolder}/1_align/1.1_input" "${runfolder}/tmp_treeshrink"
       fi
@@ -1031,17 +1091,17 @@ main() {
     checkNtaxaOutputAli "${runfolder}/tmp_treeshrink" "${mintaxfilter}"
     # realign
     if [ "${doalign}" ] ; then
-      if [ "${dobmge}" ] ; then
-        realignerOutputAli "${runfolder}/tmp_treeshrink/" "${runfolder}/1_align/1.4_${aligner}_bmge_treeshrink"
-        checkAlignments "${runfolder}/1_align/1.4_${aligner}_bmge_treeshrink" "${maxinvariantsites}"
+      if [ "${doalifilter}" ] ; then
+        realignerOutputAli "${runfolder}/tmp_treeshrink/" "${runfolder}/1_align/1.4_${aligner}_${alifilter}_treeshrink"
+        checkAlignments "${runfolder}/1_align/1.4_${aligner}_${alifilter}_treeshrink" "${maxinvariantsites}"
       else
         realignerOutputAli "${runfolder}/tmp_treeshrink/" "${runfolder}/1_align/1.3_${aligner}_treeshrink"
         checkAlignments "${runfolder}/1_align/1.3_${aligner}_treeshrink" "${maxinvariantsites}"
       fi
     else
-      if [ "${dobmge}" ] ; then
-        realignerOutputAli "${runfolder}/tmp_treeshrink/" "${runfolder}/1_align/1.3_bmge_treeshrink"
-        checkAlignments "${runfolder}/1_align/1.3_bmge_treeshrink" "${maxinvariantsites}"
+      if [ "${doalifilter}" ] ; then
+        realignerOutputAli "${runfolder}/tmp_treeshrink/" "${runfolder}/1_align/1.3_${alifilter}_treeshrink"
+        checkAlignments "${runfolder}/1_align/1.3_${alifilter}_treeshrink" "${maxinvariantsites}"
       else
         realignerOutputAli "${runfolder}/tmp_treeshrink/" "${runfolder}/1_align/1.2_treeshrink"
         checkAlignments "${runfolder}/1_align/1.2_treeshrink" "${maxinvariantsites}"
@@ -1051,28 +1111,28 @@ main() {
   # pargenes, modeltest, (astral)
   if [ "${dotreeshrink}" ]; then
     if [ "${doalign}" ] ; then
-      if [ "${dobmge}" ] ; then
-        pargenesModeltestAstral "${runfolder}/1_align/1.4_${aligner}_bmge_treeshrink" "${runfolder}/2_trees/2.2_${aligner}_bmge_treeshrink_pargenes" "${asterbin}"
+      if [ "${doalifilter}" ] ; then
+        pargenesModeltestAstral "${runfolder}/1_align/1.4_${aligner}_${alifilter}_treeshrink" "${runfolder}/2_trees/2.2_${aligner}_${alifilter}_treeshrink_pargenes" "${asterbin}"
       else
         pargenesModeltestAstral "${runfolder}/1_align/1.3_${aligner}_treeshrink" "${runfolder}/2_trees/2.2_${aligner}_treeshrink_pargenes" "${asterbin}"
       fi
     else
-      if [ "${dobmge}" ] ; then
-        pargenesModeltestAstral "${runfolder}/1_align/1.3_bmge_treeshrink" "${runfolder}/2_trees/2.2_bmge_treeshrink_pargenes" "${asterbin}"
+      if [ "${doalifilter}" ] ; then
+        pargenesModeltestAstral "${runfolder}/1_align/1.3_${alifilter}_treeshrink" "${runfolder}/2_trees/2.2_${alifilter}_treeshrink_pargenes" "${asterbin}"
       else
         pargenesModeltestAstral "${runfolder}/1_align/1.2_treeshrink" "${runfolder}/2_trees/2.2_treeshrink_pargenes" "${asterbin}"
       fi
     fi
   else
     if [ "${doalign}" ] ; then
-      if [ "${dobmge}" ] ; then
-        pargenesModeltestAstral "${runfolder}/1_align/1.3_${aligner}_bmge" "${runfolder}/2_trees/2.1_${aligner}_bmge_pargenes" "${asterbin}"
+      if [ "${doalifilter}" ] ; then
+        pargenesModeltestAstral "${runfolder}/1_align/1.3_${aligner}_${alifilter}" "${runfolder}/2_trees/2.1_${aligner}_${alifilter}_pargenes" "${asterbin}"
       else
         pargenesModeltestAstral "${runfolder}/1_align/1.2_${aligner}" "${runfolder}/2_trees/2.1_${aligner}_pargenes" "${asterbin}"
       fi
     else
-      if [ "${dobmge}" ] ; then
-        pargenesModeltestAstral "${runfolder}/1_align/1.2_bmge" "${runfolder}/2_trees/2.1_bmge_pargenes" "${asterbin}"
+      if [ "${doalifilter}" ] ; then
+        pargenesModeltestAstral "${runfolder}/1_align/1.2_${alifilter}" "${runfolder}/2_trees/2.1_${alifilter}_pargenes" "${asterbin}"
       else
         pargenesModeltestAstral "${runfolder}/1_align/1.1_input" "${runfolder}/2_trees/2.1_pargenes" "${asterbin}"
       fi

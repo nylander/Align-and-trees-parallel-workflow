@@ -1,4 +1,4 @@
-#!/bin/bash -l
+#!/usr/bin/bash -l
 #SBATCH -t 0:30:00
 #SBATCH -A naiss2023-22-913
 #SBATCH -p core
