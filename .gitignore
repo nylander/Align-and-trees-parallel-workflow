@@ -11,3 +11,11 @@ ParGenes/
 MACSE/
 mydocs/
 test_out_remove_me_if_you_see_me/
+test_out/
+trimal/
+conda/
+data.dot.names/
+fastagap/
+check-install.sh
+Makefile
+Makefile.for_dependencies
