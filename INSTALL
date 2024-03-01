@@ -1,6 +1,6 @@
 # INSTALL Align-and-trees-workflow
 
-- Last modified: mån feb 19, 2024  10:16
+- Last modified: fre mar 01, 2024  07:48
 - Sign: JN
 
 The workflow have been tested on Ubuntu Linux 20.04 and 22.04.
@@ -25,7 +25,7 @@ Python (python v3.10). See also note on requirments for TreeShrink below:
 
 BMGE (v1.12):
 
-Get from <http://ftp.pasteur.fr/pub/gensoft/projects/BMGE/>
+Extract the BMGE.jar from the compressed archives from <http://ftp.pasteur.fr/pub/gensoft/projects/BMGE/>
 
 GNU parallel (v20161222):
 
@@ -40,7 +40,7 @@ ParGenes (v1.2.0):
 RAxML-NG (v1.1.0):
 
     $ wget https://github.com/amkozlov/raxml-ng/releases/download/1.1.0/raxml-ng_v1.1.0_linux_x86_64.zip
-    (and unzip, rename to raxml-ng and put in your `~/bin` folder)
+    (and unzip, rename to raxml-ng and copy `raxml-ng` to your path)
 
 TreeShrink (v1.3.9):
 
@@ -54,6 +54,13 @@ details and alternatives.
     $ sed -i '/import collections/a from collections.abc import MutableMapping' dendropy/utility/container.py
     $ sed -i 's/class CaseInsensitiveDict(collections.MutableMapping):/class CaseInsensitiveDict(collections.abc.MutableMapping):/' dendropy/utility/container.py
     $ python setup.py install --user
+
+TrimAl (v1.4.rev22)
+
+    $ git clone https://github.com/inab/trimal.git
+    $ cd trimal/source
+    $ make
+    (and copy `trimal` to your path)
 
 fastagap.pl (v1.0):
 
