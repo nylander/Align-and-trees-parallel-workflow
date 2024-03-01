@@ -1,6 +1,6 @@
 #!/bin/bash -l
 
-# Last modified: fre mar 01, 2024  06:59
+# Last modified: fre mar 01, 2024  07:20
 # Sign: JN
 
 set -uo pipefail
@@ -90,18 +90,19 @@ Options:
     -f number -- Minimum number of taxa when filtering alignments. Default: ${mintaxfilter}
     -s prog   -- Specify ASTRAL/ASTER program: astral.jar, astral, astral-pro, or astral-hybrid. Default: ${asterbin}
     -l prog   -- Specify alignment filter software: bmge or trimal. Default: ${alifilter}
-    -b opts   -- Specify options for alignment-filter program. Multiple options needs to be quoted. Default: "program defaults"
+    -b opts   -- Specify options for alignment-filter program. Multiple options needs to be quoted. Default: program defaults
     -t opts   -- Specify options for TreeShrink. Multiple options needs to be quoted. Default: ${treeshrinkoptions:-"program defaults"}
-    -a opts   -- Specify options for ${aligner}. Multiple options needs to be quoted. Default:${alignerbinopts}
-    -A        -- Do not run ${aligner} (assume aligned input)
+    -a opts   -- Specify options for aligner (default ${aligner}. Multiple options needs to be quoted. Default (for ${aligner}): ${alignerbinopts}
+    -A        -- Do not run aligner (assume aligned input)
     -B        -- Do not run alignment-filter program
     -T        -- Do not run TreeShrink
-    -S        -- Do not run ASTER/ASTRAL
+    -S        -- Do not run ASTER/ASTRAL (no species-tree estimation)
     -v        -- Print version
     -h        -- Print help message
 
 Examples:
     $(basename "$0") -d nt -n 8 data out
+    $(basename "$0") -d nt -A -i 100 aligned-data out
 
 Input:
     Folder with fasta formatted sequence files.
