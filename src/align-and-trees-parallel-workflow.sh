@@ -1,50 +1,62 @@
 #!/bin/bash -l
 
-# Last modified: tor feb 29, 2024  11:40
+# Last modified: fre mar 01, 2024  04:09
 # Sign: JN
 
 set -uo pipefail
 
-# Default settings
+# Default paths to software
 BMGEJAR="${BMGEJAR:-${HOME}/Documents/GIT/Align-and-trees-parallel-workflow/BMGE-1.12/BMGE.jar}" # <<<<<<<<<< CHANGE HERE
 PARGENES="${PARGENES:-${HOME}/Documents/GIT/Align-and-trees-parallel-workflow/ParGenes/pargenes/pargenes.py}" # <<<<<<<<<< CHANGE HERE
 TREESHRINK="${TREESHRINK:-${HOME}/Documents/GIT/Align-and-trees-parallel-workflow/TreeShrink/run_treeshrink.py}" # <<<<<<<<<< CHANGE HERE
 TRIMAL="${TRIMAL:-${HOME}/Documents/GIT/Align-and-trees-parallel-workflow/trimal/source/trimal}" # <<<<<<<<<< CHANGE HERE
-#MACSE="${MACSE:-${HOME}/Documents/GIT/Align-and-trees-parallel-workflow//MACSE/omm_macse_v10.02.sif}" # <<<<<<<<<< CHANGE HERE
+fastagap='fastagap.pl'  # Assumed to be in the path
+
+# Varia
 version="0.9.4"
-logfile=
-modeltestcriterion="BIC"
-datatype='nt'
-mintaxfilter=4
-alifilter='bmge' # or "trimal"
-alifilteroptions=
-trimaloptions='-automated1'
-bmgeoptions=    # Consider changing default to '-h 0.7' (cf. Rokas' ClipKIT program)
-treeshrinkoptions=
-maxinvariantsites=100.00 # percent
-bootstrapreps=0
 nprocs=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null)
-ncores="${nprocs}"       # TODO: Do we need to adjust?
-modeltestperjobcores='4' # TODO: Adjust? This value needs to be at least 4!
-threadsforaligner='2'    # TODO: Adjust?
-#threadsforrealigner='2' # TODO: Adjust?
-aligner='mafft' # Name of aligner, not path to binary
-alignerbin='mafft'
+ncores="${nprocs}"  # TODO: Do we need to adjust?
+logfile=
+datatype='nt'
+
+# Aligner
+aligner='mafft'  # Name of aligner, not path to binary
+alignerbin='mafft'  # Assumed to be in path
+threadsforaligner='2'  # TODO: Adjust?
 alignerbinopts="--auto --thread ${threadsforaligner} --quiet"
-#aligner="macse"
-#alignerbin="/home/nylander/jb/johaberg-all/src/omm_macse_v10.02.sif"
-#alignerbinopts="-java_mem 2000m"
-realigner='mafft' # Name of realigner, not path to binary
+
+# Realigner
+realigner='mafft'  # Name of realigner, not path to binary
 realignerbinopts="${alignerbinopts}"
-raxmlng='raxml-ng'
-fastagap='fastagap.pl'
-asterbin='astral' # Name of prog, not path to binary
-modelforraxmltest='GTR'
-modelforraxmltestAA='LG'
+#threadsforrealigner='2' # TODO: Adjust?
+
+# Alignment filter
+alifilter='bmge'  # or "trimal"
+alifilteroptions=
+bmgeoptions=  # Consider changing default to '-h 0.7' (cf. Rokas' ClipKIT program)
 datatypeforbmge='DNA'
 datatypeforbmgeAA='AA'
+trimaloptions='-automated1'
+
+# Fasta filter
+maxinvariantsites=100.00  # percent
+mintaxfilter=4  # Min nr of seqs for keeping file
+
+# Treeshrink
+treeshrinkoptions=
+
+# ParGenes
+raxmlng='raxml-ng'
+bootstrapreps=0
 modelforpargenesfixed='GTR+G8+F'
 modelforpargenesfixedAA='LG+G8+F'
+modelforraxmltest='GTR'
+modelforraxmltestAA='LG'
+modeltestcriterion="BIC"
+modeltestperjobcores='4'  # TODO: Adjust? This value needs to be at least 4!
+
+# Aster
+asterbin='astral'  # Name of prog, not path to binary
 
 # Usage
 function usage {
@@ -211,7 +223,7 @@ else
   export logfile
   start=$(date "+%F %T")
   export start
-  echo -e "\n## ATPW [$start]: Start ATPW" 2>&1 | tee "${logfile}"
+  echo -e "\n## ATPW [$start]: Start ATPW v${version}" 2>&1 | tee "${logfile}"
   echo -e "\n## ATPW [$(date "+%F %T")]: Created output folder ${runfolder}" 2>&1 | tee -a "${logfile}"
   echo -e "\n## ATPW [$(date "+%F %T")]: Created logfile ${logfile}" 2>&1 | tee -a "${logfile}"
 fi
@@ -370,44 +382,6 @@ align() {
   find "${inputfolder}" -type f -name '*.ali' | \
     parallel ''"${alignerbin}"' '"${alignerbinopts}"' {} | '"sed '/>/ ! s/[a-z]/\U&/g'"' > '"${outputfolder}"'/{/.}.ali' >> "${logfile}" 2>&1
 }
-
-# runMacse() {
-#   # Run MACSE alignments
-#   # Input: ${input}/*.fas
-#   # Output: 1_align/1.2_macse
-#   # Call: runMacse "${input}" "${runfolder}/1_align/1.2_macse"
-#   # Note: use ${aligner} instead of 'macse', and
-#   # ${alignerbinopts} instead of "--java_mem 2000m"
-#   # TODO: Figure out how to use together with collectMacse. Perhaps fuse?
-#   inputfolder="$1"
-#   runPara() {
-#     f="$1"
-#     g=$(basename "${f}" .fas)
-#     "${MACSE}" \
-#       --in_seq_file "${f}" \
-#       --out_dir "${g}" \
-#       --out_file_prefix "${g}" \
-#       --java_mem 2000m
-#     }
-#   find "${inputfolder}" -type f -name '*.fas' | \
-#     parallel runPara {} >> "${logfile}" 2>&1
-# }
-# export -f runMacse
-
-# collectMacse() {
-#   # Collect MACSE alignments into one file
-#   # Input: resulting folder from runMacse
-#   # Output: one alignment folder in "${runfolder}/1_align/1.2_macse"
-#   # Call: collectMacse inputfolder outputfolder
-#   # TODO: Figure out how to use together with runMacse. Perhaps fuse?
-#     #mkdir -p /home/nylander/jb/johaberg-all/run/aa-baits-macse-trees/ali
-#     #for f in $(find /home/nylander/jb/johaberg-all/data/mckenna-vasili-20-vasili-19-vasili-21-miller-ngi/AA/pmacse-translated-combined -name '*_final_align_AA.aln') ; do
-#     #  g=$(basename "${f}" _final_align_AA.aln)
-#     #  cp "${f}" /home/nylander/jb/johaberg-all/run/aa-baits-macse-trees/ali/"${g}".ali
-#     #done
-#   echo "Not implemented"
-# }
-# export -f collectMacse
 
 checkAlignments() {
   # Check alignments with raxml-ng
