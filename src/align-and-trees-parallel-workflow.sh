@@ -1,6 +1,6 @@
 #!/bin/bash -l
 
-# Last modified: fre mar 01, 2024  04:09
+# Last modified: fre mar 01, 2024  06:59
 # Sign: JN
 
 set -uo pipefail
@@ -355,6 +355,88 @@ export aligner
 export realigner
 
 # Functions
+getVersions() {
+  ## Get software versions
+  # Use: declare -A dict="$(getVersions)"; "${dict[$key]}"
+  ## Note: current modeltest-ng version (from pargenes) is "x.y.z"!
+  local rp
+  rp=$(realpath "${PARGENES}")
+  local pb
+  pb=$(dirname "${rp}")
+  local pbins
+  pbins="${pb}/pargenes_binaries"
+  declare -A dict=(
+    ['treeshrink']=$("${TREESHRINK}" --version | sed 's/^/v/')
+    ['bmge']=$(java -jar "${BMGEJAR}" -? | sed -n 's/.*(version \([0-9\.]*\).*/v\1/p')
+    ['mafft']=$(mafft --version  2>&1 | awk '{print $1}')
+    ['parallel']=$(parallel --version | head -1 | awk '{print "v"$NF}')
+    ['fastagap']=$("${fastagap}" -v | sed 's/^/v/')
+    ['trimal']=$("${TRIMAL}" --version | awk '{print $2}')
+    ['pargenes']=$("${PARGENES}" --version | sed 's/.*ParGenes (v\([0-9\.]*\).*/v\1/')
+    ['raxml-ng']=$("${pbins}"/raxml-ng -v | grep '^RAxML-NG v.' | awk '{print "v"$3}')
+    ['astral.jar']=$(java -jar "${pbins}"/astral.jar --help 2>&1 | grep 'This is ASTRAL version' | awk '{print "v"$NF}')
+    ['astral']=$("${pbins}"/astral -v 2>&1 | awk '$1 == "Version:"{print $2}')
+    ['astral-pro']=$("${pbins}"/astral-pro -v 2>&1 | awk '$1 == "Version:"{print $2}')
+    ['astral-hybrid']=$("${pbins}"/astral-hybrid -v 2>&1 | awk '$1 == "Version:"{print $2}')
+    ['modeltest-ng']=$("${pbins}"/modeltest-ng --version | awk '$1 ~ /^modeltest/{print "v"$2;exit}')
+  )
+  echo '('
+  for key in  "${!dict[@]}" ; do
+    echo "['$key']='${dict[$key]}'"
+  done
+  echo ')'
+}
+#declare -A versions_dict="$(getVersions)"
+
+getCitations() {
+  ## Get software versions
+  # Use: declare -A dict="$(getCitations)"; "${dict[$key]}"
+  local rp
+  rp=$(realpath "${PARGENES}")
+  local pb
+  pb=$(dirname "${rp}")
+  local pbins
+  pbins="${pb}/pargenes_binaries"
+  declare -A dict=(
+    ['treeshrink']='[Mai & Mirarab. 2018. BMC Genomics 19:272](https://doi.org/10.1186/s12864-018-4620-2)'
+    ['bmge']='[Criscuolo & Gribaldo. 2010. BMC Evolutionary Biology 10:210](https://doi.org/10.1186/1471-2148-10-210)'
+    ['mafft']='[Katoh & Standley. 2013. (MBE 30:772-780)](https://doi.org/10.1093/molbev/mst010)'
+    ['parallel']='[Tange. 2018. GNU Parallel 2018, March 2018](https://doi.org/10.5281/zenodo.1146014)'
+    ['fastagap']='[Nylander, 2019. Software published by the author.](https://github.com/nylander/fastagap)'
+    ['trimal']='[Capella-Gutierrez et al. 2009. Bioinformatics 25:1972-1973](https://10.1093/bioinformatics/btp348)'
+    ['pargenes']='[Morel et al. 2018. Bioinformatics 35:1771-1773](https://doi.org/10.1093/bioinformatics/bty839)'
+    ['raxml-ng']='[Kozlov et al. 2019. Bioinformatics 35:4453-4455](https://doi.org/10.1093/bioinformatics/btz305)'
+    ['astral.jar']='[Zhang et al. 2018. BMC Bioinformatics 19:153](https://doi.org/10.1186/s12859-018-2129-y)'
+    ['astral']='[Zhang & Mirarab. 2022. MBE 39:msac215, ](https://doi.org/10.1093/molbev/msac215)'
+    ['astral-pro']='Zhang & Mirarab. 2022. Bioinformatics 38:4949-4950](https://doi.org/10.1093/bioinformatics/btac620)'
+    ['astral-hybrid']='[Zhang & Mirarab. 2022. MBE 39:msac215, ](https://doi.org/10.1093/molbev/msac215)'
+    ['modeltest-ng']='[Darriba et al. 2020. MBE 37:291–294](https://doi.org/10.1093/molbev/msz189)'
+  )
+  echo '('
+  for key in  "${!dict[@]}" ; do
+    echo "['$key']='${dict[$key]}'"
+  done
+  echo ')'
+}
+
+printVersions() {
+  # Print program versions as a mardown table
+  # TODO: add reference as an additional column
+  local steps="$1"
+  declare -A v_dict="$(getVersions)"
+  echo ""
+  echo -e "## Software versions"
+  echo -e "| tool | version |"
+  echo -e "| --- | --- |"
+  for prog in ${steps//,/} ; do
+    echo -e "| $prog | ${v_dict[$prog]} |"
+  done
+  for prog in modeltest-ng pargenes fastagap parallel ; do
+    echo -e "| $prog | ${v_dict[$prog]} |"
+  done
+}
+export -f printVersions
+
 checkNtaxaInFasta() {
   # Function for checking and removing fasta files with less than N taxa
   # If other max N, use, e.g., "parallel checkNtaxaInFasta {} 10"
@@ -811,12 +893,12 @@ cleanUp() {
  cd .. || exit
 }
 
+
 createReadme() {
   # Print README.md
   # Input:
   # Output: README.md
   # Call: createReadme
-  # TODO: rewrite to avoid hardcoding
   echo -e "\n## ATPW [$(date "+%F %T")]: Create summary README.md file" | tee -a "${logfile}"
   readme="${runfolder}/README.md"
   outputfolder=$(basename "${runfolder}")
@@ -996,6 +1078,7 @@ EOF
       fi
     fi
   fi
+  printVersions "${steps}"
   } >> "${readme}"
 }
 
