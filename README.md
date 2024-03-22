@@ -78,12 +78,12 @@ down stream analyses. See [example data](data).
 
 The sequences in the input files are assumed to be unaligned, and where the
 first step in the workflow is to attempt to do multiple-sequence alignment.  If
-the input files are already aligned, the workflow needs to be started with the
+the input files are already aligned, the workflow can be started with the
 `-A` option.
 
 ## Output
 
-From a default run (mafft, bmge, threeshrink, mafft, modeltest-ng, raxml-ng,
+From a default run (mafft + bmge + threeshrink + mafft + modeltest-ng + raxml-ng +
 astral)
 
 - Alignments in `outputfolder/1_align/`
