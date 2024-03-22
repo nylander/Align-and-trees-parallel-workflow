@@ -1,12 +1,14 @@
 # ATPW - Align-and-Trees-Parallel-Workflow
 
-- Last modified: fre mar 01, 2024  07:33
+- Last modified: fre mar 22, 2024  01:33
 - Sign: Johan.Nylander\@nrm.se
 
 ## Description
 
 Script for running a "standard" phylogenetic workflow on fasta-formatted input.
 In particular, parallel execution is done whenever possible.
+
+![Workflow](img/workflow.png)
 
 The default steps on unfiltered and unaligned fasta files as input (see [Input
 data](#input-data)) are:
