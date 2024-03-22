@@ -1,6 +1,6 @@
 # ATPW - Align-and-Trees-Parallel-Workflow
 
-- Last modified: fre mar 22, 2024  01:33
+- Last modified: fre mar 22, 2024  01:37
 - Sign: Johan.Nylander\@nrm.se
 
 ## Description
@@ -120,3 +120,8 @@ singularity file. See the [README](singularity/README.md) for details.
   file, or editing the TreeShrink code (see
   <https://github.com/nylander/Align-and-trees-parallel-workflow/issues/2>),
   are two alternatives.
+
+## Acknowledgements
+
+Workflow image drawn by Alice Kastor.
+
