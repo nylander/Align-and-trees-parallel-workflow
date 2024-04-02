@@ -1,6 +1,6 @@
 #!/bin/bash -l
 
-# Last modified: fre mar 01, 2024  07:20
+# Last modified: tis apr 02, 2024  07:26
 # Sign: JN
 
 set -uo pipefail
@@ -91,13 +91,14 @@ Options:
     -s prog   -- Specify ASTRAL/ASTER program: astral.jar, astral, astral-pro, or astral-hybrid. Default: ${asterbin}
     -l prog   -- Specify alignment filter software: bmge or trimal. Default: ${alifilter}
     -b opts   -- Specify options for alignment-filter program. Multiple options needs to be quoted. Default: program defaults
-    -t opts   -- Specify options for TreeShrink. Multiple options needs to be quoted. Default: ${treeshrinkoptions:-"program defaults"}
+    -t opts   -- Specify options for TreeShrink. Multiple options needs to be quoted. Default: ${treeshrinkoptions:-"program defaults"}.
     -a opts   -- Specify options for aligner (default ${aligner}. Multiple options needs to be quoted. Default (for ${aligner}): ${alignerbinopts}
     -A        -- Do not run aligner (assume aligned input)
     -B        -- Do not run alignment-filter program
     -T        -- Do not run TreeShrink
     -S        -- Do not run ASTER/ASTRAL (no species-tree estimation)
-    -v        -- Print version
+    -v        -- Print version. See output of -c for other software versions
+    -c        -- Print citations and software versions
     -h        -- Print help message
 
 Examples:
@@ -125,6 +126,160 @@ End_Of_Usage
 
 }
 
+function citations {
+  # Print software version with citation
+  declare -A version_dict="$(getVersions)"
+  declare -A citation_dict="$(getCitations)"
+  for key in  "${!version_dict[@]}" ; do
+    echo "- $key ${version_dict[$key]} ${citation_dict[$key]}"
+  done
+}
+
+#function citations {
+#  local rp
+#  rp=$(realpath "${PARGENES}")
+#  local pb
+#  pb=$(dirname "${rp}")
+#  local pbins
+#  pbins="${pb}/pargenes_binaries"
+#  declare -A Versions=(
+#    ['atpw']=$($0 -v)
+#    ['astral']=$("${pbins}"/astral-hybrid 2>&1 | grep -m 1 'Version' | awk '{print $2}' | sed 's/^v//')
+#    ['astral-hybrid']=$("${pbins}"/astral-hybrid 2>&1 | grep -m 1 'Version' | awk '{print $2}' | sed 's/^v//')
+#    ['astral-pro']=$("${pbins}"/astral-pro 2>&1 | grep -m 1 'Version' | awk '{print $2}' | sed 's/^v//')
+#    ['astral.jar']=$(java -jar "${pbins}"/astral.jar --help 2>&1 | grep -m 1 'This is ASTRAL version' | awk '{print $NF}')
+#    ['bmge']=$(java -jar "${BMGEJAR}" -? 2>&1 | grep 'BMGE (version' | sed 's/)//' | awk '{print $3}')
+#    ['fastagap']=$("${fastagap}" --version)
+#    ['mafft']=$("${alignerbin}" --version 2>&1 | awk '{print $1}' | sed 's/^v//')
+#    ['modeltest-ng']=$("${pbins}"/modeltest-ng --version 2>&1 | grep -m 1 '^modeltest' | awk '{print $2}')
+#    ['parallel']=$(parallel --version 2>&1 | head -1 | awk '{print $3}')
+#    ['pargenes']=$("${PARGENES}" --version 2>&1 | awk '{print $2}' | sed 's/[(|)|v]//g')
+#    ['raxml-ng']=$("${raxmlng}" 2>&1 | grep 'RAxML-NG' | awk '{print $3}')
+#    ['treeshrink']=$("${TREESHRINK}" --version)
+#    ['trimal']=$("${TRIMAL}" --version 2>&1 | grep . | awk '{print $2}' | sed 's/^v//')
+#  )
+#
+#cat << End_Of_Citations
+#- [ATPW v. ${Versions[atpw]}](https://github.com/nylander/Align-and-trees-parallel-workflow)
+#  Nylander, J. A. A. 2022. ATPW - Align and trees parallel workflow. Program
+#  distributed by the author.
+#  <https://github.com/nylander/Align-and-trees-parallel-workflow>
+#- [astral v. ${Versions[astral]}](https://github.com/chaoszhang/ASTER) Zhang, C., and S. Mirarab. 2022.
+#  Weighting by Gene Tree Uncertainty Improves Accuracy of Quartet-based Species
+#  Trees. Mol. Biol. Evol. 39:msac215. <https://doi.org/10.1093/molbev/msac215>
+#- [astral-pro v. ${Versions[astral-pro]}](https://github.com/chaoszhang/ASTER) Zhang, C., and S. Mirarab. 2022.
+#  Weighting by Gene Tree Uncertainty Improves Accuracy of Quartet-based Species
+#  Trees. Mol. Biol. Evol. 39:msac215. <https://doi.org/10.1093/molbev/msac215>
+#- [astral-hybrid v. ${Versions[astral-hybrid]}](https://github.com/chaoszhang/ASTER) Zhang, C., and S. Mirarab. 2022.
+#  Weighting by Gene Tree Uncertainty Improves Accuracy of Quartet-based Species
+#  Trees. Mol. Biol. Evol. 39:msac215. <https://doi.org/10.1093/molbev/msac215>
+#- [astral.jar v. ${Versions[astral.jar]}](https://github.com/smirarab/ASTRAL) Zhang, C., M. Rabiee, E.
+#  Sayyari, and S. Mirarab. 2018. ASTRAL-III: Polynomial Time Species Tree
+#  Reconstruction from Partially Resolved Gene Trees. BMC Bioinformatics
+#  19(S6):153. <https://doi.org/10.1186/s12859-018-2129-y>
+#- [BMGE v. ${Versions[bmge]}](http://ftp.pasteur.fr/pub/gensoft/projects/BMGE/) Criscuolo, A. and S.
+#  Gribaldo. 2010. BMGE (Block Mapping and Gathering with Entropy): a new
+#  software for selection of phylogenetic informative regions from multiple
+#  sequence alignments. BMC Evol. Biol. 10:210.
+#  <https://doi.org/10.1186/1471-2148-10-210>
+#- [fastagap v. ${Versions[fastagap]}](https://github.com/nylander/fastagap) Nylander, J. A. A. 2019.
+#  FastaGap. Software distributed by the author.
+#  <https://github.com/nylander/fastagap>
+#- [GNU parallel v. ${Versions[parallel]}](https://www.gnu.org/software/parallel) Tange, O. 2021. GNU
+#  Parallel 20210822 ('Kabul'). Zenodo. <https://doi.org/10.5281/zenodo.5233953>
+#- [MAFFT v. ${Versions[mafft]}](https://mafft.cbrc.jp/alignment/software/) Katoh, K. and D. M.
+#  Standley. 2013. MAFFT Multiple Sequence Alignment Software Version 7:
+#  Improvements in Performance and Usability. Mol. Biol. Evol. 30:772-780.
+#  <https://doi.org/10.1093/molbev/mst010>
+#- [ModelTest-NG v. ${Versions[modeltest-ng]}](https://github.com/ddarriba/modeltest) Darriba, D., D. Posada,
+#  A. M. Kozlov, A. Stamatakis, B. Morel, and T. Flouri. 2020. ModelTest-NG: a
+#  new and scalable tool for DNA and protein model selection. Mol. Biol. Evol.
+#  37:291-294. <https://doi.org/10.1093/molbev/msz189>
+#- [ParGenes v. ${Versions[pargenes]}](https://github.com/BenoitMorel/ParGenes) Benoit Morel, B., A. M.
+#  Kozlov, and A. Stamatakis. 2018. ParGenes: a tool for massively parallel
+#  model selection and phylogenetic tree inference on thousands of genes.
+#  Bioinformatics 35:1771-1773. <https://doi.org/10.1093/bioinformatics/bty839>
+#- [RaxML-NG v. ${Versions[raxml-ng]}](https://github.com/amkozlov/raxml-ng) Kozlov, A. M., D. Darriba,
+#  T. Flouri, B. Morel, and A. Stamatakis. 2019. RAxML-NG: A fast, scalable, and
+#  user-friendly tool for maximum likelihood phylogenetic inference.
+#  Bioinformatics 35:4453-4455. <https://doi.org/10.1093/bioinformatics/btz305>
+#- [TreeShrink v. ${Versions[treeshrink]}](https://github.com/uym2/TreeShrink) Mai, U., and S. Mirarab.
+#  2018. TreeShrink: Fast and Accurate Detection of Outlier Long Branches in
+#  Collections of Phylogenetic Trees. BMC Genomics 19(S5):272.
+#  <https://doi.org/10.1186/s12864-018-4620-2>
+#- [TrimAL v. ${Versions[trimal]}](https://github.com/inab/trimal) Capella-Gutierrez, S., J. M.
+#  Silla-Martinez, and T. Gabaldon. 2009. trimAl: a tool for automated alignment
+#  trimming in large-scale phylogenetic analyses. Bioinformatics 25:1972-1973.
+#  <https://doi.org10.1093/bioinformatics/btp348>
+#
+#End_Of_Citations
+#
+#}
+
+getVersions() {
+  ## Get software versions
+  # Use: declare -A dict="$(getVersions)"; "${dict[$key]}"
+  ## Note: current modeltest-ng version (from pargenes) is "x.y.z"!
+  local rp
+  rp=$(realpath "${PARGENES}")
+  local pb
+  pb=$(dirname "${rp}")
+  local pbins
+  pbins="${pb}/pargenes_binaries"
+  declare -A dict=(
+    ['astral']=$("${pbins}"/astral -v 2>&1 | awk '$1 == "Version:"{print $2}')
+    ['astral-hybrid']=$("${pbins}"/astral-hybrid -v 2>&1 | awk '$1 == "Version:"{print $2}')
+    ['astral-pro']=$("${pbins}"/astral-pro -v 2>&1 | awk '$1 == "Version:"{print $2}')
+    ['astral.jar']=$(java -jar "${pbins}"/astral.jar --help 2>&1 | grep 'This is ASTRAL version' | awk '{print "v"$NF}')
+    ['bmge']=$(java -jar "${BMGEJAR}" -? | sed -n 's/.*(version \([0-9\.]*\).*/v\1/p')
+    ['fastagap']=$("${fastagap}" -v | sed 's/^/v/')
+    ['mafft']=$(mafft --version  2>&1 | awk '{print $1}')
+    ['modeltest-ng']=$("${pbins}"/modeltest-ng --version | awk '$1 ~ /^modeltest/{print "v"$2;exit}')
+    ['parallel']=$(parallel --version | head -1 | awk '{print "v"$NF}')
+    ['pargenes']=$("${PARGENES}" --version | sed 's/.*ParGenes (v\([0-9\.]*\).*/v\1/')
+    ['raxml-ng']=$("${pbins}"/raxml-ng -v | grep '^RAxML-NG v.' | awk '{print "v"$3}')
+    ['treeshrink']=$("${TREESHRINK}" --version | sed 's/^/v/')
+    ['trimal']=$("${TRIMAL}" --version | grep . | awk '{print $2}')
+  )
+  echo '('
+  for key in  "${!dict[@]}" ; do
+    echo "['$key']='${dict[$key]}'"
+  done
+  echo ')'
+}
+
+getCitations() {
+  ## Get software versions
+  # Use: declare -A dict="$(getCitations)"; "${dict[$key]}"
+  local rp
+  rp=$(realpath "${PARGENES}")
+  local pb
+  pb=$(dirname "${rp}")
+  local pbins
+  pbins="${pb}/pargenes_binaries"
+  declare -A dict=(
+    ['treeshrink']='[Mai & Mirarab. 2018. BMC Genomics 19:272](https://doi.org/10.1186/s12864-018-4620-2)'
+    ['bmge']='[Criscuolo & Gribaldo. 2010. BMC Evolutionary Biology 10:210](https://doi.org/10.1186/1471-2148-10-210)'
+    ['mafft']='[Katoh & Standley. 2013. (MBE 30:772-780)](https://doi.org/10.1093/molbev/mst010)'
+    ['parallel']='[Tange. 2018. GNU Parallel 2018, March 2018](https://doi.org/10.5281/zenodo.1146014)'
+    ['fastagap']='[Nylander, 2019. Software published by the author.](https://github.com/nylander/fastagap)'
+    ['trimal']='[Capella-Gutierrez et al. 2009. Bioinformatics 25:1972-1973](https://10.1093/bioinformatics/btp348)'
+    ['pargenes']='[Morel et al. 2018. Bioinformatics 35:1771-1773](https://doi.org/10.1093/bioinformatics/bty839)'
+    ['raxml-ng']='[Kozlov et al. 2019. Bioinformatics 35:4453-4455](https://doi.org/10.1093/bioinformatics/btz305)'
+    ['astral.jar']='[Zhang et al. 2018. BMC Bioinformatics 19:153](https://doi.org/10.1186/s12859-018-2129-y)'
+    ['astral']='[Zhang & Mirarab. 2022. MBE 39:msac215, ](https://doi.org/10.1093/molbev/msac215)'
+    ['astral-pro']='[Zhang & Mirarab. 2022. Bioinformatics 38:4949-4950](https://doi.org/10.1093/bioinformatics/btac620)'
+    ['astral-hybrid']='[Zhang & Mirarab. 2022. MBE 39:msac215, ](https://doi.org/10.1093/molbev/msac215)'
+    ['modeltest-ng']='[Darriba et al. 2020. MBE 37:291–294](https://doi.org/10.1093/molbev/msz189)'
+  )
+  echo '('
+  for key in  "${!dict[@]}" ; do
+    echo "['$key']='${dict[$key]}'"
+  done
+  echo ')'
+}
+
+
 # Arguments and defaults
 doalign=1
 doalifilter=1
@@ -147,7 +302,7 @@ mflag=
 nflag=
 sflag=
 tflag=
-while getopts 'ABSTa:b:d:f:i:l:m:n:s:t:vh' OPTION
+while getopts 'ABSTa:b:d:f:i:l:m:n:s:t:vhc' OPTION
 do
   case $OPTION in
   A) Aflag=1
@@ -196,6 +351,9 @@ do
      exit
      ;;
   h) usage
+     exit
+     ;;
+  c) citations
      exit
      ;;
   *) usage
@@ -356,72 +514,8 @@ export aligner
 export realigner
 
 # Functions
-getVersions() {
-  ## Get software versions
-  # Use: declare -A dict="$(getVersions)"; "${dict[$key]}"
-  ## Note: current modeltest-ng version (from pargenes) is "x.y.z"!
-  local rp
-  rp=$(realpath "${PARGENES}")
-  local pb
-  pb=$(dirname "${rp}")
-  local pbins
-  pbins="${pb}/pargenes_binaries"
-  declare -A dict=(
-    ['treeshrink']=$("${TREESHRINK}" --version | sed 's/^/v/')
-    ['bmge']=$(java -jar "${BMGEJAR}" -? | sed -n 's/.*(version \([0-9\.]*\).*/v\1/p')
-    ['mafft']=$(mafft --version  2>&1 | awk '{print $1}')
-    ['parallel']=$(parallel --version | head -1 | awk '{print "v"$NF}')
-    ['fastagap']=$("${fastagap}" -v | sed 's/^/v/')
-    ['trimal']=$("${TRIMAL}" --version | awk '{print $2}')
-    ['pargenes']=$("${PARGENES}" --version | sed 's/.*ParGenes (v\([0-9\.]*\).*/v\1/')
-    ['raxml-ng']=$("${pbins}"/raxml-ng -v | grep '^RAxML-NG v.' | awk '{print "v"$3}')
-    ['astral.jar']=$(java -jar "${pbins}"/astral.jar --help 2>&1 | grep 'This is ASTRAL version' | awk '{print "v"$NF}')
-    ['astral']=$("${pbins}"/astral -v 2>&1 | awk '$1 == "Version:"{print $2}')
-    ['astral-pro']=$("${pbins}"/astral-pro -v 2>&1 | awk '$1 == "Version:"{print $2}')
-    ['astral-hybrid']=$("${pbins}"/astral-hybrid -v 2>&1 | awk '$1 == "Version:"{print $2}')
-    ['modeltest-ng']=$("${pbins}"/modeltest-ng --version | awk '$1 ~ /^modeltest/{print "v"$2;exit}')
-  )
-  echo '('
-  for key in  "${!dict[@]}" ; do
-    echo "['$key']='${dict[$key]}'"
-  done
-  echo ')'
-}
-#declare -A versions_dict="$(getVersions)"
-
-getCitations() {
-  ## Get software versions
-  # Use: declare -A dict="$(getCitations)"; "${dict[$key]}"
-  local rp
-  rp=$(realpath "${PARGENES}")
-  local pb
-  pb=$(dirname "${rp}")
-  local pbins
-  pbins="${pb}/pargenes_binaries"
-  declare -A dict=(
-    ['treeshrink']='[Mai & Mirarab. 2018. BMC Genomics 19:272](https://doi.org/10.1186/s12864-018-4620-2)'
-    ['bmge']='[Criscuolo & Gribaldo. 2010. BMC Evolutionary Biology 10:210](https://doi.org/10.1186/1471-2148-10-210)'
-    ['mafft']='[Katoh & Standley. 2013. (MBE 30:772-780)](https://doi.org/10.1093/molbev/mst010)'
-    ['parallel']='[Tange. 2018. GNU Parallel 2018, March 2018](https://doi.org/10.5281/zenodo.1146014)'
-    ['fastagap']='[Nylander, 2019. Software published by the author.](https://github.com/nylander/fastagap)'
-    ['trimal']='[Capella-Gutierrez et al. 2009. Bioinformatics 25:1972-1973](https://10.1093/bioinformatics/btp348)'
-    ['pargenes']='[Morel et al. 2018. Bioinformatics 35:1771-1773](https://doi.org/10.1093/bioinformatics/bty839)'
-    ['raxml-ng']='[Kozlov et al. 2019. Bioinformatics 35:4453-4455](https://doi.org/10.1093/bioinformatics/btz305)'
-    ['astral.jar']='[Zhang et al. 2018. BMC Bioinformatics 19:153](https://doi.org/10.1186/s12859-018-2129-y)'
-    ['astral']='[Zhang & Mirarab. 2022. MBE 39:msac215, ](https://doi.org/10.1093/molbev/msac215)'
-    ['astral-pro']='Zhang & Mirarab. 2022. Bioinformatics 38:4949-4950](https://doi.org/10.1093/bioinformatics/btac620)'
-    ['astral-hybrid']='[Zhang & Mirarab. 2022. MBE 39:msac215, ](https://doi.org/10.1093/molbev/msac215)'
-    ['modeltest-ng']='[Darriba et al. 2020. MBE 37:291–294](https://doi.org/10.1093/molbev/msz189)'
-  )
-  echo '('
-  for key in  "${!dict[@]}" ; do
-    echo "['$key']='${dict[$key]}'"
-  done
-  echo ')'
-}
-
 printVersions() {
-  # Print program versions as a mardown table
+  # Print program versions as a markdown table
   # TODO: add reference as an additional column
   local steps="$1"
   declare -A v_dict="$(getVersions)"
