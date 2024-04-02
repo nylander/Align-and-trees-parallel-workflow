@@ -1,6 +1,6 @@
 # ATPW - Align-and-Trees-Parallel-Workflow
 
-- Last modified: fre mar 22, 2024  01:37
+- Last modified: tis apr 02, 2024  04:47
 - Sign: Johan.Nylander\@nrm.se
 
 ## Description
@@ -124,4 +124,9 @@ singularity file. See the [README](singularity/README.md) for details.
 ## Acknowledgements
 
 Workflow image drawn by Alice Kastor.
+
+## References
+
+For citing ATPW and used software, see [References.md](doc/References.md).
+
 
