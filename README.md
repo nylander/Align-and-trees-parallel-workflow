@@ -1,6 +1,6 @@
 # ATPW - Align-and-Trees-Parallel-Workflow
 
-- Last modified: tis apr 02, 2024  04:47
+- Last modified: ons apr 03, 2024  11:09
 - Sign: Johan.Nylander\@nrm.se
 
 ## Description
@@ -56,7 +56,8 @@ Positional parameters are input- and output-folders. Output folder will be creat
     -B        -- Do not run alignment-filter program
     -T        -- Do not run TreeShrink
     -S        -- Do not run ASTER/ASTRAL (no species-tree estimation)
-    -v        -- Print version
+    -v        -- Print ATPW version
+    -c        -- Print citations and software versions
     -h        -- Print help message
 
 Default settings for most software are used in the workflow. Some default
