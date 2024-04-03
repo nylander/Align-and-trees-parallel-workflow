@@ -1,6 +1,6 @@
 # References
 
-- Last modified: tis apr 02, 2024  04:41
+- Last modified: ons apr 03, 2024  10:54
 - Sign: JN
 
 ## Citations and links to software
@@ -26,7 +26,7 @@
   <https://github.com/nylander/fastagap>
 - [GNU parallel](https://www.gnu.org/software/parallel) Tange, O. 2021. GNU
   Parallel 20210822 ('Kabul'). Zenodo. <https://doi.org/10.5281/zenodo.5233953>
-- [MAFFT](https://mafft.cbrc.jp/alignment/software/) Katoh, K. and D. M.
+- [MAFFT](https://gitlab.com/sysimm/mafft) Katoh, K. and D. M.
   Standley. 2013. MAFFT Multiple Sequence Alignment Software Version 7:
   Improvements in Performance and Usability. Mol. Biol. Evol. 30:772-780.
   <https://doi.org/10.1093/molbev/mst010>

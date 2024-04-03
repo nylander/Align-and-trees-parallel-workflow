@@ -1,6 +1,6 @@
 #!/bin/bash -l
 
-# Last modified: tis apr 02, 2024  07:26
+# Last modified: ons apr 03, 2024  11:00
 # Sign: JN
 
 set -uo pipefail
@@ -39,6 +39,7 @@ datatypeforbmgeAA='AA'
 trimaloptions='-automated1'
 
 # Fasta filter
+raxmlng='raxml-ng'
 maxinvariantsites=100.00  # percent
 mintaxfilter=4  # Min nr of seqs for keeping file
 
@@ -46,7 +47,6 @@ mintaxfilter=4  # Min nr of seqs for keeping file
 treeshrinkoptions=
 
 # ParGenes
-raxmlng='raxml-ng'
 bootstrapreps=0
 modelforpargenesfixed='GTR+G8+F'
 modelforpargenesfixedAA='LG+G8+F'
@@ -59,7 +59,7 @@ modeltestperjobcores='4'  # TODO: Adjust? This value needs to be at least 4!
 asterbin='astral'  # Name of prog, not path to binary
 
 # Usage
-function usage {
+usage () {
 cat << End_Of_Usage
 
 $(basename "$0") version ${version}
@@ -126,100 +126,21 @@ End_Of_Usage
 
 }
 
-function citations {
-  # Print software version with citation
+citations () {
+  # Print software versions with citation, markdown format
   declare -A version_dict="$(getVersions)"
   declare -A citation_dict="$(getCitations)"
-  for key in  "${!version_dict[@]}" ; do
-    echo "- $key ${version_dict[$key]} ${citation_dict[$key]}"
+  declare -A git_dict="$(getGits)"
+  keys=$(echo "${!version_dict[@]}" | tr ' ' '\012' | sort | tr '\012' ' ')
+  for key in $keys ; do
+    echo "- [$key ${version_dict[$key]}](${git_dict[$key]}); ${citation_dict[$key]}"
   done
 }
 
-#function citations {
-#  local rp
-#  rp=$(realpath "${PARGENES}")
-#  local pb
-#  pb=$(dirname "${rp}")
-#  local pbins
-#  pbins="${pb}/pargenes_binaries"
-#  declare -A Versions=(
-#    ['atpw']=$($0 -v)
-#    ['astral']=$("${pbins}"/astral-hybrid 2>&1 | grep -m 1 'Version' | awk '{print $2}' | sed 's/^v//')
-#    ['astral-hybrid']=$("${pbins}"/astral-hybrid 2>&1 | grep -m 1 'Version' | awk '{print $2}' | sed 's/^v//')
-#    ['astral-pro']=$("${pbins}"/astral-pro 2>&1 | grep -m 1 'Version' | awk '{print $2}' | sed 's/^v//')
-#    ['astral.jar']=$(java -jar "${pbins}"/astral.jar --help 2>&1 | grep -m 1 'This is ASTRAL version' | awk '{print $NF}')
-#    ['bmge']=$(java -jar "${BMGEJAR}" -? 2>&1 | grep 'BMGE (version' | sed 's/)//' | awk '{print $3}')
-#    ['fastagap']=$("${fastagap}" --version)
-#    ['mafft']=$("${alignerbin}" --version 2>&1 | awk '{print $1}' | sed 's/^v//')
-#    ['modeltest-ng']=$("${pbins}"/modeltest-ng --version 2>&1 | grep -m 1 '^modeltest' | awk '{print $2}')
-#    ['parallel']=$(parallel --version 2>&1 | head -1 | awk '{print $3}')
-#    ['pargenes']=$("${PARGENES}" --version 2>&1 | awk '{print $2}' | sed 's/[(|)|v]//g')
-#    ['raxml-ng']=$("${raxmlng}" 2>&1 | grep 'RAxML-NG' | awk '{print $3}')
-#    ['treeshrink']=$("${TREESHRINK}" --version)
-#    ['trimal']=$("${TRIMAL}" --version 2>&1 | grep . | awk '{print $2}' | sed 's/^v//')
-#  )
-#
-#cat << End_Of_Citations
-#- [ATPW v. ${Versions[atpw]}](https://github.com/nylander/Align-and-trees-parallel-workflow)
-#  Nylander, J. A. A. 2022. ATPW - Align and trees parallel workflow. Program
-#  distributed by the author.
-#  <https://github.com/nylander/Align-and-trees-parallel-workflow>
-#- [astral v. ${Versions[astral]}](https://github.com/chaoszhang/ASTER) Zhang, C., and S. Mirarab. 2022.
-#  Weighting by Gene Tree Uncertainty Improves Accuracy of Quartet-based Species
-#  Trees. Mol. Biol. Evol. 39:msac215. <https://doi.org/10.1093/molbev/msac215>
-#- [astral-pro v. ${Versions[astral-pro]}](https://github.com/chaoszhang/ASTER) Zhang, C., and S. Mirarab. 2022.
-#  Weighting by Gene Tree Uncertainty Improves Accuracy of Quartet-based Species
-#  Trees. Mol. Biol. Evol. 39:msac215. <https://doi.org/10.1093/molbev/msac215>
-#- [astral-hybrid v. ${Versions[astral-hybrid]}](https://github.com/chaoszhang/ASTER) Zhang, C., and S. Mirarab. 2022.
-#  Weighting by Gene Tree Uncertainty Improves Accuracy of Quartet-based Species
-#  Trees. Mol. Biol. Evol. 39:msac215. <https://doi.org/10.1093/molbev/msac215>
-#- [astral.jar v. ${Versions[astral.jar]}](https://github.com/smirarab/ASTRAL) Zhang, C., M. Rabiee, E.
-#  Sayyari, and S. Mirarab. 2018. ASTRAL-III: Polynomial Time Species Tree
-#  Reconstruction from Partially Resolved Gene Trees. BMC Bioinformatics
-#  19(S6):153. <https://doi.org/10.1186/s12859-018-2129-y>
-#- [BMGE v. ${Versions[bmge]}](http://ftp.pasteur.fr/pub/gensoft/projects/BMGE/) Criscuolo, A. and S.
-#  Gribaldo. 2010. BMGE (Block Mapping and Gathering with Entropy): a new
-#  software for selection of phylogenetic informative regions from multiple
-#  sequence alignments. BMC Evol. Biol. 10:210.
-#  <https://doi.org/10.1186/1471-2148-10-210>
-#- [fastagap v. ${Versions[fastagap]}](https://github.com/nylander/fastagap) Nylander, J. A. A. 2019.
-#  FastaGap. Software distributed by the author.
-#  <https://github.com/nylander/fastagap>
-#- [GNU parallel v. ${Versions[parallel]}](https://www.gnu.org/software/parallel) Tange, O. 2021. GNU
-#  Parallel 20210822 ('Kabul'). Zenodo. <https://doi.org/10.5281/zenodo.5233953>
-#- [MAFFT v. ${Versions[mafft]}](https://mafft.cbrc.jp/alignment/software/) Katoh, K. and D. M.
-#  Standley. 2013. MAFFT Multiple Sequence Alignment Software Version 7:
-#  Improvements in Performance and Usability. Mol. Biol. Evol. 30:772-780.
-#  <https://doi.org/10.1093/molbev/mst010>
-#- [ModelTest-NG v. ${Versions[modeltest-ng]}](https://github.com/ddarriba/modeltest) Darriba, D., D. Posada,
-#  A. M. Kozlov, A. Stamatakis, B. Morel, and T. Flouri. 2020. ModelTest-NG: a
-#  new and scalable tool for DNA and protein model selection. Mol. Biol. Evol.
-#  37:291-294. <https://doi.org/10.1093/molbev/msz189>
-#- [ParGenes v. ${Versions[pargenes]}](https://github.com/BenoitMorel/ParGenes) Benoit Morel, B., A. M.
-#  Kozlov, and A. Stamatakis. 2018. ParGenes: a tool for massively parallel
-#  model selection and phylogenetic tree inference on thousands of genes.
-#  Bioinformatics 35:1771-1773. <https://doi.org/10.1093/bioinformatics/bty839>
-#- [RaxML-NG v. ${Versions[raxml-ng]}](https://github.com/amkozlov/raxml-ng) Kozlov, A. M., D. Darriba,
-#  T. Flouri, B. Morel, and A. Stamatakis. 2019. RAxML-NG: A fast, scalable, and
-#  user-friendly tool for maximum likelihood phylogenetic inference.
-#  Bioinformatics 35:4453-4455. <https://doi.org/10.1093/bioinformatics/btz305>
-#- [TreeShrink v. ${Versions[treeshrink]}](https://github.com/uym2/TreeShrink) Mai, U., and S. Mirarab.
-#  2018. TreeShrink: Fast and Accurate Detection of Outlier Long Branches in
-#  Collections of Phylogenetic Trees. BMC Genomics 19(S5):272.
-#  <https://doi.org/10.1186/s12864-018-4620-2>
-#- [TrimAL v. ${Versions[trimal]}](https://github.com/inab/trimal) Capella-Gutierrez, S., J. M.
-#  Silla-Martinez, and T. Gabaldon. 2009. trimAl: a tool for automated alignment
-#  trimming in large-scale phylogenetic analyses. Bioinformatics 25:1972-1973.
-#  <https://doi.org10.1093/bioinformatics/btp348>
-#
-#End_Of_Citations
-#
-#}
-
-getVersions() {
-  ## Get software versions
+getVersions () {
+  # Get software versions
   # Use: declare -A dict="$(getVersions)"; "${dict[$key]}"
-  ## Note: current modeltest-ng version (from pargenes) is "x.y.z"!
+  # Note: current modeltest-ng version (from pargenes) is "x.y.z"!
   local rp
   rp=$(realpath "${PARGENES}")
   local pb
@@ -227,6 +148,7 @@ getVersions() {
   local pbins
   pbins="${pb}/pargenes_binaries"
   declare -A dict=(
+    ['atpw']="v${version}"
     ['astral']=$("${pbins}"/astral -v 2>&1 | awk '$1 == "Version:"{print $2}')
     ['astral-hybrid']=$("${pbins}"/astral-hybrid -v 2>&1 | awk '$1 == "Version:"{print $2}')
     ['astral-pro']=$("${pbins}"/astral-pro -v 2>&1 | awk '$1 == "Version:"{print $2}')
@@ -248,8 +170,8 @@ getVersions() {
   echo ')'
 }
 
-getCitations() {
-  ## Get software versions
+getCitations () {
+  # Get software citations
   # Use: declare -A dict="$(getCitations)"; "${dict[$key]}"
   local rp
   rp=$(realpath "${PARGENES}")
@@ -258,19 +180,20 @@ getCitations() {
   local pbins
   pbins="${pb}/pargenes_binaries"
   declare -A dict=(
+    ['atpw']='[Nylander. 2022. Software published by the author](https://github.com/nylander/Align-and-trees-parallel-workflow)'
     ['treeshrink']='[Mai & Mirarab. 2018. BMC Genomics 19:272](https://doi.org/10.1186/s12864-018-4620-2)'
     ['bmge']='[Criscuolo & Gribaldo. 2010. BMC Evolutionary Biology 10:210](https://doi.org/10.1186/1471-2148-10-210)'
-    ['mafft']='[Katoh & Standley. 2013. (MBE 30:772-780)](https://doi.org/10.1093/molbev/mst010)'
+    ['mafft']='[Katoh & Standley. 2013. MBE 30:772-780](https://doi.org/10.1093/molbev/mst010)'
     ['parallel']='[Tange. 2018. GNU Parallel 2018, March 2018](https://doi.org/10.5281/zenodo.1146014)'
-    ['fastagap']='[Nylander, 2019. Software published by the author.](https://github.com/nylander/fastagap)'
-    ['trimal']='[Capella-Gutierrez et al. 2009. Bioinformatics 25:1972-1973](https://10.1093/bioinformatics/btp348)'
-    ['pargenes']='[Morel et al. 2018. Bioinformatics 35:1771-1773](https://doi.org/10.1093/bioinformatics/bty839)'
+    ['fastagap']='[Nylander. 2019. Software published by the author](https://github.com/nylander/fastagap)'
+    ['trimal']='[Capella-Gutierrez et al. 2009. Bioinformatics 25:1972-1973](https://doi.org/10.1093/bioinformatics/btp348)'
+    ['pargenes']='[Morel et al. 2019. Bioinformatics 35:1771-1773](https://doi.org/10.1093/bioinformatics/bty839)'
     ['raxml-ng']='[Kozlov et al. 2019. Bioinformatics 35:4453-4455](https://doi.org/10.1093/bioinformatics/btz305)'
     ['astral.jar']='[Zhang et al. 2018. BMC Bioinformatics 19:153](https://doi.org/10.1186/s12859-018-2129-y)'
-    ['astral']='[Zhang & Mirarab. 2022. MBE 39:msac215, ](https://doi.org/10.1093/molbev/msac215)'
+    ['astral']='[Zhang & Mirarab. 2022. MBE 39:msac215](https://doi.org/10.1093/molbev/msac215)'
     ['astral-pro']='[Zhang & Mirarab. 2022. Bioinformatics 38:4949-4950](https://doi.org/10.1093/bioinformatics/btac620)'
-    ['astral-hybrid']='[Zhang & Mirarab. 2022. MBE 39:msac215, ](https://doi.org/10.1093/molbev/msac215)'
-    ['modeltest-ng']='[Darriba et al. 2020. MBE 37:291–294](https://doi.org/10.1093/molbev/msz189)'
+    ['astral-hybrid']='[Zhang & Mirarab. 2022. MBE 39:msac215](https://doi.org/10.1093/molbev/msac215)'
+    ['modeltest-ng']='[Darriba et al. 2020. MBE 37:291-294](https://doi.org/10.1093/molbev/msz189)'
   )
   echo '('
   for key in  "${!dict[@]}" ; do
@@ -279,6 +202,37 @@ getCitations() {
   echo ')'
 }
 
+getGits () {
+  # Get software repositories
+  # Use: declare -A dict="$(getCitations)"; "${dict[$key]}"
+  local rp
+  rp=$(realpath "${PARGENES}")
+  local pb
+  pb=$(dirname "${rp}")
+  local pbins
+  pbins="${pb}/pargenes_binaries"
+  declare -A dict=(
+    ['atpw']='https://github.com/nylander/Align-and-trees-parallel-workflow'
+    ['treeshrink']='https://github.com/uym2/TreeShrink'
+    ['bmge']='http://ftp.pasteur.fr/pub/gensoft/projects/BMGE/'
+    ['mafft']='https://gitlab.com/sysimm/mafft'
+    ['parallel']='https://www.gnu.org/software/parallel'
+    ['fastagap']='https://github.com/nylander/fastagap'
+    ['trimal']='https://github.com/inab/trimal'
+    ['pargenes']='https://github.com/BenoitMorel/ParGenes'
+    ['raxml-ng']='https://github.com/amkozlov/raxml-ng'
+    ['astral.jar']='https://github.com/smirarab/ASTRAL'
+    ['astral']='https://github.com/chaoszhang/ASTER'
+    ['astral-pro']='https://github.com/chaoszhang/ASTER'
+    ['astral-hybrid']='https://github.com/chaoszhang/ASTER'
+    ['modeltest-ng']='https://github.com/ddarriba/modeltest'
+  )
+  echo '('
+  for key in  "${!dict[@]}" ; do
+    echo "['$key']='${dict[$key]}'"
+  done
+  echo ')'
+}
 
 # Arguments and defaults
 doalign=1
@@ -363,6 +317,25 @@ do
 done
 shift $((OPTIND - 1))
 
+# Check mandatory option
+if [ ! "${dflag}" ] ; then
+  echo -e "## ATPW [$(date "+%F %T")]: ERROR! Need to supply data type with '-d' (argument 'nt' or 'aa')"
+  exit 1
+elif [ "${dflag}" ] ; then
+  lcdval=${dval,,} # to lowercase
+  if [[ "${lcdval}" != @(nt|aa) ]] ; then
+    echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! -d should be 'nt' or 'aa'"
+    exit 1
+  else
+    datatype="${lcdval}"
+  fi
+fi
+if [ "${datatype}" = 'aa' ] ; then
+  datatypeforbmge="${datatypeforbmgeAA}"
+  modelforraxmltest="${modelforraxmltestAA}"
+  modelforpargenesfixed="${modelforpargenesfixedAA}"
+fi
+
 # Check if positional args are folders and create log file
 if [ $# -ne 2 ]; then
   echo 1>&2 "Usage: $0 [options] /path/to/folder/with/fas/files /path/to/output/folder"
@@ -410,24 +383,7 @@ else
   exit 1
 fi
 
-## Check options
-if [ ! "${dflag}" ] ; then
-  echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! Need to supply data type ('nt' or 'aa') with '-d'" 2>&1 | tee -a "${logfile}"
-  exit 1
-elif [ "${dflag}" ] ; then
-  lcdval=${dval,,} # to lowercase
-  if [[ "${lcdval}" != @(nt|aa) ]] ; then
-    echo -e "\n## ATPW [$(date "+%F %T")]: ERROR! -d should be 'nt' or 'aa'" 2>&1 | tee -a "${logfile}"
-    exit 1
-  else
-    datatype="${lcdval}"
-  fi
-fi
-if [ "${datatype}" = 'aa' ] ; then
-  datatypeforbmge="${datatypeforbmgeAA}"
-  modelforraxmltest="${modelforraxmltestAA}"
-  modelforpargenesfixed="${modelforpargenesfixedAA}"
-fi
+# Check options
 if [ "${Aflag}" ] ; then
   echo -e "\n## ATPW [$(date "+%F %T")]: Data is assumed to be aligned: skipping first alignment step" 2>&1 | tee -a "${logfile}"
 fi
@@ -514,25 +470,26 @@ export aligner
 export realigner
 
 # Functions
-printVersions() {
-  # Print program versions as a markdown table
-  # TODO: add reference as an additional column
+printVersionsCitations () {
+  # Print program versions and citations as a markdown table
   local steps="$1"
   declare -A v_dict="$(getVersions)"
+  declare -A c_dict="$(getCitations)"
   echo ""
-  echo -e "## Software versions"
-  echo -e "| tool | version |"
-  echo -e "| --- | --- |"
+  echo -e "## Software versions and references"
+  echo -e "| tool | version | citation |"
+  echo -e "| --- | --- | --- |"
+  echo -e "| atpw | ${v_dict[atpw]} | ${c_dict[atpw]} |"
   for prog in ${steps//,/} ; do
-    echo -e "| $prog | ${v_dict[$prog]} |"
+    echo -e "| $prog | ${v_dict[$prog]} | ${c_dict[$prog]} |"
   done
   for prog in modeltest-ng pargenes fastagap parallel ; do
-    echo -e "| $prog | ${v_dict[$prog]} |"
+    echo -e "| $prog | ${v_dict[$prog]} | ${c_dict[$prog]} |"
   done
 }
-export -f printVersions
+export -f printVersionsCitations
 
-checkNtaxaInFasta() {
+checkNtaxaInFasta () {
   # Function for checking and removing fasta files with less than N taxa
   # If other max N, use, e.g., "parallel checkNtaxaInFasta {} 10"
   f=$1
@@ -546,7 +503,7 @@ checkNtaxaInFasta() {
 }
 export -f checkNtaxaInFasta
 
-align() {
+align () {
   # Alignments with mafft. Convert lower case mafft output to uppercase.
   # Input: inputfolder/*.fas
   # Output: 1_align/1.1_mafft/*.ali
@@ -560,7 +517,7 @@ align() {
     parallel ''"${alignerbin}"' '"${alignerbinopts}"' {} | '"sed '/>/ ! s/[a-z]/\U&/g'"' > '"${outputfolder}"'/{/.}.ali' >> "${logfile}" 2>&1
 }
 
-checkAlignments() {
+checkAlignments () {
   # Check alignments with raxml-ng
   # Input: folder/*.ali
   # Output: Removes files in input folder
@@ -584,7 +541,7 @@ checkAlignments() {
   rm "${inputfolder}"/*.raxml.reduced.phy
 }
 
-runBmge() {
+runBmge () {
   # Run BMGE
   # Input: 1_align/1.2_mafft/*.mafft.ali (symlinks)
   # Output: 1_align/1.3_mafft_bmge/*.ali
@@ -606,7 +563,7 @@ runBmge() {
   cd .. || exit
 }
 
-runTrimal() {
+runTrimal () {
   # Run TrimAl
   # Input: 1_align/1.2_${aligner}/*.mafft.ali (symlinks)
   # Output: 1_align/1.3_${aligner}_trimal/*.ali
@@ -628,7 +585,7 @@ runTrimal() {
   cd .. || exit
 }
 
-checkNtaxa() {
+checkNtaxa () {
   # Check and remove if any of the .suffix files have less than 4 taxa
   # Input: input/*.suffix
   # Output: remove input/*.suffix files
@@ -646,7 +603,7 @@ checkNtaxa() {
   fi
 }
 
-checkNtaxaOutputAli() {
+checkNtaxaOutputAli () {
   # Check and remove if any of the output.ali files have less than 4 taxa
   # Input: 1_align/1.3_mafft_bmge/*.mafft.ali
   # Output: remove /1_align/1.3_mafft_bmge/*.ali files
@@ -663,7 +620,7 @@ checkNtaxaOutputAli() {
   fi
 }
 
-removeInvariant() {
+removeInvariant () {
   # Remove file if alignment has more than (or equal to) maxinvariantsites percent invariant sites
   # Input: Alignment (*.ali)
   # Output: REMOVES file
@@ -683,7 +640,7 @@ removeInvariant() {
 }
 export -f removeInvariant
 
-pargenesFixedModel() {
+pargenesFixedModel () {
   # Run pargenes with fixed model
   # Input: /1_align/1.3_mafft_check_bmge
   # Output: /2_trees/2.1_mafft_check_bmge_pargenes
@@ -700,7 +657,7 @@ pargenesFixedModel() {
     --raxml-global-parameters-string "--model ${modelforpargenesfixed}" >> "${logfile}" 2>&1
 }
 
-setupTreeshrink() {
+setupTreeshrink () {
  # Setup data for TreeShrink
  # Input: tmp_treeshrink
  # Output:
@@ -726,7 +683,7 @@ setupTreeshrink() {
    parallel copyAndConvert {} >> "${logfile}" 2>&1
 }
 
-runTreeshrink() {
+runTreeshrink () {
   # Run TreeShrink
   # Input: tmp_treeshrink
   # Output:
@@ -748,7 +705,7 @@ runTreeshrink() {
   fi
 }
 
-realignerOutputAli() {
+realignerOutputAli () {
   # Realign using realigner (search for "output.ali" files). Convert mafft output to upper case.
   # Input: tmp_treeshrink/
   # Output: 1_align/1.4_aligner_alifilter_treeshrink
@@ -762,7 +719,7 @@ realignerOutputAli() {
     parallel 'b=$(basename {//} .ali); '"${realigner}"' '"${realignerbinopts}"' <('"${fastagap}"' {}) | '"sed '/>/ ! s/[a-z]/\U&/g'"' > '"${outputfolder}"'/"${b/_ali/.ali}"' >> "${logfile}" 2>&1
 }
 
-realignerAli() {
+realignerAli () {
   # Realign using realigner (search for ".ali" files). Convert mafft output to upper case.
   # Input:
   # Output:
@@ -776,7 +733,7 @@ realignerAli() {
     parallel 'b=$(basename {//} .ali); '"${realigner}"' '"${realignerbinopts}"' <('"${fastagap}"' {}) | sed '/>/ ! s/[a-z]/\U&/g' > '"${outputfolder}"'/"${b//_/\.}"' >> "${logfile}" 2>&1
 }
 
-pargenesModeltestAstral() {
+pargenesModeltestAstral () {
   # Run pargenes with modeltest, finish with ASTER/ASTRAL
   # Input: /1_align/1.3_mafft_check_bmge
   # Output: /2_trees/2.1_mafft_check_bmge_pargenes
@@ -832,7 +789,7 @@ pargenesModeltestAstral() {
   fi
 }
 
-count() {
+count () {
   # Count genes and sequences after each step
   # Input:
   # Output:
@@ -952,8 +909,8 @@ count() {
   fi
 }
 
-cleanUp() {
-  ## Compress and remove files in run folder
+cleanUp () {
+  # Compress and remove files in run folder
  local runfolder="$1"
  if [ "${dotreeshrink}" ]; then
    if [ -e  "${runfolder}/tmp_treeshrink/" ] ; then
@@ -989,7 +946,7 @@ cleanUp() {
 }
 
 
-createReadme() {
+createReadme () {
   # Print README.md
   # Input:
   # Output: README.md
@@ -1173,11 +1130,11 @@ EOF
       fi
     fi
   fi
-  printVersions "${steps}"
+  printVersionsCitations "${steps}"
   } >> "${readme}"
 }
 
-main() {
+main () {
   # MAIN
   # Align or not, and check alignments
   checkNtaxa "${runfolder}/1_align/1.1_input" "${mintaxfilter}" .ali
