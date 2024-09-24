@@ -5,7 +5,7 @@
 #SBATCH -o atpw-dardel.out
 #SBATCH -p long
 #SBATCH -N 1
-#SBATCH -t 03:00:00
+#SBATCH -t 10:00:00
 
 # atpw-dardel.slurm.sh
 # Last modified: tis sep 24, 2024  11:15
