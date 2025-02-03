@@ -1,6 +1,6 @@
 #!/bin/bash -l
 
-# Last modified: ons apr 03, 2024  11:00
+# Last modified: mån feb 03, 2025  11:44
 # Sign: JN
 
 set -uo pipefail
@@ -917,7 +917,7 @@ cleanUp () {
      rm -rf "${runfolder}/tmp_treeshrink/"
    fi
  fi
- # Compress folders inside pargenes folders
+ # Compress folders and files inside pargenes folders
  echo -e "\n## ATPW [$(date "+%F %T")]: Compressing some output" 2>&1 | tee -a "${logfile}"
  cd "${runfolder}" || exit
  mapfile -t arr < <(find 1_align/ -mindepth 1 -maxdepth 1 -type d | sort)
@@ -938,9 +938,12 @@ cleanUp () {
    find . -type d -name "${d}" -execdir tar czf {}.tgz {} ';'
    find . -type d -name "${d}" -exec rm -r {} '+'
  done
- for d in per_job_logs running_jobs bootstraps concatenated_bootstraps ; do
+ for d in per_job_logs running_jobs bootstraps concatenated_bootstraps results ; do
    find . -type d -name "${d}" -execdir tar czf {}.tgz {} ';'
    find . -type d -name "${d}" -exec rm -r {} '+'
+ done
+ for f in checkpoint_commands.txt logs.txt mlsearch_command.txt ; do
+   find . -type f -name "${f}" -execdir gzip {} ';'
  done
  cd .. || exit
 }
