@@ -1,6 +1,6 @@
 #!/bin/bash -l
 
-# Last modified: tis mar 11, 2025  05:54
+# Last modified: tis mar 11, 2025  06:20
 # Sign: JN
 
 set -uo pipefail
@@ -476,6 +476,7 @@ if [ "${Zflag}" ] ; then
   docompress=0
 else
   echo -e "\n## ATPW [$(date "+%F %T")]: Will compress (gzip) output (use -Z for no compression)" 2>&1 | tee -a "${logfile}"
+  docompress=1
 fi
 
 # Needed for some bash functions
