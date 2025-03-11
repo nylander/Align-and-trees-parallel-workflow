@@ -1,7 +1,7 @@
 Bootstrap: docker
 From: ubuntu:20.04
 
-# Last modified: tor feb 29, 2024  11:53
+# Last modified: tis mar 11, 2025  02:19
 # Sign: JN
 
 %files
@@ -106,7 +106,7 @@ From: ubuntu:20.04
 
 %labels
     Author johan.nylander@nrm.se
-    Version v0.9.4
+    Version v0.9.5
 
 %environment
     export LC_ALL=C
