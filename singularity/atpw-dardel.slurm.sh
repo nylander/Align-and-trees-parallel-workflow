@@ -11,7 +11,7 @@
 # testing: use -p shared -c 36 -t 01:00:00
 
 # atpw-dardel.slurm.sh
-# Last modified: tis mar 11, 2025  05:46
+# Last modified: tis mar 11, 2025  06:37
 # Sign: JN
 #
 # Test by using
