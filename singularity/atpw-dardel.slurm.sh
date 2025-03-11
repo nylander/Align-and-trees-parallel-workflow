@@ -7,8 +7,11 @@
 #SBATCH -N 1
 #SBATCH -t 10:00:00
 
+# run:     use -p long -N 1 -t 10:00:00
+# testing: use -p shared -c 36 -t 01:00:00
+
 # atpw-dardel.slurm.sh
-# Last modified: tis mar 11, 2025  03:21
+# Last modified: tis mar 11, 2025  05:46
 # Sign: JN
 #
 # Test by using
@@ -45,44 +48,44 @@
 #   $ ATPW=/cfs/klemming/projects/supr/nrmdnalab_storage/src/Align-and-trees-parallel-workflow/singularity/atpw
 #   $ export ATPW
 #   $ singularity run $ATPW -h
-#   $ infolder=/cfs/klemming/projects/supr/nrmdnalab_storage/tmp/atpw-testing/9_fasta_files
 #   $ cd /cfs/klemming/projects/supr/nrmdnalab_storage/tmp/atpw-testing
-#   $ sbatch atpw-dardel.slurm.sh "${infolder}" 9_fasta_files
+#   $ sbatch atpw-dardel.slurm.sh 9_fasta_files 9_fasta_files_out
 
-
-ml PDC
+ml PDC/23.12
 ml singularity
 
-ATPW="${ATPW:-/path/to/singularity/sandbox/atpw}" # Edit path to atpw sandbox here
-datatype='nt'                                     # Edit here if not nt input
-ncpu=256                                          # One node on dardel
+ATPW="${ATPW:-/cfs/klemming/projects/supr/nrmdnalab_storage/src/Align-and-trees-parallel-workflow/singularity/atpw}"
+               # ^ Edit path above to atpw sandbox
+data_type='nt' # < Edit here if not nt input
+n_cpus=256     # < 256: One node on dardel
 
 start=$(date +%s)
 
 if [ -z "$1" ] && [ -z "$2" ] ; then
-    echo "Usage: $0 infolder outfolder"
-    exit
-fi
-
-infolder=$1
-outfolder=$2
-
-if [ -d "${outfolder}" ]; then
-  echo "Directory ${outfolder} exists. Exiting."
+  echo "Usage: sbatch $0 infolder outfolder"
   exit
 fi
 
-basename_outfolder=$(basename "${outfolder}")
-runfolder="$SNIC_TMP/${basename_outfolder}"
-mkdir -p "${runfolder}"
+in_folder=$1
+out_folder=$2
 
-singularity run \
-    "${ATPW}" \
-    -d "${datatype}" \
-    -n "${ncpu}" \
-    "${infolder}" \
-    "${runfolder}" \
-    && cp -r "${runfolder}" "${outfolder}"
+if [ -d "${out_folder}" ]; then
+  echo "Directory ${out_folder} exists. Exiting."
+  exit
+fi
+
+if [ -d "${SNIC_TMP}${out_folder}" ]; then
+  rm -rf "${SNIC_TMP}${out_folder}"
+fi
+
+basename_out_folder=$(basename "${out_folder}")
+tmp_folder="${basename_out_folder}"
+
+cp -r "${in_folder}" $SNIC_TMP
+
+cd $SNIC_TMP
+
+singularity run "${ATPW}" -d "${data_type}" -n "${n_cpus}" "${in_folder}" "${tmp_folder}" && cp -r "${tmp_folder}" "$SLURM_SUBMIT_DIR/${basename_out_folder}"
 
 end=$(date +%s)
 runtime=$((end-start))
