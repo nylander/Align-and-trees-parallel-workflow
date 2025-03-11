@@ -1,23 +1,24 @@
 #!/bin/bash -l
 
-# Last modified: mån feb 03, 2025  11:44
+# Last modified: tis mar 11, 2025  03:33
 # Sign: JN
 
 set -uo pipefail
 
 # Default paths to software
-BMGEJAR="${BMGEJAR:-${HOME}/Documents/GIT/Align-and-trees-parallel-workflow/BMGE-1.12/BMGE.jar}" # <<<<<<<<<< CHANGE HERE
-PARGENES="${PARGENES:-${HOME}/Documents/GIT/Align-and-trees-parallel-workflow/ParGenes/pargenes/pargenes.py}" # <<<<<<<<<< CHANGE HERE
-TREESHRINK="${TREESHRINK:-${HOME}/Documents/GIT/Align-and-trees-parallel-workflow/TreeShrink/run_treeshrink.py}" # <<<<<<<<<< CHANGE HERE
-TRIMAL="${TRIMAL:-${HOME}/Documents/GIT/Align-and-trees-parallel-workflow/trimal/source/trimal}" # <<<<<<<<<< CHANGE HERE
+BMGEJAR="${BMGEJAR:-${HOME}/Documents/GIT/Align-and-trees-parallel-workflow/src/BMGE-1.12/BMGE.jar}" # <<<<<<<<<< CHANGE HERE
+PARGENES="${PARGENES:-${HOME}/Documents/GIT/Align-and-trees-parallel-workflow/src/ParGenes/pargenes/pargenes.py}" # <<<<<<<<<< CHANGE HERE
+TREESHRINK="${TREESHRINK:-${HOME}/Documents/GIT/Align-and-trees-parallel-workflow/src/TreeShrink/run_treeshrink.py}" # <<<<<<<<<< CHANGE HERE
+TRIMAL="${TRIMAL:-${HOME}/Documents/GIT/Align-and-trees-parallel-workflow/src/trimal/source/trimal}" # <<<<<<<<<< CHANGE HERE
 fastagap='fastagap.pl'  # Assumed to be in the path
 
 # Varia
-version="0.9.4"
+version="0.9.5"
 nprocs=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null)
 ncores="${nprocs}"  # TODO: Do we need to adjust?
 logfile=
 datatype='nt'
+docompress=1
 
 # Aligner
 aligner='mafft'  # Name of aligner, not path to binary
@@ -97,6 +98,7 @@ Options:
     -B        -- Do not run alignment-filter program
     -T        -- Do not run TreeShrink
     -S        -- Do not run ASTER/ASTRAL (no species-tree estimation)
+    -Z        -- Do not compress output folders and files (default: compress)
     -v        -- Print version. See output of -c for other software versions
     -c        -- Print citations and software versions
     -h        -- Print help message
@@ -242,6 +244,7 @@ doaster=1
 doboot=
 dobmge=1
 dotrimal=
+docompress=1
 Aflag=
 Bflag=
 Sflag=
@@ -256,7 +259,8 @@ mflag=
 nflag=
 sflag=
 tflag=
-while getopts 'ABSTa:b:d:f:i:l:m:n:s:t:vhc' OPTION
+Zflag=
+while getopts 'ABSTa:b:d:f:i:l:m:n:s:t:Zvhc' OPTION
 do
   case $OPTION in
   A) Aflag=1
@@ -300,6 +304,9 @@ do
      ;;
   t) tflag=1
      tval="$OPTARG"
+     ;;
+  Z) Zflag=1
+     docompress=0
      ;;
   v) echo "${version}"
      exit
@@ -462,6 +469,12 @@ if [ "${nflag}" ] ; then
 fi
 if [ "${fflag}" ] ; then
   mintaxfilter="${fval}"
+fi
+if [ "${Zflag}" ] ; then
+  echo -e "\n## ATPW [$(date "+%F %T")]: Will not compress (gzip) output" 2>&1 | tee -a "${logfile}"
+  docompress=0
+else
+  echo -e "\n## ATPW [$(date "+%F %T")]: Will compress (gzip) output (use -Z for no compression)" 2>&1 | tee -a "${logfile}"
 fi
 
 # Needed for some bash functions
@@ -909,31 +922,63 @@ count () {
   fi
 }
 
+#cleanUp_old () {
+#  # Compress and remove files in run folder
+# local runfolder="$1"
+# if [ "${dotreeshrink}" ]; then
+#   if [ -e  "${runfolder}/tmp_treeshrink/" ] ; then
+#     rm -rf "${runfolder}/tmp_treeshrink/"
+#   fi
+# fi
+# # Compress folders and files inside pargenes folders
+# echo -e "\n## ATPW [$(date "+%F %T")]: Compressing some output" 2>&1 | tee -a "${logfile}"
+# cd "${runfolder}" || exit
+# mapfile -t arr < <(find 1_align/ -mindepth 1 -maxdepth 1 -type d | sort)
+# for d in "${arr[@]::${#arr[@]}-1}" ; do # compress all except the last
+#   e=$(basename "$d")
+#   f=$(dirname "$d")
+#   find "${f}" -type d -name "${e}" -execdir tar czf {}.tgz {} ';'
+#   find "${f}" -type d -name "${e}" -exec rm -r {} '+'
+# done
+# mapfile -t arr < <(find 2_trees/ -mindepth 1 -maxdepth 1 -type d | sort)
+# for d in "${arr[@]::${#arr[@]}-1}" ; do
+#   e=$(basename "$d")
+#   f=$(dirname "$d")
+#   find "${f}" -type d -name "${e}" -execdir tar czf {}.tgz {} ';'
+#   find "${f}" -type d -name "${e}" -exec rm -r {} '+'
+# done
+# for d in old_parse_run parse_run supports_run ; do
+#   find . -type d -name "${d}" -execdir tar czf {}.tgz {} ';'
+#   find . -type d -name "${d}" -exec rm -r {} '+'
+# done
+# for d in per_job_logs running_jobs bootstraps concatenated_bootstraps results ; do
+#   find . -type d -name "${d}" -execdir tar czf {}.tgz {} ';'
+#   find . -type d -name "${d}" -exec rm -r {} '+'
+# done
+# for f in checkpoint_commands.txt logs.txt mlsearch_command.txt ; do
+#   find . -type f -name "${f}" -execdir gzip {} ';'
+# done
+# cd .. || exit
+#}
+
 cleanUp () {
-  # Compress and remove files in run folder
+ # Extract gene and species tree files
  local runfolder="$1"
+ echo -e "\n## ATPW [$(date "+%F %T")]: Compressing output" 2>&1 | tee -a "${logfile}"
+ if [ "${doaster}" ] ; then
+   if [ ! -z "$(find ${runfolder}/2_trees -type f -name '*.newick')" ] ; then
+     cp $(find ${runfolder}/2_trees -type f -name '*.newick') ${runfolder}/2_trees
+   else
+     printf 'ERROR; did not find any gene- or species tree files (*.newick) in 2_trees/\n' >&2
+   fi
+ fi
+ # Remove tmp files and folders
  if [ "${dotreeshrink}" ]; then
    if [ -e  "${runfolder}/tmp_treeshrink/" ] ; then
      rm -rf "${runfolder}/tmp_treeshrink/"
    fi
  fi
- # Compress folders and files inside pargenes folders
- echo -e "\n## ATPW [$(date "+%F %T")]: Compressing some output" 2>&1 | tee -a "${logfile}"
- cd "${runfolder}" || exit
- mapfile -t arr < <(find 1_align/ -mindepth 1 -maxdepth 1 -type d | sort)
- for d in "${arr[@]::${#arr[@]}-1}" ; do
-   e=$(basename "$d")
-   f=$(dirname "$d")
-   find "${f}" -type d -name "${e}" -execdir tar czf {}.tgz {} ';'
-   find "${f}" -type d -name "${e}" -exec rm -r {} '+'
- done
- mapfile -t arr < <(find 2_trees/ -mindepth 1 -maxdepth 1 -type d | sort)
- for d in "${arr[@]::${#arr[@]}-1}" ; do
-   e=$(basename "$d")
-   f=$(dirname "$d")
-   find "${f}" -type d -name "${e}" -execdir tar czf {}.tgz {} ';'
-   find "${f}" -type d -name "${e}" -exec rm -r {} '+'
- done
+ # Compress files and folders hierarchically
  for d in old_parse_run parse_run supports_run ; do
    find . -type d -name "${d}" -execdir tar czf {}.tgz {} ';'
    find . -type d -name "${d}" -exec rm -r {} '+'
@@ -942,12 +987,26 @@ cleanUp () {
    find . -type d -name "${d}" -execdir tar czf {}.tgz {} ';'
    find . -type d -name "${d}" -exec rm -r {} '+'
  done
- for f in checkpoint_commands.txt logs.txt mlsearch_command.txt ; do
-   find . -type f -name "${f}" -execdir gzip {} ';'
+ find . -type f -name 'checkpoint' -execdir gzip {} ';'
+ find . -type f -name '*.txt' -execdir gzip {} ';'
+ find . -type f -name '*.svg' -execdir gzip {} ';'
+ cd "${runfolder}" || exit
+ mapfile -t arr < <(find 1_align/ -mindepth 1 -maxdepth 1 -type d | sort)
+ for d in "${arr[@]}" ; do
+   e=$(basename "$d")
+   f=$(dirname "$d")
+   find "${f}" -type d -name "${e}" -execdir tar czf {}.tgz {} ';'
+   find "${f}" -type d -name "${e}" -exec rm -r {} '+'
+ done
+ mapfile -t arr < <(find 2_trees/ -mindepth 1 -maxdepth 1 -type d | sort)
+ for d in "${arr[@]}" ; do
+   e=$(basename "$d")
+   f=$(dirname "$d")
+   find "${f}" -type d -name "${e}" -execdir tar czf {}.tgz {} ';'
+   find "${f}" -type d -name "${e}" -exec rm -r {} '+'
  done
  cd .. || exit
 }
-
 
 createReadme () {
   # Print README.md
@@ -1038,6 +1097,8 @@ createReadme () {
 - Run started: $start
 - Run completed: $(date "+%F %T")
 - Steps: ${steps}
+
+Note: many of the links in this document deas not work on compressed output.
 
 ## Input data (unfiltered):
 
@@ -1262,7 +1323,9 @@ count
 createReadme
 
 # Clean up
-cleanUp "${runfolder}"
+if [ $docompress -eq 1 ] ; then
+  cleanUp "${runfolder}"
+fi
 
 # End
 echo -e "\n## ATPW [$(date "+%F %T")]: Reached end of the script\n" 2>&1 | tee -a "${logfile}"
