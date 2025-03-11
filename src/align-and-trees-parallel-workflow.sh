@@ -1,11 +1,12 @@
 #!/bin/bash -l
 
-# Last modified: tis mar 11, 2025  03:33
+# Last modified: tis mar 11, 2025  05:54
 # Sign: JN
 
 set -uo pipefail
 
 # Default paths to software
+# TODO: adjust all binary names to work with conda installa names - if possible (cf. pargenes and treeshrink versions)
 BMGEJAR="${BMGEJAR:-${HOME}/Documents/GIT/Align-and-trees-parallel-workflow/src/BMGE-1.12/BMGE.jar}" # <<<<<<<<<< CHANGE HERE
 PARGENES="${PARGENES:-${HOME}/Documents/GIT/Align-and-trees-parallel-workflow/src/ParGenes/pargenes/pargenes.py}" # <<<<<<<<<< CHANGE HERE
 TREESHRINK="${TREESHRINK:-${HOME}/Documents/GIT/Align-and-trees-parallel-workflow/src/TreeShrink/run_treeshrink.py}" # <<<<<<<<<< CHANGE HERE
@@ -54,7 +55,7 @@ modelforpargenesfixedAA='LG+G8+F'
 modelforraxmltest='GTR'
 modelforraxmltestAA='LG'
 modeltestcriterion="BIC"
-modeltestperjobcores='4'  # TODO: Adjust? This value needs to be at least 4!
+modeltestperjobcores='4' # TODO: Adjust? This value needs to be at least 4!
 
 # Aster
 asterbin='astral'  # Name of prog, not path to binary
@@ -98,7 +99,7 @@ Options:
     -B        -- Do not run alignment-filter program
     -T        -- Do not run TreeShrink
     -S        -- Do not run ASTER/ASTRAL (no species-tree estimation)
-    -Z        -- Do not compress output folders and files (default: compress)
+    -Z        -- Do not compress output folders and files (default: compress using gzip)
     -v        -- Print version. See output of -c for other software versions
     -c        -- Print citations and software versions
     -h        -- Print help message
@@ -962,6 +963,7 @@ count () {
 #}
 
 cleanUp () {
+ # TODO: use pigz?
  # Extract gene and species tree files
  local runfolder="$1"
  echo -e "\n## ATPW [$(date "+%F %T")]: Compressing output" 2>&1 | tee -a "${logfile}"
