@@ -7,11 +7,11 @@
 #SBATCH -N 1
 #SBATCH -t 10:00:00
 
-# run:     use -p long -N 1 -t 10:00:00
 # testing: use -p shared -c 36 -t 01:00:00
+# run:     use -p long -N 1 -t 10:00:00
 
 # atpw-dardel.slurm.sh
-# Last modified: tis mar 11, 2025  06:37
+# Last modified: mån mar 17, 2025  08:56
 # Sign: JN
 #
 # Test by using
@@ -44,7 +44,7 @@
 # run took 9 minutes to complete.
 
 # Testing
-#   $ ml singularity
+#   $ ml PDC/23.12 singularity
 #   $ ATPW=/cfs/klemming/projects/supr/nrmdnalab_storage/src/Align-and-trees-parallel-workflow/singularity/atpw
 #   $ export ATPW
 #   $ singularity run $ATPW -h
