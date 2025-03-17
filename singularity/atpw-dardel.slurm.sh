@@ -3,15 +3,15 @@
 #SBATCH -A naiss2024-22-1518
 #SBATCH -J atpw-dardel
 #SBATCH -o atpw-dardel-%j.out
-#SBATCH -p long
-#SBATCH -N 1
-#SBATCH -t 10:00:00
+#SBATCH -p shared
+#SBATCH -c 36
+#SBATCH -t 01:00:00
 
 # testing: use -p shared -c 36 -t 01:00:00
 # run:     use -p long -N 1 -t 10:00:00
 
 # atpw-dardel.slurm.sh
-# Last modified: mån mar 17, 2025  08:56
+# Last modified: mån mar 17, 2025  04:22
 # Sign: JN
 #
 # Test by using
@@ -69,6 +69,10 @@ fi
 in_folder=$1
 out_folder=$2
 
+basename_in_folder=$(basename "${in_folder}")
+tmp_in_folder="${basename_in_folder}"
+cp -r "${in_folder}" "$SNIC_TMP"
+
 if [ -d "${out_folder}" ]; then
   echo "Directory ${out_folder} exists. Exiting."
   exit
@@ -79,13 +83,13 @@ if [ -d "${SNIC_TMP}${out_folder}" ]; then
 fi
 
 basename_out_folder=$(basename "${out_folder}")
-tmp_folder="${basename_out_folder}"
+tmp_out_folder="${basename_out_folder}"
 
-cp -r "${in_folder}" $SNIC_TMP
+cp -r "${in_folder}" "$SNIC_TMP"
 
-cd $SNIC_TMP
+cd "$SNIC_TMP" || exit
 
-singularity run "${ATPW}" -d "${data_type}" -n "${n_cpus}" "${in_folder}" "${tmp_folder}" && cp -r "${tmp_folder}" "$SLURM_SUBMIT_DIR/${basename_out_folder}"
+singularity run "${ATPW}" -d "${data_type}" -n "${n_cpus}" "${tmp_in_folder}" "${tmp_out_folder}" && cp -r "${tmp_out_folder}" "$SLURM_SUBMIT_DIR/${basename_out_folder}"
 
 end=$(date +%s)
 runtime=$((end-start))
