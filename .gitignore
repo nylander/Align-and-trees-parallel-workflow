@@ -8,7 +8,7 @@ out/
 tmp/
 *.swp
 singularity/atpw.sif
-singularity/atpw
+singularity/atpw/
 test_out/
 Makefile
 Makefile.for_dependencies
