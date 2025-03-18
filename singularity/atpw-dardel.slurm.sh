@@ -7,11 +7,11 @@
 #SBATCH -c 36
 #SBATCH -t 01:00:00
 
-# testing: use -p shared -c 36 -t 01:00:00
-# run:     use -p long -N 1 -t 10:00:00
+# testing: use "-p shared -c 36 -t 01:00:00" and set "n_cpus=36" below
+# run:     use "-p long -N 1 -t 10:00:00" and set "n_cpus=256" below
 
 # atpw-dardel.slurm.sh
-# Last modified: mån mar 17, 2025  04:52
+# Last modified: tis mar 18, 2025  08:46
 # Sign: JN
 #
 # Test by using
@@ -57,7 +57,7 @@ ml singularity
 ATPW="${ATPW:-/cfs/klemming/projects/supr/nrmdnalab_storage/src/Align-and-trees-parallel-workflow/singularity/atpw}"
                # ^ Edit path above to atpw sandbox
 data_type='nt' # < Edit here if not nt input
-n_cpus=256     # < 256: One node on dardel
+n_cpus=36      # < 256: One node on dardel
 
 start=$(date +%s)
 
