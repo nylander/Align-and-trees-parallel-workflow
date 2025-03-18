@@ -8,10 +8,10 @@
 #SBATCH -t 01:00:00
 
 # testing: use "-p shared -c 36 -t 01:00:00" and set "n_cpus=36" below
-# run:     use "-p long -N 1 -t 10:00:00" and set "n_cpus=256" below
+# run:     try "-p long   -N 1  -t 24:00:00" and set "n_cpus=256" below
 
 # atpw-dardel.slurm.sh
-# Last modified: tis mar 18, 2025  08:46
+# Last modified: tis mar 18, 2025  01:04
 # Sign: JN
 #
 # Test by using
