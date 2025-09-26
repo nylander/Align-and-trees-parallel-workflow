@@ -11,7 +11,7 @@
 # run:     try "-p long   -N 1  -t 24:00:00" and set "n_cpus=256" below
 
 # atpw-dardel.slurm.sh
-# Last modified: tis mar 18, 2025  01:04
+# Last modified: ons jun 18, 2025  10:22
 # Sign: JN
 #
 # Test by using
@@ -29,6 +29,7 @@
 #
 # Note: On dardel, a singularity image needs to be run as a "sandbox"!
 # To convert a .sif to sandbox, use (on an existing atpw.sif on dardel):
+#     ml PDC/24.11 singularity
 #     singularity build --sandbox atpw atpw.sif
 # And then run:
 #     singularity run atpw -h
@@ -44,14 +45,14 @@
 # run took 9 minutes to complete.
 
 # Testing
-#   $ ml PDC/23.12 singularity
+#   $ ml PDC/24.11 singularity
 #   $ ATPW=/cfs/klemming/projects/supr/nrmdnalab_storage/src/Align-and-trees-parallel-workflow/singularity/atpw
 #   $ export ATPW
 #   $ singularity run $ATPW -h
 #   $ cd /cfs/klemming/projects/supr/nrmdnalab_storage/tmp/atpw-testing
 #   $ sbatch atpw-dardel.slurm.sh 9_fasta_files 9_fasta_files_out
 
-ml PDC/23.12
+ml PDC/24.11
 ml singularity
 
 ATPW="${ATPW:-/cfs/klemming/projects/supr/nrmdnalab_storage/src/Align-and-trees-parallel-workflow/singularity/atpw}"
