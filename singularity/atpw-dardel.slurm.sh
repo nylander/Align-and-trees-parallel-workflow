@@ -11,7 +11,7 @@
 # run:     try "-p long   -N 1  -t 24:00:00" and set "n_cpus=256" below
 
 # atpw-dardel.slurm.sh
-# Last modified: ons jun 18, 2025  10:22
+# Last modified: 2026-01-28 10:18:59
 # Sign: JN
 #
 # Test by using
@@ -62,7 +62,7 @@ n_cpus=36      # < 256: One node on dardel
 
 start=$(date +%s)
 
-if (( $# < 2 )) ; then
+if [ $# -lt 2 ] ; then
   echo "Usage: sbatch atpw-dardel.slurm.sh infolder outfolder"
   exit
 fi
