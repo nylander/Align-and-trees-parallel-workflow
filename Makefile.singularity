@@ -1,0 +1,172 @@
+# Makefile
+# Last modified: 2026-06-10 11:05:10
+# Sign: JN
+
+SHELL=bash
+
+testset := $(patsubst %,test-%,1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18)
+test_out := test_out_remove_me_if_you_see_me
+sif_file := ./singularity/atpw.sif
+atpw_script := ./src/align-and-trees-parallel-workflow.sh
+
+.PHONY: sif test-sif test $(tests)
+
+all:
+	@echo Makefile for ATPW
+
+sif: $(sif_file)
+
+./singularity/atpw.sif: ./singularity/atpw.def
+	singularity build $(sif_file) ./singularity/atpw.def
+
+check-install:
+	./private/check-install.sh
+
+test: $(sif_file)
+	@echo "Testing the singularity container: default"
+	$(sif_file) -d nt data $(test_out)
+
+tests: $(testset)
+
+test-sif: $(sif_file)
+	@echo "Testing the singularity container: default"
+	@$(sif_file) -d nt data $(test_out) &>/dev/null && \
+	string=$$(tree $(test_out) | tail -1) && \
+	rm -rf $(test_out) && \
+	diff <(echo "$$string") <(echo "17 directories, 65 files")
+
+test-1:
+	@echo "Running test-1: default"
+	@$(sif_file) -d nt data $(test_out) &>/dev/null && \
+	string=$$(tree $(test_out) | tail -1) && \
+	rm -rf $(test_out) && \
+	diff <(echo "$$string") <(echo "3 directories, 10 files")
+
+test-2:
+	@echo "Running test-2: astral.jar"
+	@$(sif_file) -d nt -s astral.jar data $(test_out) &>/dev/null && \
+	string=$$(tree $(test_out) | tail -1) && \
+	rm -rf $(test_out) && \
+	diff <(echo "$$string") <(echo "3 directories, 10 files")
+
+test-3:
+	@echo "Running test-3: astral-pro"
+	@$(sif_file) -d nt -s astral-pro data $(test_out) &>/dev/null && \
+	string=$$(tree $(test_out) | tail -1) && \
+	rm -rf $(test_out) && \
+	diff <(echo "$$string") <(echo "3 directories, 10 files")
+
+test-4:
+	@echo "Running test-4: astral-hybrid"
+	@$(sif_file) -d nt -s astral-hybrid data $(test_out) &>/dev/null && \
+	string=$$(tree $(test_out) | tail -1) && \
+	rm -rf $(test_out) && \
+	diff <(echo "$$string") <(echo "3 directories, 10 files")
+
+test-5:
+	@echo "Running test-5: no-astral"
+	@$(sif_file) -d nt -S data $(test_out) &>/dev/null && \
+	string=$$(tree $(test_out) | tail -1) && \
+	rm -rf $(test_out) && \
+	diff <(echo "$$string") <(echo "3 directories, 8 files")
+
+test-6:
+	@echo "Running test-6: no-BMGE"
+	@$(sif_file) -B -d nt data $(test_out) &>/dev/null && \
+	string=$$(tree $(test_out) | tail -1) && \
+	rm -rf $(test_out) && \
+	diff <(echo "$$string") <(echo "3 directories, 9 files")
+
+test-7:
+	@echo "Running test-7: no-BMGE, no-TreeShrink"
+	@$(sif_file) -B -T -d nt data $(test_out) &>/dev/null && \
+	string=$$(tree $(test_out) | tail -1) && \
+	rm -rf $(test_out) && \
+	diff <(echo "$$string") <(echo "3 directories, 7 files")
+
+test-8:
+	@echo "Running test-8: no-align"
+	@$(sif_file) -A -d nt aligned-data $(test_out) &>/dev/null && \
+	string=$$(tree $(test_out) | tail -1) && \
+	rm -rf $(test_out) && \
+	diff <(echo "$$string") <(echo "3 directories, 9 files")
+
+test-9:
+	@echo "Running test-9: no-align, no-BMGE"
+	@$(sif_file) -A -B -d nt aligned-data $(test_out) &>/dev/null && \
+	string=$$(tree $(test_out) | tail -1) && \
+	rm -rf $(test_out) && \
+	diff <(echo "$$string") <(echo "3 directories, 8 files")
+
+test-10:
+	@echo "Running test-10: no-align, no-BMGE, no-TreeShrink"
+	@$(sif_file) -A -B -T -d nt aligned-data $(test_out) &>/dev/null && \
+	string=$$(tree $(test_out) | tail -1) && \
+	rm -rf $(test_out) && \
+	diff <(echo "$$string") <(echo "3 directories, 6 files")
+
+test-11:
+	@echo "Running test-11: no-align, no-BMGE, no-TreeShrink, no-astral"
+	@$(sif_file) -A -B -T -S -d nt aligned-data $(test_out) &>/dev/null && \
+	string=$$(tree $(test_out) | tail -1) && \
+	rm -rf $(test_out) && \
+	diff <(echo "$$string") <(echo "3 directories, 4 files")
+
+test-12:
+	@echo "Running test-12: bmgoptions"
+	@$(sif_file) -d nt -b '-h 0.7' data $(test_out) &>/dev/null && \
+	string=$$(tree $(test_out) | tail -1) && \
+	rm -rf $(test_out) && \
+	diff <(echo "$$string") <(echo "3 directories, 10 files")
+
+test-13:
+	@echo "Running test-13: aligneroptions"
+	@$(sif_file) -d nt -a ' --maxiterate 1000 --localpair --thread 2 --quiet' data $(test_out) &>/dev/null && \
+	string=$$(tree $(test_out) | tail -1) && \
+	rm -rf $(test_out) && \
+	diff <(echo "$$string") <(echo "3 directories, 10 files")
+
+test-14:
+	@echo "Running test-14: bootstrap and auto switch to astral-hybrid"
+	@$(sif_file) -d nt -i 50 data $(test_out) &>/dev/null && \
+	string=$$(tree $(test_out) | tail -1) && \
+	rm -rf $(test_out) && \
+	diff <(echo "$$string") <(echo "3 directories, 10 files")
+
+test-15:
+	@echo "Running test-15: no-ALIGN, -s astral-hybrid, bootstrap"
+	@$(sif_file) -d nt -A -s astral-hybrid -i 50 aligned-data $(test_out) &>/dev/null && \
+	string=$$(tree $(test_out) | tail -1) && \
+	rm -rf $(test_out) && \
+	diff <(echo "$$string") <(echo "3 directories, 9 files")
+
+test-16:
+	@echo "Running test-16: no-ALIGN, no-BMGE, no-TREESHRINK, bootstrap"
+	@$(sif_file) -d nt -A -B -T -i 50 aligned-data $(test_out) &>/dev/null && \
+	string=$$(tree $(test_out) | tail -1) && \
+	rm -rf $(test_out) && \
+	diff <(echo "$$string") <(echo "3 directories, 6 files")
+
+test-17:
+	@echo "Running test-17: trimal with arguments"
+	@$(sif_file) -d nt -l trimal -b '-gt 0.9 -cons 60' data $(test_out) &>/dev/null && \
+	string=$$(tree $(test_out) | tail -1) && \
+	rm -rf $(test_out) && \
+	diff <(echo "$$string") <(echo "3 directories, 10 files")
+
+test-18:
+	@echo "Running test-18: change min ntax for filtering using -f"
+	@$(sif_file) -d nt -f 10 data $(test_out) &>/dev/null && \
+	string=$$(tree $(test_out) | tail -1) && \
+	rm -rf $(test_out) && \
+	diff <(echo "$$string") <(echo "3 directories, 10 files")
+
+#test-19:
+#	@echo "Running test-19: xxx"
+#	@$(sif_file) -d nt xxx $(test_out) &>/dev/null && \
+#	string=$$(tree $(test_out) | tail -1) && \
+#	rm -rf $(test_out) && \
+#	diff <(echo "$$string") <(echo "")
+
+
+# vim:ft=make
