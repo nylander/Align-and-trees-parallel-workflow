@@ -11,7 +11,7 @@
 # Note: one node on pelle has 48 cores (96 threads)
 
 # atpw-pelle.slurm.sh
-# Last modified: 2026-06-10 11:15:47
+# Last modified: 2026-06-10 11:49:34
 # Sign: JN
 #
 # Test by using
@@ -36,7 +36,6 @@ ATPW="${ATPW:-$HOME/bin/atpw.sif}"
                  # ^ Edit path above to atpw
 data_type='nt'   # < Edit here if not nt input
 n_cpus="${SLURM_CPUS_PER_TASK}"
-#other_options='-i 1000' # Other options to atpw here
 other_options=(-i 100 -f 10) # Other options to atpw here
 # ------------------------------------------------------------
 
@@ -55,7 +54,6 @@ if [ -d "${out_folder}" ]; then
   exit
 fi
 
-#eval 'singularity run -B "${SNIC_TMP}" "${ATPW}" -d "${data_type}" -n "${n_cpus}" "${other_options}" "${in_folder}" "${out_folder}"'
 singularity run -B "${SNIC_TMP}" "${ATPW}" -d "${data_type}" -n "${n_cpus}" "${other_options[@]}" "${in_folder}" "${out_folder}"
 
 end=$(date +%s)
