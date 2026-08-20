@@ -1,17 +1,17 @@
 #!/bin/bash -l
 
-# Last modified: tis mar 11, 2025  06:20
+# Last modified: 2026-08-20 13:01:25
 # Sign: JN
 
 set -uo pipefail
 
 # Default paths to software
 # TODO: adjust all binary names to work with conda installa names - if possible (cf. pargenes and treeshrink versions)
-BMGEJAR="${BMGEJAR:-${HOME}/Documents/GIT/Align-and-trees-parallel-workflow/src/BMGE-1.12/BMGE.jar}" # <<<<<<<<<< CHANGE HERE
-PARGENES="${PARGENES:-${HOME}/Documents/GIT/Align-and-trees-parallel-workflow/src/ParGenes/pargenes/pargenes.py}" # <<<<<<<<<< CHANGE HERE
-TREESHRINK="${TREESHRINK:-${HOME}/Documents/GIT/Align-and-trees-parallel-workflow/src/TreeShrink/run_treeshrink.py}" # <<<<<<<<<< CHANGE HERE
-TRIMAL="${TRIMAL:-${HOME}/Documents/GIT/Align-and-trees-parallel-workflow/src/trimal/source/trimal}" # <<<<<<<<<< CHANGE HERE
-fastagap='fastagap.pl'  # Assumed to be in the path
+BMGEJAR="${BMGEJAR:-${HOME}/private/GIT/Align-and-trees-parallel-workflow/src/BMGE-1.12/BMGE.jar}" # <<<<<<<<<< CHANGE HERE
+PARGENES="${PARGENES:-${HOME}/private/GIT/Align-and-trees-parallel-workflow/src/ParGenes/pargenes/pargenes.py}" # <<<<<<<<<< CHANGE HERE
+TREESHRINK="${TREESHRINK:-${HOME}/private/GIT/Align-and-trees-parallel-workflow/src/TreeShrink/run_treeshrink.py}" # <<<<<<<<<< CHANGE HERE
+TRIMAL="${TRIMAL:-${HOME}/private/GIT/Align-and-trees-parallel-workflow/src/trimal/source/trimal}" # <<<<<<<<<< CHANGE HERE
+fastagap='fastagap.pl'  # Assumed to be in the path (see https://github.com/nylander/fastagap.git)
 
 # Varia
 version="0.9.5"
